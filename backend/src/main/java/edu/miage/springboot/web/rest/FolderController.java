@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/folders")
+@RequestMapping("/api/folders")
 public class FolderController {
 
     private FolderService folderService;
@@ -20,7 +20,7 @@ public class FolderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<FolderDTO>> getAll(){
+    public ResponseEntity<List<FolderDTO>> getAll() {
         return ResponseEntity.ok(folderService.getAll());
     }
 }
