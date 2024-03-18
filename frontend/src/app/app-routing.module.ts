@@ -1,9 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { LoginComponent } from './login/login.component';
+import { LoginComponent } from './pages/login/login.component';
+import { FolderListComponent } from './pages/folder-list/folder-list.component';
+import { AuthGuard } from './guards/AuthGuard';
 
 const routes: Routes = [
-  {path:"login",component:LoginComponent}
+  {path:"login",component:LoginComponent},
+  {path:"",component:FolderListComponent,canActivate: [AuthGuard],},
+  {path:"**",pathMatch:'full',redirectTo:"/"}
 ];
 
 @NgModule({
