@@ -27,7 +27,7 @@ public class FolderServiceImpl implements FolderService {
 
     @Override
     public Optional<FolderDTO> getById(Long id) {
-        return Optional.empty();
+        return folderRepository.findById(id).map(folderMapper::entityToDto);
     }
 
     @Override

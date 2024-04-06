@@ -11,6 +11,18 @@ public class FileEntity {
     private Long id;
     private String name;
 
+    @ManyToOne
+    @JoinColumn(name = "folder_id")
+    private FolderEntity folder;
+
+    public FolderEntity getFolder() {
+        return folder;
+    }
+
+    public void setFolder(FolderEntity folder) {
+        this.folder = folder;
+    }
+
     public FileEntity() {
     }
 
@@ -23,4 +35,11 @@ public class FileEntity {
     }
 
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

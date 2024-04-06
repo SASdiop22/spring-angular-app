@@ -2,8 +2,10 @@ package edu.miage.springboot.web.rest;
 
 import edu.miage.springboot.services.interfaces.FolderService;
 import edu.miage.springboot.web.dtos.FolderDTO;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,5 +24,9 @@ public class FolderController {
     @GetMapping
     public ResponseEntity<List<FolderDTO>> getAll() {
         return ResponseEntity.ok(folderService.getAll());
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<FolderDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(folderService.getById(id).orElseThrow(()->new EntityNotFoundException()));
     }
 }

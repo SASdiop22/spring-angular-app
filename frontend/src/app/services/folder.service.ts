@@ -14,4 +14,9 @@ export class FolderService {
     const url="http://localhost:8080/api/folders";
     return this.http.get<Folder[]>(url);
   }
+
+  getFolderById(id:number):Observable<Folder> {
+    const url="http://localhost:8080/api/folders/"+id;
+    return this.http.get<Folder>(url);
+  }
 }

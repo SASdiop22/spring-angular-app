@@ -1,6 +1,8 @@
 package edu.miage.springboot.seeders;
 
+import edu.miage.springboot.dao.entities.FileEntity;
 import edu.miage.springboot.dao.entities.FolderEntity;
+import edu.miage.springboot.dao.repositories.FileRepository;
 import edu.miage.springboot.dao.repositories.FolderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -12,13 +14,22 @@ public class FolderSeeder implements CommandLineRunner {
 
     @Autowired
     private FolderRepository folderRepository;
+    @Autowired
+    private FileRepository fileRepository;
 
     @Override
     public void run(String... args) throws Exception {
 
+
+
         FolderEntity folder = new FolderEntity();
         folder.setName("Folder1");
-        folderRepository.save(folder);
+        folder = folderRepository.save(folder);
+        FileEntity file=new FileEntity();
+        file.setName("File1");
+        file.setFolder(folder);
+        fileRepository.save(file);
+
 
     }
 }

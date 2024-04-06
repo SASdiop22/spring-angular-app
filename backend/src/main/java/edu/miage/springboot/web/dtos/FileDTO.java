@@ -1,14 +1,10 @@
 package edu.miage.springboot.web.dtos;
 
-import java.util.List;
-
-public class FolderDTO {
-
+public class FileDTO {
     private Long id;
     private String name;
-    private List<FileDTO> files;
 
-    public FolderDTO() {
+    public FileDTO() {
     }
 
     public Long getId() {
@@ -25,13 +21,5 @@ public class FolderDTO {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public List<FileDTO> getFiles() {
-        return files;
-    }
-
-    public void setFiles(List<FileDTO> files) {
-        this.files = files;
     }
 }

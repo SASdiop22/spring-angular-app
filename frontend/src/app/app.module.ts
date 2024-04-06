@@ -15,13 +15,15 @@ import { FolderListComponent } from './pages/folder-list/folder-list.component';
 import {MatListModule} from '@angular/material/list';
 import {MatIconModule} from '@angular/material/icon';
 import { JwtInterceptor } from './interceptors/JwtInterceptor';
+import { FileListComponent } from './pages/file-list/file-list.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    FolderListComponent
+    FolderListComponent,
+    FileListComponent
   ],
   imports: [
     CommonModule,

@@ -5,8 +5,9 @@ import edu.miage.springboot.web.dtos.FolderDTO;
 import org.mapstruct.Mapper;
 
 import java.util.List;
+import java.util.Optional;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",uses = {FileMapper.class})
 public interface FolderMapper {
     FolderEntity dtoToEntity(FolderDTO dto);
     FolderDTO entityToDto(FolderEntity entity);
