@@ -1,1 +1,1 @@
-web: java -jar target/spring-angular-app.jar
+web: java -jar backend/target/spring-angular-app.jar
