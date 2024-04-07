@@ -1,3 +1,12 @@
 export const environment = {
-  production: true
+  production: true,
+  backend:{
+    protocol:"",
+    host:"",
+    port:""
+  }
 };
+
+export function geturl(){
+  return "";
+}
