@@ -1,1 +1,1 @@
-web: java -jar  backend/target/spring-angular-app.jar --server.port=$PORT
+web: java -Dserver.port=$PORT -jar  backend/target/spring-angular-app.jar
