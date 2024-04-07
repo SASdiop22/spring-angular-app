@@ -35,5 +35,11 @@ public class UserSeeder implements CommandLineRunner {
         user.setRoles(Set.of(userRole));
         userRepository.save(user);
 
+        UserEntity admin=new UserEntity();
+        admin.setUsername("admin");
+        admin.setPassword(passwordEncoder.encode("123456"));
+        admin.setRoles(Set.of(userRole,adminRole));
+        userRepository.save(admin);
+
     }
 }
