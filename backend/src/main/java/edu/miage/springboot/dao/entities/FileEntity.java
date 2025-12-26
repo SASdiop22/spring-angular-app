@@ -43,5 +43,3 @@ public class FileEntity {
         this.name = name;
     }
 }
-
-//Commentaire
