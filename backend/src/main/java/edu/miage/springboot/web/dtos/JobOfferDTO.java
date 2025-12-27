@@ -4,9 +4,9 @@ import java.time.LocalDate;
 
 public class JobOfferDTO {
     private Long id;
-    String title;
-    String description;
-    LocalDate deadline;
+    private String title;
+    private String description;
+    private LocalDate deadline;
 
     public JobOfferDTO() {
     }

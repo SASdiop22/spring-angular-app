@@ -11,10 +11,10 @@ public class JobOfferEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false)
     private Long id;
-    String title;
+    private String title;
     @Column(length = 2000)
-    String description;
-    LocalDate deadline;
+    private String description;
+    private LocalDate deadline;
 
     public void setId(Long id) {
         this.id = id;
