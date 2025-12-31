@@ -1,0 +1,70 @@
+<div class="bg-gray-50 min-h-screen py-12" *ngIf="offer; else loading">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <button (click)="goBack()" class="mb-6 flex items-center text-gray-600 hover:text-primary transition">
+            <span class="material-icons mr-1">arrow_back</span>
+            Retour aux offres
+        </button>
+
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-primary px-8 py-10 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 -mt-4 -mr-4 bg-white opacity-10 rounded-full h-32 w-32"></div>
+                <div class="absolute bottom-0 left-0 -mb-4 -ml-4 bg-white opacity-10 rounded-full h-24 w-24"></div>
+
+                <h1 class="text-3xl md:text-4xl font-bold mb-4 relative z-10">{{ offer.title }}</h1>
+                <div class="flex flex-wrap gap-4 text-indigo-100 text-sm md:text-base relative z-10">
+                    <span class="flex items-center">
+                        <span class="material-icons mr-1 text-base">location_on</span>
+                        {{ offer.location }}
+                    </span>
+                    <span class="flex items-center">
+                        <span class="material-icons mr-1 text-base">payment</span>
+                        {{ offer.salaryRange || 'Non spécifié' }}
+                    </span>
+                    <span class="flex items-center">
+                        <span class="material-icons mr-1 text-base">schedule</span>
+                        Publié le {{ offer.postedDate | date:'longDate' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="px-8 py-8 md:px-12 md:py-12">
+
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Description du poste</h2>
+                    <p class="text-gray-700 leading-relaxed text-lg">
+                        {{ offer.description }}
+                    </p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Pré-requis</h2>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li *ngFor="let req of offer.requirements">{{ req }}</li>
+                    </ul>
+                </div>
+
+                <div class="border-t border-gray-200 pt-8 mt-8 flex flex-col md:flex-row items-center justify-between">
+                    <div class="mb-4 md:mb-0">
+                        <span class="block text-gray-500 text-sm">Intéressé(e) ?</span>
+                        <span class="font-bold text-gray-900 text-lg">Rejoignez-nous !</span>
+                    </div>
+                    <button
+                        class="bg-accent hover:bg-pink-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:-translate-y-1 text-lg flex items-center">
+                        <span class="material-icons mr-2">send</span>
+                        Postuler maintenant
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #loading>
+    <div class="flex justify-center items-center h-64">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+    </div>
+</ng-template>

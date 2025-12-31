@@ -1,0 +1,102 @@
+<div class="bg-gray-50 min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Tableau de Bord Recruteur</h1>
+                <p class="text-gray-500">Bienvenue sur votre espace de gestion.</p>
+            </div>
+            <button
+                class="bg-primary hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition flex items-center">
+                <span class="material-icons mr-2">add</span>
+                Nouvelle Offre
+            </button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-primary">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Offres Totales</p>
+                        <p class="text-3xl font-bold text-gray-900">{{ totalOffers }}</p>
+                    </div>
+                    <div class="p-3 bg-indigo-50 rounded-full text-primary">
+                        <span class="material-icons">work</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-accent">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Candidatures en cours</p>
+                        <p class="text-3xl font-bold text-gray-900">{{ totalCandidates }}</p>
+                    </div>
+                    <div class="p-3 bg-pink-50 rounded-full text-accent">
+                        <span class="material-icons">people</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-teal-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Offres Actives</p>
+                        <p class="text-3xl font-bold text-gray-900">{{ activeOffers }}</p>
+                    </div>
+                    <div class="p-3 bg-teal-50 rounded-full text-teal-600">
+                        <span class="material-icons">toggle_on</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity / Navigation -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-800">Actions Rapides</h3>
+                </div>
+                <div class="p-6 grid grid-cols-2 gap-4">
+                    <a routerLink="/recruiter/offers"
+                        class="flex flex-col items-center justify-center p-6 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition cursor-pointer group">
+                        <span
+                            class="material-icons text-3xl text-primary mb-2 group-hover:scale-110 transition">list_alt</span>
+                        <span class="font-bold text-gray-700">Gérer les Offres</span>
+                    </a>
+                    <a routerLink="/recruiter/candidates"
+                        class="flex flex-col items-center justify-center p-6 bg-pink-50 rounded-xl hover:bg-pink-100 transition cursor-pointer group">
+                        <span
+                            class="material-icons text-3xl text-accent mb-2 group-hover:scale-110 transition">assignment_ind</span>
+                        <span class="font-bold text-gray-700">Suivi Candidats</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Applications Placeholder -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-800">Dernières Candidatures</h3>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition">
+                        <div
+                            class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mr-4">
+                            <span class="material-icons">person</span>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-800">Jean Dupont</p>
+                            <p class="text-sm text-gray-500">Senior Frontend Developer</p>
+                        </div>
+                        <span class="ml-auto text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">Reçu</span>
+                    </div>
+                    <!-- More items -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
