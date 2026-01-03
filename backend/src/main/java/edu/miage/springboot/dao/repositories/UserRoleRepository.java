@@ -4,4 +4,5 @@ import edu.miage.springboot.dao.entities.UserRoleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRoleRepository extends JpaRepository<UserRoleEntity, Long> {
+    Optional<UserRoleEntity> findByName(String name);
 }

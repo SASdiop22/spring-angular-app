@@ -58,14 +58,19 @@ public class SecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/login","/api/auth/signin")
-                        .permitAll()
-                        .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js")
-                        .permitAll()
-                        .requestMatchers("/actuator/**")
-                        .hasRole("ADMIN")
-                        .anyRequest()
-                        .authenticated()
+                        // 1. Les accès publics (Inscription et Login)
+                        .requestMatchers("/api/auth/login", "/api/auth/signin", "/api/auth/register").permitAll()
+                        .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js").permitAll()
+
+                        // 2. Consultation des offres autorisée sans connexion (Candidats)
+                        // Remplace "/api/jobs/**" par "/api/joboffers/**" si c'est ce que tu as mis dans ton Controller
+                        .requestMatchers(HttpMethod.GET, "/api/jobs/**").permitAll()
+
+                        // 3. Les accès restreints par rôle
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
+
+                        // 4. TOUT le reste demande une authentification (Dernière règle !)
+                        .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
