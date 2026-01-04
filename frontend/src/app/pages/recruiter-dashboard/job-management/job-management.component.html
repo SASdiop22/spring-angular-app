@@ -1,0 +1,53 @@
+<div class="job-container">
+    <h2>Job Offers Management</h2>
+
+    <mat-card class="form-card">
+        <mat-card-header>
+            <mat-card-title>Create New Offer</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <form [formGroup]="jobForm" (ngSubmit)="onSubmit()" class="job-form">
+                <mat-form-field appearance="outline">
+                    <mat-label>Job Title</mat-label>
+                    <input matInput formControlName="title" placeholder="e.g. Senior Java Developer">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Location</mat-label>
+                    <input matInput formControlName="location" placeholder="e.g. Paris, Remote">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Description</mat-label>
+                    <textarea matInput formControlName="description" rows="3"></textarea>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Requirements</mat-label>
+                    <textarea matInput formControlName="requirements" rows="2"></textarea>
+                </mat-form-field>
+
+                <button mat-raised-button color="primary" type="submit" [disabled]="jobForm.invalid">Create
+                    Offer</button>
+            </form>
+        </mat-card-content>
+    </mat-card>
+
+    <h3>Existing Offers</h3>
+    <div class="offer-list">
+        <mat-card *ngFor="let offer of jobOffers" class="offer-card">
+            <mat-card-header>
+                <div mat-card-avatar class="example-header-image"></div>
+                <mat-card-title>{{offer.title}}</mat-card-title>
+                <mat-card-subtitle>{{offer.location}} - {{offer.status}}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <p>{{offer.description}}</p>
+            </mat-card-content>
+            <mat-card-actions>
+                <button mat-button color="primary">EDIT</button>
+                <button mat-button color="accent">VIEW CANDIDATES</button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+</div>

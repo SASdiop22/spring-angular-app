@@ -1,0 +1,16 @@
+.spacer {
+    flex: 1 1 auto;
+}
+
+.main-container {
+    padding: 20px;
+}
+
+a[mat-button] {
+    color: white;
+    text-decoration: none;
+}
+
+a[mat-button].active {
+    background: rgba(255, 255, 255, 0.1);
+}

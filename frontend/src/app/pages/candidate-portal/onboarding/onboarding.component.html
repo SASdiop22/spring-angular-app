@@ -1,0 +1,49 @@
+<div class="onboarding-container">
+    <h2>My Applications & Onboarding</h2>
+
+    <div *ngFor="let app of myApplications" class="app-card">
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>{{app.jobOffer.title}}</mat-card-title>
+                <mat-card-subtitle>Status: {{app.status}}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="status-steps" *ngIf="app.status !== 'REJECTED'">
+                    <!-- Simple Stepper Visualization (Simulated with CSS/Divs if material stepper not avail, but we can try basic flex) -->
+                    <div class="step" [class.active]="getStepIndex(app.status) >= 0">
+                        <div class="circle">1</div>
+                        <span>Received</span>
+                    </div>
+                    <div class="line"></div>
+                    <div class="step" [class.active]="getStepIndex(app.status) >= 1">
+                        <div class="circle">2</div>
+                        <span>Interview</span>
+                    </div>
+                    <div class="line"></div>
+                    <div class="step" [class.active]="getStepIndex(app.status) >= 2">
+                        <div class="circle">3</div>
+                        <span>Onboarding</span>
+                    </div>
+                </div>
+
+                <div *ngIf="app.status === 'REJECTED'" class="rejected-msg">
+                    <p>Unfortunately, your application was not selected.</p>
+                </div>
+
+                <div *ngIf="app.status === 'ACCEPTED'" class="onboarding-resources">
+                    <h3>Onboarding Resources</h3>
+                    <mat-list role="list">
+                        <mat-list-item role="listitem">
+                            <mat-icon matListItemIcon>description</mat-icon>
+                            <div matListItemTitle><a href="#">Employee Handbook.pdf</a></div>
+                        </mat-list-item>
+                        <mat-list-item role="listitem">
+                            <mat-icon matListItemIcon>video_library</mat-icon>
+                            <div matListItemTitle><a href="#">Welcome Video</a></div>
+                        </mat-list-item>
+                    </mat-list>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>

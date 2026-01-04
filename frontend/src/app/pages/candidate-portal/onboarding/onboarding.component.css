@@ -1,0 +1,66 @@
+.onboarding-container {
+    max-width: 800px;
+    margin: 40px auto;
+}
+
+.app-card {
+    margin-bottom: 20px;
+}
+
+.status-steps {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 30px 0;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.5;
+}
+
+.step.active {
+    opacity: 1;
+    font-weight: bold;
+}
+
+.circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #ccc;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.step.active .circle {
+    background-color: #3f51b5;
+}
+
+.line {
+    flex: 1;
+    height: 2px;
+    background-color: #ccc;
+    margin: 0 10px;
+    align-self: flex-start;
+    margin-top: 15px;
+    /* Half of circle height */
+}
+
+.rejected-msg {
+    color: red;
+    padding: 20px;
+    text-align: center;
+}
+
+.onboarding-resources {
+    margin-top: 20px;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+}

@@ -1,0 +1,27 @@
+.apply-container {
+    max-width: 600px;
+    margin: 40px auto;
+}
+
+.apply-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.row {
+    display: flex;
+    gap: 15px;
+}
+
+.row mat-form-field {
+    flex: 1;
+}
+
+.file-input {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 10px;
+}

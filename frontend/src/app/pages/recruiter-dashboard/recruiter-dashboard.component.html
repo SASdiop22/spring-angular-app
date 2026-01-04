@@ -1,0 +1,21 @@
+<div class="dashboard-container">
+  <mat-card class="sidebar">
+    <mat-card-header>
+      <mat-card-title>Recruiter Portal</mat-card-title>
+    </mat-card-header>
+    <mat-nav-list>
+      <a mat-list-item routerLink="/recruiter/jobs" routerLinkActive="active">
+        <mat-icon matListItemIcon>work</mat-icon>
+        <span matListItemTitle>Job Offers</span>
+      </a>
+      <a mat-list-item routerLink="/recruiter/candidates" routerLinkActive="active">
+        <mat-icon matListItemIcon>people</mat-icon>
+        <span matListItemTitle>Candidates</span>
+      </a>
+    </mat-nav-list>
+  </mat-card>
+
+  <div class="content">
+    <router-outlet></router-outlet>
+  </div>
+</div>

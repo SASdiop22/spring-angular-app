@@ -1,0 +1,40 @@
+<div class="apply-container" *ngIf="job">
+    <h2>Apply for: {{job.title}}</h2>
+
+    <mat-card>
+        <mat-card-content>
+            <form [formGroup]="applyForm" (ngSubmit)="onSubmit()" class="apply-form">
+                <div class="row">
+                    <mat-form-field appearance="outline">
+                        <mat-label>First Name</mat-label>
+                        <input matInput formControlName="firstName">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Last Name</mat-label>
+                        <input matInput formControlName="lastName">
+                    </mat-form-field>
+                </div>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email">
+                </mat-form-field>
+
+                <div class="file-input">
+                    <label>Resume (PDF)*</label>
+                    <input type="file" (change)="onFileChange($event, 'resume')" accept=".pdf,.doc,.docx">
+                </div>
+
+                <div class="file-input">
+                    <label>Cover Letter</label>
+                    <input type="file" (change)="onFileChange($event, 'coverLetter')" accept=".pdf,.doc,.docx">
+                </div>
+
+                <button mat-raised-button color="primary" type="submit" [disabled]="applyForm.invalid || isSubmitting">
+                    {{ isSubmitting ? 'Submitting...' : 'Submit Application' }}
+                </button>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</div>

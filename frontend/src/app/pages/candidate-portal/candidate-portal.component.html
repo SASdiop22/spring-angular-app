@@ -1,0 +1,24 @@
+<div class="portal-container">
+    <div class="hero">
+        <h1>Join Our Team</h1>
+        <p>Find your next career opportunity.</p>
+    </div>
+
+    <div class="job-grid">
+        <mat-card *ngFor="let job of activeJobs" class="job-card">
+            <mat-card-header>
+                <mat-card-title>{{job.title}}</mat-card-title>
+                <mat-card-subtitle>{{job.location}} • {{job.postedDate | date}}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <p>{{job.description | slice:0:150}}...</p>
+                <mat-chip-listbox>
+                    <mat-chip-option color="accent" selected>{{job.requirements}}</mat-chip-option>
+                </mat-chip-listbox>
+            </mat-card-content>
+            <mat-card-actions align="end">
+                <button mat-raised-button color="primary" (click)="apply(job.id)">APPLY NOW</button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+</div>
