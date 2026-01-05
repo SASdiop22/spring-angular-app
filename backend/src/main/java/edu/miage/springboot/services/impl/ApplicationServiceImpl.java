@@ -3,10 +3,14 @@ package edu.miage.springboot.services.impl;
 import edu.miage.springboot.dao.entities.*;
 import edu.miage.springboot.dao.repositories.*;
 import edu.miage.springboot.services.interfaces.ApplicationService;
+import edu.miage.springboot.utils.mappers.ApplicationMapper;
+import edu.miage.springboot.web.dtos.ApplicationDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
@@ -19,6 +23,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private JobOfferRepository jobOfferRepository;
     @Autowired
     private FileRepository fileRepository;
+    private ApplicationMapper applicationMapper;
 
     @Override
     @Transactional // Très important pour garantir que tout est sauvegardé correctement

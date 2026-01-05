@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -14,7 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.crypcdto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.util.StringUtils;
@@ -52,33 +53,38 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
         return http
                 .csrf(csrf -> csrf.disable())
-                .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // 1. Les accès publics (Inscription et Login)
-                        .requestMatchers("/api/auth/login", "/api/auth/signin", "/api/auth/register").permitAll()
-                        .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js").permitAll()
+                        // 1. Autoriser l'accès à la console H2 (si tu l'utilises)
+                        .requestMatchers("/h2-console/**").permitAll()
 
-                        // 2. Consultation des offres autorisée sans connexion (Candidats)
-                        // Remplace "/api/jobs/**" par "/api/joboffers/**" si c'est ce que tu as mis dans ton Controller
-                        .requestMatchers(HttpMethod.GET, "/api/jobs/**").permitAll()
+                        // 2. Autoriser Swagger pour pouvoir tester tes APIs
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // 3. Les accès restreints par rôle
-                        .requestMatchers("/actuator/**").hasRole("ADMIN")
+                        // 3. Autoriser tes endpoints d'authentification
+                        .requestMatchers("/api/auth/**").permitAll()
 
-                        // 4. TOUT le reste demande une authentification (Dernière règle !)
+                        // 4. Autoriser Pape à voir les offres sans être connecté
+                        .requestMatchers(HttpMethod.GET, "/api/joboffers/**").permitAll()
+
+                        // 5. Autoriser les fichiers statiques du frontend (index.html, js, css)
+                        .requestMatchers("/", "/index.html", "/static/**", "/*.js", "/*.css", "/*.ico").permitAll()
+
+                        // 6. TOUT le reste demande une connexion
                         .anyRequest().authenticated()
                 )
+                // Pour H2-console (si nécessaire)
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 

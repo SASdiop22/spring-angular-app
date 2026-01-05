@@ -9,6 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+
 import java.util.Set;
 @Component
 public class UserSeeder implements CommandLineRunner {
@@ -45,7 +46,7 @@ public class UserSeeder implements CommandLineRunner {
     }
 
     private void createUserIfNotFound(String username, String password, UserRoleEntity role) {
-        if (userRepository.findByUsername(username).isEmpty()) {
+        if (userRepository.findByUsername(username) == null) {
             UserEntity user = new UserEntity();
             user.setUsername(username);
             user.setPassword(passwordEncoder.encode(password)); // On encode toujours !

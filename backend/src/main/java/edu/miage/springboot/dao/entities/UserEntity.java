@@ -51,4 +51,8 @@ public class UserEntity {
     public void setRoles(Set<UserRoleEntity> roles) {
         this.roles = roles;
     }
+
+    public boolean isPresent() {
+        return this.id != null;
+    }
 }

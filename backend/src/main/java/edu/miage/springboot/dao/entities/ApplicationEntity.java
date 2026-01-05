@@ -18,8 +18,6 @@ public class ApplicationEntity {
     @Column(length = 1000)
     private String comment;
 
-    // --- RELATIONS ---
-
     // Plusieurs candidatures peuvent appartenir à un seul candidat
     @ManyToOne
     @JoinColumn(name = "candidate_id", nullable = false)
