@@ -58,19 +58,19 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // 1. Autoriser l'accès à la console H2 (si tu l'utilises)
+                        // 1. Autoriser l'accès à la console H2
                         .requestMatchers("/h2-console/**").permitAll()
-
+                        .requestMatchers("/actuator/**").permitAll()
                         // 2. Autoriser Swagger pour pouvoir tester tes APIs
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // 3. Autoriser tes endpoints d'authentification
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // 4. Autoriser Pape à voir les offres sans être connecté
+                        // 4. Autoriser à voir les offres sans être connecté
                         .requestMatchers(HttpMethod.GET, "/api/joboffers/**").permitAll()
 
-                        // 5. Autoriser les fichiers statiques du frontend (index.html, js, css)
+                        // 5. Autoriser les fichiers statiques du frontend
                         .requestMatchers("/", "/index.html", "/static/**", "/*.js", "/*.css", "/*.ico").permitAll()
 
                         // 6. TOUT le reste demande une connexion
