@@ -29,7 +29,7 @@ import java.util.List;
 public class SecurityConfig {
     @Autowired
     JwtAuthFilter jwtAuthFilter;
-    @Value("{app.dev.frontend.local}")
+    @Value("${app.dev.frontend.local}") // Ajout du $
     String allowedOrigins;
     @Bean
     public UserDetailsService userDetailsService(){
@@ -58,6 +58,8 @@ public class SecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
+                        //AUTORISER EXPLICITEMENT LES REQUÊTES OPTIONS (CORS)
+                        .requestMatchers(org.springframework.web.cors.CorsUtils::isPreFlightRequest).permitAll() 
                         .requestMatchers("/api/auth/login","/api/auth/signin")
                         .permitAll()
                         .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js")
@@ -90,6 +92,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
 
 
 }
