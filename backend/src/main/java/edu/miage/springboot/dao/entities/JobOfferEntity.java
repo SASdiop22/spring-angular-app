@@ -3,6 +3,7 @@ package edu.miage.springboot.dao.entities;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "job_offers")
@@ -15,33 +16,16 @@ public class JobOfferEntity {
     @Column(length = 2000)
     private String description;
     private LocalDate deadline;
+    @Enumerated(EnumType.STRING)
+    private JobStatusEnum status;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private String department;
 
-    public Long getId() {
-        return id;
-    }
+    @ElementCollection
+    private List<String> skillsRequired;
 
-    public String getTitle() {
-        return title;
-    }
+    private Integer remoteDays;
 
-    public String getDescription() {
-        return description;
-    }
+    private Double salary;
 
-    public LocalDate getDeadline() {
-        return deadline;
-    }
-    public void setTitle(String title) {
-        this.title = title;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public void setDeadline(LocalDate deadline) {
-        this.deadline = deadline;
-    }
 }
