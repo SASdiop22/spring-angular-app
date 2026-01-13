@@ -39,21 +39,21 @@ public class JobOfferController {
     // --- ACCÈS EMPLOYÉ / DEMANDEUR (Spec 1 & 2.A) ---
 
     @PostMapping
-    //@PreAuthorize("hasRole('EMPLOYE')")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'ADMIN')")
     public ResponseEntity<JobOfferDTO> create(@RequestBody JobOfferDTO jobOfferDTO) {
         // Création initiale en statut DRAFT
         return new ResponseEntity<>(jobOfferService.createJobOffer(jobOfferDTO), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}/submit")
-    //@PreAuthorize("hasRole('EMPLOYE') and @securityService.isOwner(#id)")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'ADMIN') and @securityService.isOwner(#id)")
     public ResponseEntity<JobOfferDTO> submitForApproval(@PathVariable Long id) {
         // Passage de DRAFT à PENDING (Spec 2.A)
         return ResponseEntity.ok(jobOfferService.updateStatus(id, JobStatusEnum.PENDING));
     }
 
     @PutMapping("/{id}")
-    //@PreAuthorize("hasAnyRole('RH', 'ADMIN') or @securityService.isOwner(#id)")
+    @PreAuthorize("hasAnyRole('RH', 'ADMIN') or @securityService.isOwner(#id)")
     public ResponseEntity<JobOfferDTO> update(@PathVariable Long id, @RequestBody JobOfferDTO jobOfferDTO) {
         return ResponseEntity.ok(jobOfferService.updateJobOffer(id, jobOfferDTO));
     }
@@ -65,7 +65,7 @@ public class JobOfferController {
      * Le RH est le seul à pouvoir définir le salaire et le télétravail pour passer en OPEN.
      */
     @PatchMapping("/{id}/publish")
-    //@PreAuthorize("hasRole('RH')")
+    @PreAuthorize("hasAnyRole('RH', 'ADMIN')")
     public ResponseEntity<JobOfferDTO> validateAndPublish(
             @PathVariable Long id,
             @RequestParam Double salary,
@@ -77,7 +77,7 @@ public class JobOfferController {
 
 
     @GetMapping("/privilege")
-    //@PreAuthorize("hasAnyRole('RH', 'ADMIN')") // Spec 1 & 4.A
+    @PreAuthorize("hasAnyRole('RH', 'ADMIN')") // Spec 1 & 4.A
     public List<JobOfferDTO> getAllWithPrivilege() {
         // Retourne toutes les offres (DRAFT, PENDING, OPEN, CLOSED, FILLED)
         return jobOfferService.findAll();
@@ -85,14 +85,14 @@ public class JobOfferController {
     // --- ADMINISTRATION ET CLÔTURE (Spec 2.B) ---
 
     @PatchMapping("/{id}/close")
-    //@PreAuthorize("hasAnyRole('RH', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('RH', 'ADMIN')")
     public ResponseEntity<JobOfferDTO> closeOffer(@PathVariable Long id) {
         // Passage manuel en statut CLOSED (Spec 2.B)
         return ResponseEntity.ok(jobOfferService.updateStatus(id, JobStatusEnum.CLOSED));
     }
 
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasAnyRole('RH', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('RH', 'ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         jobOfferService.deleteJobOffer(id);
         return ResponseEntity.noContent().build();

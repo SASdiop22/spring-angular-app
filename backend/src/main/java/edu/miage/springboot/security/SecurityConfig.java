@@ -65,7 +65,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/login","/api/auth/signin")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/joboffers/**","/api/employes/**","/api/users/**", "/api/applications/**")
+                        .requestMatchers("/api/joboffers/**","/api/employes/**","/api/users/**", "/api/applications/**")
                         .permitAll()
                         .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js")
                         .permitAll()

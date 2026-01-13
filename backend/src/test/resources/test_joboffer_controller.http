@@ -44,7 +44,13 @@ Content-Type: application/json
   "skillsRequired": ["AWS", "Terraform", "Kubernetes"]
 }
 
-> {% client.global.set("new_offer_id", response.body.id); %}
+> {%
+    if (response.status === 201 || response.status === 200) {
+        client.global.set("new_offer_id", response.body.id);
+    }else{
+        client.global.set("new_offer_id", 2);
+    }
+%}
 
 ###
 
