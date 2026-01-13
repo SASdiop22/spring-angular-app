@@ -58,7 +58,7 @@ public class AuthController {
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
         // ASSIGNATION DU RÔLE PAR DÉFAUT (ROLE_CANDIDATE)
-        UserRoleEntity candidateRole = userRoleRepository.findByName("ROLE_CANDIDATE")
+        UserRoleEntity candidateRole = (UserRoleEntity) userRoleRepository.findByName("ROLE_CANDIDATE")
                 .orElseThrow(() -> new RuntimeException("Rôle par défaut introuvable. Avez-vous lancé le Seeder ?"));
 
         newUser.setRoles(Collections.singleton(candidateRole));
