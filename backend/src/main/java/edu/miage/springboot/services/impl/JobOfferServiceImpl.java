@@ -27,4 +27,16 @@ public class JobOfferServiceImpl implements JobOfferService {
     public JobOfferDTO findById(Long id) {
         return jobOfferRepository.findById(id).map(jobOfferMapper::entityToDto).orElseThrow(() -> new RuntimeException("Offre introuvable"));
     }
+
+    @Override
+    public JobOfferDTO updateStatus(Long id, String status) {
+        var offer = jobOfferRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Offre introuvable"));
+
+        offer.setStatus(status);
+        jobOfferRepository.save(offer);
+
+        return jobOfferMapper.entityToDto(offer);
+    }
+
 }

@@ -45,25 +45,25 @@ public class AuthController {
 
     @PostMapping("/register")
     public String register(@RequestBody AuthRequestDTO registerRequest) {
-        // 1. Vérification si l'utilisateur existe déjà
+        // Vérification si l'utilisateur existe déjà
         if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
             throw new RuntimeException("Le nom d'utilisateur est déjà pris");
         }
 
-        // 2. Création de l'entité utilisateur
+        // Création de l'entité utilisateur
         UserEntity newUser = new UserEntity();
         newUser.setUsername(registerRequest.getUsername());
 
-        // 3. ENCODAGE DU MOT DE PASSE (CRUCIAL)
+        // ENCODAGE DU MOT DE PASSE (CRUCIAL)
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
-        // 4. ASSIGNATION DU RÔLE PAR DÉFAUT (ROLE_CANDIDATE)
+        // ASSIGNATION DU RÔLE PAR DÉFAUT (ROLE_CANDIDATE)
         UserRoleEntity candidateRole = userRoleRepository.findByName("ROLE_CANDIDATE")
                 .orElseThrow(() -> new RuntimeException("Rôle par défaut introuvable. Avez-vous lancé le Seeder ?"));
 
         newUser.setRoles(Collections.singleton(candidateRole));
 
-        // 5. SAUVEGARDE
+        // SAUVEGARDE
         userRepository.save(newUser);
 
         return "Utilisateur enregistré avec succès !";

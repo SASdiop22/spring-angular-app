@@ -4,10 +4,7 @@ import edu.miage.springboot.dao.repositories.JobOfferRepository;
 import edu.miage.springboot.services.interfaces.JobOfferService;
 import edu.miage.springboot.web.dtos.JobOfferDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,6 +21,13 @@ public class JobOfferController {
     @GetMapping("/{id}")
     public JobOfferDTO getById(@PathVariable Long id){
         return jobOfferService.findById(id);
+    }
+    @PutMapping("/{id}/status")
+    public JobOfferDTO updateStatus(
+            @PathVariable Long id,
+            @RequestParam String status
+    ) {
+        return jobOfferService.updateStatus(id, status);
     }
 
 }

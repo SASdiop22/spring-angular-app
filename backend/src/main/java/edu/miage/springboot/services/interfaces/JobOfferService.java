@@ -7,4 +7,5 @@ import java.util.List;
 public interface JobOfferService {
     List<JobOfferDTO> findAll();
     JobOfferDTO findById(Long id);
+    JobOfferDTO updateStatus(Long id, String status);
 }
