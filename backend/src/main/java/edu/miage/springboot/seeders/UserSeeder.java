@@ -21,25 +21,40 @@ public class UserSeeder implements CommandLineRunner {
     private UserRoleRepository userRoleRepository;
     @Override
     public void run(String... args) throws Exception {
-        UserRoleEntity userRole=new UserRoleEntity();
-        userRole.setName("USER");
-        userRole=userRoleRepository.save(userRole);
 
-        UserRoleEntity adminRole=new UserRoleEntity();
-        adminRole.setName("ADMIN");
-        adminRole=userRoleRepository.save(adminRole);
+        // 1. Initialisation des rôles avec vérification d'existence
+        UserRoleEntity roleCandidat = getOrCreateRole("ROLE_CANDIDAT");
+        UserRoleEntity roleEmploye = getOrCreateRole("ROLE_EMPLOYE");
+        UserRoleEntity roleAdmin = getOrCreateRole("ROLE_ADMIN");
 
-        UserEntity user=new UserEntity();
-        user.setUsername("user");
-        user.setPassword(passwordEncoder.encode("123456"));
-        user.setRoles(Set.of(userRole));
-        userRepository.save(user);
+        
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            UserEntity admin = new UserEntity();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setEmail("admin@uha.com");
 
-        UserEntity admin=new UserEntity();
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("123456"));
-        admin.setRoles(Set.of(userRole,adminRole));
-        userRepository.save(admin);
+            admin.setupAsEmploye(roleEmploye); 
+            admin.getRoles().add(roleAdmin); // On ajoute le rôle ADMIN en plus
+            
+            userRepository.save(admin);
+        }
 
+        if (userRepository.findByUsername("candidat_test").isEmpty()) {
+            UserEntity candidat = new UserEntity();
+            candidat.setUsername("candidat_test");
+            candidat.setPassword(passwordEncoder.encode("password"));
+            candidat.setEmail("candidat@uha.com");
+            
+            candidat.setupAsCandidat(roleCandidat);
+            
+            userRepository.save(candidat);
+        }
+
+    }
+
+    private UserRoleEntity getOrCreateRole(String roleName) {
+        return userRoleRepository.findByName(roleName)
+                .orElseGet(() -> userRoleRepository.save(new UserRoleEntity(roleName)));
     }
 }
