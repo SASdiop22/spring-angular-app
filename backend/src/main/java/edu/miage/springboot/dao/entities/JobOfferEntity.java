@@ -55,8 +55,16 @@ public class JobOfferEntity {
     }
 
     // Méthode pour la spécification 2.A (Validation RH)
-    public void publish() {
+    public void submitForApproval() {
+        if (this.status == JobStatusEnum.DRAFT) {
+            this.status = JobStatusEnum.PENDING;
+        }
+    }
+
+    public void validateAndPublish(Double salary, Integer remoteDays) {
+        this.salaryRange = salary;
+        this.remoteDays = remoteDays;
         this.status = JobStatusEnum.OPEN;
-        this.publishedAt = LocalDateTime.now();
+        this.publishedAt = java.time.LocalDateTime.now();
     }
 }
