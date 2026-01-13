@@ -3,6 +3,9 @@ package edu.miage.springboot.services.impl;
 import edu.miage.springboot.dao.entities.UserEntity;
 import edu.miage.springboot.dao.repositories.UserRepository;
 import edu.miage.springboot.web.dtos.AuthUserDetails;
+
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,10 +20,9 @@ public class AuthUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserEntity user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found");
-        }
+        UserEntity user = userRepository.findByUsername(username)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        
         return new AuthUserDetails(user);
     }
 }
