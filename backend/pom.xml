@@ -19,14 +19,7 @@
     <artifactId>backend</artifactId>
 
     <dependencies>
-    <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>frontend</artifactId>
-        <version>${project.version}</version>
-        <type>jar</type>
-        <!-- we add optional to work with the backend package without building the frontend -->
-        <optional>true</optional>
-    </dependency>
+    <!-- Frontend jar dependency removed because the frontend is an Angular project and is built separately. The backend only needs the static resources, which are copied by the Maven dependency plugin. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -131,31 +124,7 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.6.0</version>
-                <executions>
-                    <execution>
-                        <id>merge</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>frontend</artifactId>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/classes/static</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!-- The maven-dependency-plugin execution that unpacks the frontend JAR has been removed because the frontend is an Angular project built separately. The backend no longer needs to unpack a non‑existent JAR. -->
         </plugins>
     </build>
 </project>
