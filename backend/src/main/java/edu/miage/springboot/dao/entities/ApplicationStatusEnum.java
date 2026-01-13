@@ -1,6 +1,6 @@
 package edu.miage.springboot.dao.entities;
 
-public enum CandidatureStatusEnum {
+public enum ApplicationStatusEnum {
     RECEIVED,
     INTERVIEW_PENDING,
     SHORTLISTED,

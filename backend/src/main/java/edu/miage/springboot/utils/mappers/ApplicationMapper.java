@@ -11,15 +11,10 @@ public interface ApplicationMapper {
 
     @Mapping(source = "candidate.id", target = "candidateId")
     @Mapping(source = "candidate.username", target = "candidateName")
-    @Mapping(source = "jobOffer.id", target = "jobOfferId")
-    @Mapping(source = "jobOffer.title", target = "jobOfferTitle")
-    @Mapping(source = "cv.id", target = "cvId")
+    @Mapping(source = "job.id", target = "jobOfferId")
+    @Mapping(source = "job.title", target = "jobOfferTitle")
+    @Mapping(source = "currentStatus", target = "status")
     ApplicationDTO toDto(ApplicationEntity entity);
-
-    @Mapping(target = "candidate", ignore = true)
-    @Mapping(target = "jobOffer", ignore = true)
-    @Mapping(target = "cv", ignore = true)
-    ApplicationEntity toEntity(ApplicationDTO dto);
 
     List<ApplicationDTO> toDtos(List<ApplicationEntity> entities);
 }

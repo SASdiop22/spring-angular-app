@@ -22,13 +22,15 @@ public class ApplicationController {
      */
     @PostMapping("/apply")
     public ResponseEntity<String> apply(
-            @RequestParam("jobOfferId") Long jobOfferId,
-            @RequestParam("candidateId") Long candidateId,
-            @RequestParam("cvFile") MultipartFile cvFile) {
+            @RequestParam Long jobOfferId,
+            @RequestParam Long candidateId,
+            @RequestParam String cvUrl,        // On attend une URL/String maintenant
+            @RequestParam(required = false) String coverLetter
+    ){
 
         try {
-            applicationService.apply(jobOfferId, candidateId, cvFile);
-            return ResponseEntity.ok("Votre candidature a été envoyée avec succès !");
+            applicationService.apply(jobOfferId, candidateId, cvUrl, coverLetter);
+            return ResponseEntity.ok("Candidature déposée avec succès.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erreur lors de l'envoi : " + e.getMessage());
         }

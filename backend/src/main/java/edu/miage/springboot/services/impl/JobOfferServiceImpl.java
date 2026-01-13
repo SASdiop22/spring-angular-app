@@ -1,13 +1,18 @@
 package edu.miage.springboot.services.impl;
 
+import edu.miage.springboot.dao.entities.EmployeEntity;
 import edu.miage.springboot.dao.entities.JobOfferEntity;
+import edu.miage.springboot.dao.entities.JobStatusEnum;
+import edu.miage.springboot.dao.repositories.EmployeRepository;
 import edu.miage.springboot.dao.repositories.JobOfferRepository;
 import edu.miage.springboot.services.interfaces.JobOfferService;
 import edu.miage.springboot.utils.mappers.JobOfferMapper;
 import edu.miage.springboot.web.dtos.JobOfferDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -19,6 +24,9 @@ public class JobOfferServiceImpl implements JobOfferService {
     @Autowired
     private JobOfferMapper jobOfferMapper;
 
+    @Autowired
+    private EmployeRepository employeRepository; // Nécessaire pour lier le créateur
+
     @Override
     public List<JobOfferDTO> findAll() {
         return jobOfferMapper.entitiesToDtos(jobOfferRepository.findAll());
@@ -26,32 +34,94 @@ public class JobOfferServiceImpl implements JobOfferService {
 
     @Override
     public JobOfferDTO findById(Long id) {
-        return jobOfferRepository.findById(id).map(jobOfferMapper::entityToDto).orElseThrow(() -> new RuntimeException("Offre introuvable"));
-    }
-    @Override
-    public JobOfferDTO createJobOffer(JobOfferDTO jobOfferDTO) {
-        // Conversion DTO -> Entity
-        JobOfferEntity entity = jobOfferMapper.dtoToEntity(jobOfferDTO);
-        // Sauvegarde
-        JobOfferEntity savedEntity = jobOfferRepository.save(entity);
-        // Retour DTO
-        return jobOfferMapper.entityToDto(savedEntity);
+        return jobOfferRepository.findById(id)
+                .map(jobOfferMapper::entityToDto)
+                .orElseThrow(() -> new RuntimeException("Offre introuvable"));
     }
 
     @Override
-    public JobOfferDTO updateJobOffer(Long id, JobOfferDTO jobOfferDTO) {
-        JobOfferEntity existingOffer = jobOfferRepository.findById(id)
+    @Transactional
+    public JobOfferDTO updateStatus(Long id, JobStatusEnum status) {
+        // 1. Récupération de l'offre
+        JobOfferEntity jobOffer = jobOfferRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Offre d'emploi introuvable avec l'ID : " + id));
+
+        // 2. Application de la logique métier selon le statut visé
+        switch (status) {
+            case PENDING:
+                jobOffer.submitForApproval();
+                break;
+
+            case OPEN:
+                // Si le passage en OPEN nécessite des données RH (salaire/remote),
+                // on vérifie qu'elles existent ou on utilise des valeurs par défaut
+                if (jobOffer.getSalaryRange() == null) {
+                    throw new IllegalStateException("Impossible de publier : le salaire doit être renseigné par les RH.");
+                }
+                jobOffer.setStatus(JobStatusEnum.OPEN);
+                jobOffer.setPublishedAt(LocalDateTime.now());
+                break;
+
+            case CLOSED:
+            case FILLED:
+                jobOffer.setStatus(status);
+                break;
+
+            default:
+                jobOffer.setStatus(status);
+                break;
+        }
+
+        // 3. Sauvegarde et retour du DTO mis à jour
+        JobOfferEntity updatedEntity = jobOfferRepository.save(jobOffer);
+        return jobOfferMapper.entityToDto(updatedEntity);
+    }
+
+    @Override
+    @Transactional
+    public JobOfferDTO createJobOffer(JobOfferDTO jobOfferDTO) {
+        JobOfferEntity entity = jobOfferMapper.dtoToEntity(jobOfferDTO);
+
+        // Liaison avec le créateur (Demandeur de poste)
+        if (jobOfferDTO.getCreatorId() != null) {
+            EmployeEntity creator = employeRepository.findById(jobOfferDTO.getCreatorId())
+                    .orElseThrow(() -> new RuntimeException("Employé créateur introuvable"));
+            entity.setCreator(creator);
+        }
+
+        entity.setStatus(JobStatusEnum.DRAFT);
+        return jobOfferMapper.entityToDto(jobOfferRepository.save(entity));
+    }
+
+    /**
+     * Conforme à la Spec 2.A : Validation et Publication par les RH
+     */
+    @Transactional
+    public JobOfferDTO publishOffer(Long id, Double salary, Integer remoteDays) {
+        JobOfferEntity entity = jobOfferRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Offre introuvable"));
 
-        // Mise à jour des champs (Idéalement, utilise le mapper ou des setters ici)
-        existingOffer.setTitle(jobOfferDTO.getTitle());
-        existingOffer.setDescription(jobOfferDTO.getDescription());
-        existingOffer.setDeadline(jobOfferDTO.getDeadline());
-        existingOffer.setLocation(jobOfferDTO.getLocation());
-        existingOffer.setSalary(jobOfferDTO.getSalary());
-        existingOffer.setStatus(jobOfferDTO.getStatus());
+        // Utilise la méthode métier interne de l'entité
+        entity.validateAndPublish(salary, remoteDays);
 
-        return jobOfferMapper.entityToDto(jobOfferRepository.save(existingOffer));
+        return jobOfferMapper.entityToDto(jobOfferRepository.save(entity));
+    }
+
+    @Override
+    @Transactional
+    public JobOfferDTO updateJobOffer(Long id, JobOfferDTO dto) {
+        JobOfferEntity existing = jobOfferRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Offre introuvable"));
+
+        existing.setTitle(dto.getTitle());
+        existing.setDescription(dto.getDescription());
+        existing.setDeadline(dto.getDeadline());
+        existing.setDepartment(dto.getDepartment());
+        existing.setSkillsRequired(dto.getSkillsRequired());
+        existing.setLocation(dto.getLocation());
+        // Note: Le salaire et le statut sont généralement gérés par des méthodes dédiées (workflow)
+
+        return jobOfferMapper.entityToDto(jobOfferRepository.save(existing));
     }
 
     @Override
@@ -59,10 +129,10 @@ public class JobOfferServiceImpl implements JobOfferService {
         jobOfferRepository.deleteById(id);
     }
 
-    // Méthode de recherche pour ton rôle spécifique
     @Override
     public List<JobOfferDTO> searchJobOffers(String keyword) {
-        List<JobOfferEntity> entities = jobOfferRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+        List<JobOfferEntity> entities = jobOfferRepository
+                .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
         return jobOfferMapper.entitiesToDtos(entities);
     }
 }

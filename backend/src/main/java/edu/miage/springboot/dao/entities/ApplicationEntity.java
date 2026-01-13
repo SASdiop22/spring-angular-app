@@ -1,96 +1,49 @@
 package edu.miage.springboot.dao.entities;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "applications")
+@Getter @Setter @NoArgsConstructor
 public class ApplicationEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String status; // Exemple : "RECU", "ENTRETIEN", "ACCEPTE", "REFUSE"
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_id", nullable = false)
+    private JobOfferEntity job;
 
-    private LocalDate applicationDate;
-
-    @Column(length = 1000)
-    private String comment;
-
-    // Plusieurs candidatures peuvent appartenir à un seul candidat
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "candidate_id", nullable = false)
     private UserEntity candidate;
 
-    // Plusieurs candidatures peuvent viser la même offre d'emploi
-    @ManyToOne
-    @JoinColumn(name = "job_offer_id", nullable = false)
-    private JobOfferEntity jobOffer;
+    @Column(name = "cv_url", nullable = false)
+    private String cvUrl;
 
-    // Une candidature est généralement liée à un seul CV spécifique
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cv_file_id")
-    private FileEntity cv;
+    @Column(name = "cover_letter", columnDefinition = "TEXT")
+    private String coverLetter;
 
-    public ApplicationEntity() {
-        this.applicationDate = LocalDate.now();
-        this.status = "RECU"; // Statut par défaut
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "current_status")
+    private ApplicationStatusEnum currentStatus = ApplicationStatusEnum.RECEIVED;
 
-    public Long getId() {
-        return id;
-    }
+    @Column(name = "meeting_date")
+    private LocalDateTime meetingDate;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Column(name = "matching_score")
+    private Integer matchingScore;
 
-    public String getStatus() {
-        return status;
-    }
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public LocalDate getApplicationDate() {
-        return applicationDate;
-    }
-
-    public void setApplicationDate(LocalDate applicationDate) {
-        this.applicationDate = applicationDate;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public UserEntity getCandidate() {
-        return candidate;
-    }
-
-    public void setCandidate(UserEntity candidate) {
-        this.candidate = candidate;
-    }
-
-    public JobOfferEntity getJobOffer() {
-        return jobOffer;
-    }
-
-    public void setJobOffer(JobOfferEntity jobOffer) {
-        this.jobOffer = jobOffer;
-    }
-
-    public FileEntity getCv() {
-        return cv;
-    }
-
-    public void setCv(FileEntity cv) {
-        this.cv = cv;
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 }

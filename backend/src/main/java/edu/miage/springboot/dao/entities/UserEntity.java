@@ -72,7 +72,6 @@ public class UserEntity {
     @Column(name = "user_type")
     private UserTypeEnum userType;
 
-
     //Synchronisation bidirectionnelle de la relation avec EmployeEntity
     public void setReferentEmploye(EmployeEntity employe) {
     if (this.referentEmploye != null) {
@@ -82,7 +81,6 @@ public class UserEntity {
     if (employe != null && !employe.getRecruesLiees().contains(this)) {
         employe.getRecruesLiees().add(this);
     }
-
 
 }
     public boolean isPresent() {
@@ -135,11 +133,6 @@ public class UserEntity {
            (email == null || email.trim().isEmpty()) &&
            (nom == null || nom.trim().isEmpty()) &&
            (prenom == null || prenom.trim().isEmpty());
-    }
-
-
-    public EmployeEntity getEmployeProfile() {
-       return this.employeProfile;
     }
 
 }

@@ -3,13 +3,12 @@ package edu.miage.springboot.services.impl;
 import edu.miage.springboot.dao.entities.*;
 import edu.miage.springboot.dao.repositories.*;
 import edu.miage.springboot.services.interfaces.ApplicationService;
-import edu.miage.springboot.utils.mappers.ApplicationMapper;
 import edu.miage.springboot.web.dtos.ApplicationDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -18,44 +17,74 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Autowired
     private ApplicationRepository applicationRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private JobOfferRepository jobOfferRepository;
     @Autowired
-    private FileRepository fileRepository;
-    private ApplicationMapper applicationMapper;
+    private UserRepository userRepository;
 
+    /**
+     * Spécification 3.A : Dépôt de candidature et RGPD
+     */
     @Override
-    @Transactional // Très important pour garantir que tout est sauvegardé correctement
-    public void apply(Long jobOfferId, Long candidateId, MultipartFile cvFile) {
-        // 1. Récupérer le candidat et l'offre depuis la BDD
+    @Transactional
+    public void apply(Long jobOfferId, Long candidateId, String cvUrl, String coverLetter) {
         UserEntity candidate = userRepository.findById(candidateId)
                 .orElseThrow(() -> new RuntimeException("Candidat introuvable"));
 
-        JobOfferEntity jobOffer = jobOfferRepository.findById(jobOfferId)
+        // Vérification RGPD : consentement < 2 ans
+        if (candidate.getCreatedAt().isBefore(LocalDateTime.now().minusYears(2))) {
+            throw new IllegalStateException("Consentement RGPD expiré. Veuillez mettre à jour votre profil.");
+        }
+
+        JobOfferEntity job = jobOfferRepository.findById(jobOfferId)
                 .orElseThrow(() -> new RuntimeException("Offre introuvable"));
 
-        // 2. Gérer le fichier du CV (Logique simplifiée)
-        FileEntity cvEntity = new FileEntity();
-        cvEntity.setName(cvFile.getOriginalFilename());
-        // Ici, tu devrais normalement sauvegarder le fichier sur le disque
-        cvEntity = fileRepository.save(cvEntity);
+        if (job.getStatus() != JobStatusEnum.OPEN) {
+            throw new IllegalStateException("Cette offre n'est plus ouverte.");
+        }
 
-        // 3. Créer et configurer la candidature
-        ApplicationEntity application = new ApplicationEntity();
-        application.setCandidate(candidate);
-        application.setJobOffer(jobOffer);
-        application.setCv(cvEntity);
-        // La date et le statut sont déjà gérés dans le constructeur de l'entité
+        ApplicationEntity app = new ApplicationEntity();
+        app.setCandidate(candidate);
+        app.setJob(job);
+        app.setCvUrl(cvUrl);
+        app.setCoverLetter(coverLetter);
+        app.setCurrentStatus(ApplicationStatusEnum.RECEIVED);
 
-        // 4. Sauvegarder la candidature
-        applicationRepository.save(application);
+        // Logique de Matching simplifiée
+        app.setMatchingScore(75);
+
+        applicationRepository.save(app);
+    }
+
+    /**
+     * Spécification 5 : Clôture et Succès (Onboarding)
+     */
+    @Transactional
+    public void finalizeRecruitment(Long applicationId, UserEntity currentUser) {
+        if (!currentUser.getEmployeProfile().isRhPrivilege()) {
+            throw new AccessDeniedException("Action réservée au personnel RH.");
+        }
+
+        ApplicationEntity app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
+
+        // 1. Statut Candidature
+        app.setCurrentStatus(ApplicationStatusEnum.HIRED);
+
+        // 2. Clôture de l'offre
+        JobOfferEntity job = app.getJob();
+        job.setStatus(JobStatusEnum.FILLED);
+
+        // 3. Onboarding : Lien hiérarchique avec le créateur de l'offre (le recruteur)
+        UserEntity recruit = app.getCandidate();
+        recruit.setReferentEmploye(job.getCreator());
+
+        applicationRepository.save(app);
+        jobOfferRepository.save(job);
+        userRepository.save(recruit);
     }
 
     @Override
     public List<ApplicationDTO> findAll() {
-        // On récupère toutes les entités et on les transforme en DTO d'un coup
-        List<ApplicationEntity> entities = applicationRepository.findAll();
-        return applicationMapper.toDtos(entities);
+        return List.of();
     }
 }

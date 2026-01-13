@@ -1,11 +1,13 @@
 package edu.miage.springboot.web.rest;
 
+import edu.miage.springboot.dao.entities.JobStatusEnum;
 import edu.miage.springboot.dao.repositories.JobOfferRepository;
 import edu.miage.springboot.services.interfaces.JobOfferService;
 import edu.miage.springboot.web.dtos.JobOfferDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +27,16 @@ public class JobOfferController {
         return jobOfferService.findById(id);
     }
     @PutMapping("/{id}/status")
-    public JobOfferDTO updateStatus( @PathVariable Long id, @RequestParam String status) {
-        return jobOfferService.updateStatus(id, status);
+    @PreAuthorize("hasAnyRole('ROLE_RH', 'ROLE_ADMIN')")
+    public ResponseEntity<JobOfferDTO> updateStatus(
+            @PathVariable Long id,
+            @RequestParam JobStatusEnum status) {
+
+        // Spring Boot convertit automatiquement le String en Enum si le nom correspond
+        // Si la conversion échoue, une erreur 400 Bad Request sera renvoyée
+        JobOfferDTO updatedOffer = jobOfferService.updateStatus(id, status);
+
+        return ResponseEntity.ok(updatedOffer);
     }
     @GetMapping("/search")
     public List<JobOfferDTO> search(@RequestParam String keyword) {

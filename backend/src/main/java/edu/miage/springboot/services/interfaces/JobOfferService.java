@@ -1,5 +1,6 @@
 package edu.miage.springboot.services.interfaces;
 
+import edu.miage.springboot.dao.entities.JobStatusEnum;
 import edu.miage.springboot.web.dtos.JobOfferDTO;
 
 import java.util.List;
@@ -8,7 +9,7 @@ public interface JobOfferService {
     List<JobOfferDTO> findAll();
     JobOfferDTO findById(Long id);
 
-    JobOfferDTO updateStatus(Long id, String status);
+    public JobOfferDTO updateStatus(Long id, JobStatusEnum status);
 
     JobOfferDTO createJobOffer(JobOfferDTO jobOfferDTO);
 
