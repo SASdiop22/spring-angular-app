@@ -5,6 +5,7 @@ import edu.miage.springboot.dao.entities.CandidatureStatusEnum;
 import edu.miage.springboot.dao.entities.JobOfferEntity;
 import edu.miage.springboot.dao.entities.JobStatusEnum;
 import edu.miage.springboot.dao.entities.UserEntity;
+import edu.miage.springboot.dao.entities.JobOfferEntity;
 import edu.miage.springboot.dao.repositories.JobOfferRepository;
 import edu.miage.springboot.services.interfaces.JobOfferService;
 import edu.miage.springboot.utils.mappers.JobOfferMapper;
@@ -83,7 +84,55 @@ public class JobOfferServiceImpl implements JobOfferService {
         recrue.setReferentEmploye(application.getJob().getCreator()); 
         
         // L'offre passe en FILLED automatiquement
-        application.getJob().setStatus(JobStatusEnum.FILLED);
+        application.getJob().setStatus(JobStatusEnum.FILLED) ;
+    }
+        
+    public JobOfferDTO updateStatus(Long id, JobStatusEnum status) {
+        var offer = jobOfferRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Offre introuvable"));
+
+        offer.setStatus(status);
+        jobOfferRepository.save(offer);
+
+        return jobOfferMapper.entityToDto(offer);
+    }
+
+    @Override
+    public JobOfferDTO createJobOffer(JobOfferDTO jobOfferDTO) {
+        // Conversion DTO -> Entity
+        JobOfferEntity entity = jobOfferMapper.dtoToEntity(jobOfferDTO);
+        // Sauvegarde
+        JobOfferEntity savedEntity = jobOfferRepository.save(entity);
+        // Retour DTO
+        return jobOfferMapper.entityToDto(savedEntity);
+    }
+
+    @Override
+    public JobOfferDTO updateJobOffer(Long id, JobOfferDTO jobOfferDTO) {
+        JobOfferEntity existingOffer = jobOfferRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Offre introuvable"));
+
+        // Mise à jour des champs (Idéalement, utilise le mapper ou des setters ici)
+        existingOffer.setTitle(jobOfferDTO.getTitle());
+        existingOffer.setDescription(jobOfferDTO.getDescription());
+        existingOffer.setDeadline(jobOfferDTO.getDeadline());
+        existingOffer.setLocation(jobOfferDTO.getLocation());
+        existingOffer.setSalary(jobOfferDTO.getSalary());
+        existingOffer.setStatus(jobOfferDTO.getStatus());
+
+        return jobOfferMapper.entityToDto(jobOfferRepository.save(existingOffer));
+    }
+
+    @Override
+    public void deleteJobOffer(Long id) {
+        jobOfferRepository.deleteById(id);
+    }
+
+    // Méthode de recherche pour ton rôle spécifique
+    @Override
+    public List<JobOfferDTO> searchJobOffers(String keyword) {
+        List<JobOfferEntity> entities = jobOfferRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+        return jobOfferMapper.entitiesToDtos(entities);
     }
 
 

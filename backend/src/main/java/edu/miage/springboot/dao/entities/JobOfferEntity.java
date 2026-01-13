@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,9 @@ public class JobOfferEntity {
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
+    private LocalDate deadline;
+    private String location;
+    private Double salary;
 
     @Column(nullable = false)
     private String department; // Service (ex: IT, RH) - Spécification 2.A

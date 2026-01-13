@@ -1,5 +1,4 @@
 package edu.miage.springboot.dao.entities;
-
 import jakarta.persistence.*;
 
 @Entity

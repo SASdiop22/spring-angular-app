@@ -82,6 +82,10 @@ public class UserEntity {
     if (employe != null && !employe.getRecruesLiees().contains(this)) {
         employe.getRecruesLiees().add(this);
     }
+
+    public boolean isPresent() {
+        return this.id != null;
+    }
 }
 
 
