@@ -148,7 +148,7 @@
                 <executions>
                     <execution>
                         <id>merge</id>
-                        <phase>initialize</phase>
+                        <phase>generate-resources</phase> 
                         <goals>
                             <goal>unpack</goal>
                         </goals>

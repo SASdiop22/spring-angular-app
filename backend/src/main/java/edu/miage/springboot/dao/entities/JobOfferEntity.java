@@ -1,47 +1,62 @@
 package edu.miage.springboot.dao.entities;
 
 import jakarta.persistence.*;
-
-import java.time.LocalDate;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "job_offers")
+@Table(name = "jobs")
+@Getter 
+@Setter 
+@NoArgsConstructor
 public class JobOfferEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String title;
-    @Column(length = 2000)
+
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
-    private LocalDate deadline;
 
-    public void setId(Long id) {
-        this.id = id;
+    @Column(nullable = false)
+    private String department; // Service (ex: IT, RH) - Spécification 2.A
+
+    private Double salaryRange; // Enrichi par les RH
+    
+    private Integer remoteDays; // Enrichi par les RH - Spécification 2.A
+
+    @Enumerated(EnumType.STRING)
+    private JobStatusEnum status = JobStatusEnum.DRAFT;
+
+    // L'employé (Demandeur) qui a créé le besoin
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id", nullable = false)
+    private EmployeEntity creator;
+
+    // Compétences clés (Tags : Java, Agile, etc.) - Spécification 2.A
+    @ElementCollection
+    @CollectionTable(name = "job_skills", joinColumns = @JoinColumn(name = "job_id"))
+    @Column(name = "skill")
+    private List<String> skillsRequired = new ArrayList<>();
+
+    private LocalDateTime createdAt;
+    private LocalDateTime publishedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public LocalDate getDeadline() {
-        return deadline;
-    }
-    public void setTitle(String title) {
-        this.title = title;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public void setDeadline(LocalDate deadline) {
-        this.deadline = deadline;
+    // Méthode pour la spécification 2.A (Validation RH)
+    public void publish() {
+        this.status = JobStatusEnum.OPEN;
+        this.publishedAt = LocalDateTime.now();
     }
 }
