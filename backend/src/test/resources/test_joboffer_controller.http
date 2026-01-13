@@ -15,6 +15,19 @@ Content-Type: application/json
 
 ###
 
+# @name PaulinLogin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "Paulin",
+  "password": "Paulin"
+}
+
+> {% client.global.set("paulin_token", response.body.accessToken); %}
+
+###
+
 # @name rhLogin
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
@@ -34,7 +47,7 @@ Content-Type: application/json
 # Un ADMIN ou un Employé avec demandeurDePoste=true peut créer.
 # @name createOffer
 POST http://localhost:8080/api/joboffers
-Authorization: Bearer {{admin_token}}
+Authorization: Bearer {{paulin_token}}
 Content-Type: application/json
 
 {
@@ -57,14 +70,14 @@ Content-Type: application/json
 ### B. Soumission pour validation (Passage en PENDING)
 # Le créateur change le statut pour informer les RH.
 PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/status?status=PENDING
-Authorization: Bearer {{admin_token}}
+Authorization: Bearer {{paulin_token}}
 
 ###
 
 ### C. Validation et Publication par le RH (OPEN)
 # Spec 2.A & 4.A : Le RH enrichit l'offre (Salaire, Télétravail) pour la rendre publique.
 PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=75000&remoteDays=3
-Authorization: Bearer {{rh_token}}
+Authorization: Bearer {{paulin_token}}
 
 ###
 
@@ -84,7 +97,7 @@ GET http://localhost:8080/api/joboffers/search?keyword=Cloud
 ### Consultation Back-Office (Privilèges Spec 4.A)
 # Retourne TOUTES les offres, y compris DRAFT et PENDING (Réservé RH/ADMIN).
 GET http://localhost:8080/api/joboffers/privilege
-Authorization: Bearer {{rh_token}}
+Authorization: Bearer {{paulin_token}}
 
 ### =========================================================================
 ### 4. CLÔTURE DE L'OFFRE (SPEC 2.B)
@@ -92,4 +105,4 @@ Authorization: Bearer {{rh_token}}
 
 ### Clôture administrative
 PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/close
-Authorization: Bearer {{rh_token}}
+Authorization: Bearer {{paulin_token}}

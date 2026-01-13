@@ -59,20 +59,14 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         return http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/login","/api/auth/signin")
-                        .permitAll()
-                        .requestMatchers("/api/joboffers/**","/api/employes/**","/api/users/**", "/api/applications/**")
-                        .permitAll()
-                        .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js")
-                        .permitAll()
-                        .requestMatchers("/actuator/**")
-                        .hasRole("ADMIN")
-                        .anyRequest()
-                        .authenticated()
+                        .requestMatchers("/api/auth/**").permitAll() // Login et Register libres
+                        .requestMatchers(HttpMethod.GET, "/api/joboffers/**").permitAll()
+                        .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js").permitAll()
+                        .anyRequest().authenticated() // Tout le reste nécessite un Token
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
