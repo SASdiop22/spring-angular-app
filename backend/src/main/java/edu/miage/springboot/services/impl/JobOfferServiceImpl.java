@@ -1,6 +1,7 @@
 package edu.miage.springboot.services.impl;
 
 import edu.miage.springboot.dao.entities.CandidatureEntity;
+import edu.miage.springboot.dao.entities.CandidatureStatusEnum;
 import edu.miage.springboot.dao.entities.JobOfferEntity;
 import edu.miage.springboot.dao.entities.JobStatusEnum;
 import edu.miage.springboot.dao.entities.UserEntity;
@@ -72,6 +73,17 @@ public class JobOfferServiceImpl implements JobOfferService {
         // Enrichissement et publication (Spécification 2.A)
         offer.validateAndPublish(salary, remoteDays);
         jobOfferRepository.save(offer);
+    }
+
+    public void finaliserRecrutement(CandidatureEntity application) {
+        application.setCurrentStatus(CandidatureStatusEnum.HIRED);
+        
+        // On lie le candidat au créateur de l'offre (le demandeur)
+        UserEntity recrue = application.getCandidate();
+        recrue.setReferentEmploye(application.getJob().getCreator()); 
+        
+        // L'offre passe en FILLED automatiquement
+        application.getJob().setStatus(JobStatusEnum.FILLED);
     }
 
 
