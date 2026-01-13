@@ -16,11 +16,16 @@ public class JobOfferDTO {
     private String description;
     private LocalDate deadline;
     private String department;
-    private Double salaryRange; // Salaire annuel brut
-    private Integer remoteDays; // Jours de télétravail
+    private Double salaryRange;
+    private Integer remoteDays;
     private JobStatusEnum status;
-    private Long creatorId;     // ID de l'employé demandeur
-    private List<String> skillsRequired; // Tags techniques (Java, Agile, etc.)
+
+    // Correction : On peut garder l'ID, mais il est souvent utile
+    // d'avoir le nom du créateur pour l'affichage sans charger l'entité
+    private Long creatorId;
+    private String creatorName;
+
+    private List<String> skillsRequired;
     private LocalDateTime createdAt;
     private LocalDateTime publishedAt;
     private String location;

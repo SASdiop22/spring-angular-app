@@ -19,4 +19,9 @@ public interface JobOfferService {
 
     // Méthode de recherche pour ton rôle spécifique
     List<JobOfferDTO> searchJobOffers(String keyword);
+
+    // --- Spec 2.A & 2.B : Visibilité publique ---
+    List<JobOfferDTO> findAllOpen();
+
+    JobOfferDTO enrichAndPublish(Long id, Double salary, Integer remoteDays);
 }

@@ -1,6 +1,7 @@
 package edu.miage.springboot.dao.repositories;
 
 import edu.miage.springboot.dao.entities.EmployeEntity;
+import edu.miage.springboot.dao.entities.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,4 +20,6 @@ public interface EmployeRepository extends JpaRepository<EmployeEntity, Long> {
     // Trouver tous les employés qui sont habilités à être recruteurs
     List<EmployeEntity> findByDemandeurDePosteTrue();
     List<EmployeEntity> findByRhPrivilegeTrue();
+
+    Optional<EmployeEntity> findByUser(UserEntity rhUser);
 }

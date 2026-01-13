@@ -39,6 +39,35 @@ public class JobOfferServiceImpl implements JobOfferService {
                 .orElseThrow(() -> new RuntimeException("Offre introuvable"));
     }
 
+    // --- Spec 2.A & 2.B : Visibilité publique ---
+    @Override
+    public List<JobOfferDTO> findAllOpen() {
+        // On ne récupère que les offres dont le statut est OPEN
+        List<JobOfferEntity> entities = jobOfferRepository.findByStatus(JobStatusEnum.OPEN);
+        return jobOfferMapper.entitiesToDtos(entities);
+    }
+
+    // --- Spec 2.A : Enrichissement et Publication par RH ---
+    @Override
+    @Transactional
+    public JobOfferDTO enrichAndPublish(Long id, Double salary, Integer remoteDays) {
+        JobOfferEntity entity = jobOfferRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Offre introuvable"));
+
+        // Sécurité métier : On ne publie que ce qui est en attente (PENDING) ou en brouillon (DRAFT)
+        if (entity.getStatus() == JobStatusEnum.CLOSED || entity.getStatus() == JobStatusEnum.FILLED) {
+            throw new IllegalStateException("Impossible de publier une offre clôturée ou pourvue.");
+        }
+
+        // Utilisation de la méthode métier définie dans JobOfferEntity
+        entity.validateAndPublish(salary, remoteDays);
+
+        // On peut aussi enregistrer la date de publication
+        entity.setPublishedAt(LocalDateTime.now());
+
+        return jobOfferMapper.entityToDto(jobOfferRepository.save(entity));
+    }
+
     @Override
     @Transactional
     public JobOfferDTO updateStatus(Long id, JobStatusEnum status) {
