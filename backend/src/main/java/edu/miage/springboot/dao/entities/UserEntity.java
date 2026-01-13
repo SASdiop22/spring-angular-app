@@ -83,11 +83,11 @@ public class UserEntity {
         employe.getRecruesLiees().add(this);
     }
 
+
+}
     public boolean isPresent() {
         return this.id != null;
     }
-}
-
 
     // Synchronisation du type d'utilisateur et des rôles associés
     // Evite les jointures lors de requetes de filtrage d'utilisateurs par type
