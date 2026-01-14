@@ -1,0 +1,94 @@
+### Variables Globales
+@baseUrl = http://localhost:8080/api
+@jobOfferId = 1
+@candidateId = 1
+
+### 1. Authentification des acteurs
+# @name loginRH
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+###
+# @name loginDemandeur
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "dylan.demandeur",
+  "password": "password123"
+}
+> {% client.global.set("token_demandeur", response.body.accessToken); %}
+
+###
+# @name loginCandidat
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.candidat",
+  "password": "password123"
+}
+> {% client.global.set("token_candidat", response.body.accessToken); %}
+
+
+### 2. Création d'une candidature (Spec 3.A)
+POST {{baseUrl}}/applications/apply?jobOfferId={{jobOfferId}}&candidateId={{candidateId}}&cvUrl=http://cloud.storage/cv_test.pdf
+Authorization: Bearer {{token_candidat}}
+
+> {% client.global.set("app_id", response.body.id); %}
+
+
+### 3. Gestion des Notes par le Demandeur (Spec 4.3)
+# Dylan est le propriétaire de l'offre (grâce au correctif du Seeder)
+POST {{baseUrl}}/applications/{{app_id}}/notes
+Authorization: Bearer {{token_demandeur}}
+Content-Type: application/json
+
+{
+  "stepName": "Entretien Technique",
+  "content": "Le candidat a de bonnes bases mais manque de pratique sur les architectures microservices."
+}
+
+
+### 4. TEST SPEC 4.4 : GESTION DES REJETS
+
+### 4a. Tentative de rejet SANS motif (Doit échouer)
+# @name rejectionFail
+PATCH {{baseUrl}}/applications/{{app_id}}/status?status=REJECTED
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Le rejet sans motif doit être bloqué", function() {
+        client.assert(response.status === 400, "Le serveur aurait dû renvoyer une erreur 400");
+    });
+%}
+
+### 4b. Rejet AVEC motif obligatoire (Doit réussir)
+# @name rejectionSuccess
+PATCH {{baseUrl}}/applications/{{app_id}}/status?status=REJECTED&reason=Expérience insuffisante sur l'environnement technique cible (Microservices).
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Le rejet avec motif est validé", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "REJECTED");
+    });
+%}
+
+
+### 5. Vérification finale (Consultation)
+GET {{baseUrl}}/applications/{{app_id}}
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Le motif est bien enregistré en base", function() {
+        client.assert(response.body.rejectionReason !== null);
+        client.log("Motif enregistré : " + response.body.rejectionReason);
+    });
+%}

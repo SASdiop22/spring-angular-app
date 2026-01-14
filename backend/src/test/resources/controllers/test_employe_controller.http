@@ -1,0 +1,128 @@
+### =========================================================================
+### 1. AUTHENTIFICATION
+### =========================================================================
+
+# @name loginAdmin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+> {% client.global.set("admin_token", response.body.accessToken); %}
+
+###
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("rh_token", response.body.accessToken); %}
+
+###
+
+# @name loginEmploye
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cathy.employe",
+  "password": "password123"
+}
+> {% client.global.set("emp_token", response.body.accessToken); %}
+
+
+### =========================================================================
+### 2. TESTS DES FILTRES DE RÔLES
+### =========================================================================
+
+### A. Récupérer uniquement le personnel RH (Nécessite ROLE_ADMIN)
+GET http://localhost:8080/api/employes/rh
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Admin accède à la liste RH", function() {
+        client.assert(response.status === 200, "Le statut devrait être 200");
+        client.assert(Array.isArray(response.body), "La réponse doit être un tableau");
+        client.assert(response.body.length > 0, "Il devrait y avoir au moins un RH (Alice)");
+
+        // On cherche Alice dynamiquement dans la liste pour capturer son ID
+        var alice = response.body.find(e => e.username === "alice.rh");
+        client.assert(alice !== undefined, "Alice RH devrait être dans la liste");
+        client.global.set("alice_id", alice.id);
+    });
+%}
+
+### B. Récupérer les demandeurs de poste (Accessible aux RH)
+GET http://localhost:8080/api/employes/demandeurs
+Authorization: Bearer {{rh_token}}
+
+> {%
+    client.test("RH accède aux demandeurs", function() {
+        client.assert(response.status === 200);
+        // Vérification qu'un élément possède bien le flag demandeur
+        if(response.body.length > 0) {
+            client.assert(response.body[0].demandeurDePoste === true, "L'employé doit être un demandeur");
+        }
+    });
+%}
+
+
+### =========================================================================
+### 3. TEST DE LA HIÉRARCHIE (Spécification 5)
+### =========================================================================
+
+### C. Récupérer les recrues liées à un employé (ex: Bob Admin via Alice)
+# Note : Selon votre logique, on regarde qui l'employé a recruté
+GET http://localhost:8080/api/employes/{{alice_id}}/recrues
+Authorization: Bearer {{rh_token}}
+
+> {%
+    client.test("Récupération des recrues", function() {
+        client.assert(response.status === 200, "Échec de récupération des recrues");
+        client.assert(Array.isArray(response.body), "Le corps devrait être une liste (éventuellement vide)");
+    });
+%}
+
+
+### =========================================================================
+### 4. SÉCURITÉ ET ACCÈS (RBAC)
+### =========================================================================
+
+### D. Test d'interdiction (403) : Un RH tente d'accéder à la liste RH (réservé Admin)
+GET http://localhost:8080/api/employes/rh
+Authorization: Bearer {{rh_token}}
+
+> {%
+    client.test("Sécurité : RH ne peut pas voir la liste RH (réservé Admin)", function() {
+        client.assert(response.status === 403, "Un RH ne devrait pas avoir accès à cet endpoint");
+    });
+%}
+
+### E. Test d'interdiction (403) : Un employé simple tente de voir les demandeurs
+GET http://localhost:8080/api/employes/demandeurs
+Authorization: Bearer {{emp_token}}
+
+> {%
+    client.test("Sécurité : Employé simple ne voit pas les demandeurs", function() {
+        client.assert(response.status === 403, "Accès devrait être réservé RH/Admin");
+    });
+%}
+
+### F. Recherche par ID (Vérification des données)
+GET http://localhost:8080/api/employes/{{alice_id}}
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Vérification structure EmployeDTO", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.id === parseInt(client.global.get("alice_id")), "L'ID ne correspond pas");
+        client.assert(!!response.body.email, "L'email doit être présent");
+        client.assert(!!response.body.nomComplet, "Le nom complet doit être calculé");
+    });
+%}

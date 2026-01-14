@@ -1,0 +1,121 @@
+### =========================================================================
+### 1. AUTHENTICATION (RECUPERATION DES TOKENS)
+### =========================================================================
+
+# @name adminLogin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+> {% client.global.set("admin_token", response.body.accessToken); %}
+
+###
+
+# @name rhLogin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("rh_token", response.body.accessToken); %}
+
+
+### =========================================================================
+### 2. TESTS USER CONTROLLER (SPEC 1 & 6)
+### =========================================================================
+
+### A. Liste technique des utilisateurs (Réservé ADMIN)
+# @name getUsers
+GET http://localhost:8080/api/users
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Admin accède à la liste technique", function() {
+        client.assert(response.status === 200, "Le statut devrait être 200");
+        client.assert(Array.isArray(response.body), "La réponse doit être une liste");
+
+        // Capture des IDs pour les tests suivants (Alice et Sophie)
+        var alice = response.body.find(u => u.username === "alice.rh");
+        var sophie = response.body.find(u => u.username === "sophie.onboard");
+
+        client.assert(alice !== undefined, "Alice RH doit exister");
+        client.global.set("alice_user_id", alice.id);
+        client.global.set("sophie_user_id", sophie.id);
+    });
+%}
+
+### B. Sécurité : Un RH ne peut pas voir la liste technique
+GET http://localhost:8080/api/users
+Authorization: Bearer {{rh_token}}
+
+> {%
+    client.test("Accès refusé au RH pour la liste technique", function() {
+        client.assert(response.status === 403, "Seul un ADMIN doit pouvoir accéder à /api/users");
+    });
+%}
+
+
+### =========================================================================
+### 3. SPEC 3.A : VERIFICATION RGPD
+### =========================================================================
+
+### C. Vérifier la conformité RGPD d'un utilisateur
+GET http://localhost:8080/api/users/{{sophie_user_id}}/rgpd-check
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Vérification RGPD", function() {
+        client.assert(response.status === 200);
+        // On vérifie que la réponse est un booléen
+        client.assert(typeof response.body === "boolean", "La réponse doit être true ou false");
+    });
+%}
+
+
+### =========================================================================
+### 4. SPEC 5 : ASSIGNATION D'UN RÉFÉRENT (Succès recrutement)
+### =========================================================================
+
+### D. Lier un candidat recruté à un référent RH
+# On utilise Alice (RH) comme référente pour Sophie (Candidat recruté)
+# Format : /api/users/{candidatId}/assign-referent/{referentUserId}
+PATCH http://localhost:8080/api/users/{{sophie_user_id}}/assign-referent/{{alice_user_id}}
+Authorization: Bearer {{rh_token}}
+
+> {%
+    client.test("Lien hiérarchique : Alice est référente de Sophie", function() {
+        client.assert(response.status === 200, "L'assignation a échoué avec le code " + response.status);
+    });
+%}
+
+### E. Sécurité : Un utilisateur anonyme ne peut pas assigner de référent
+PATCH http://localhost:8080/api/users/{{alice_user_id}}/assign-referent/{{sophie_user_id}}
+
+> {%
+    client.test("Anonyme refusé pour l'assignation", function() {
+        client.assert(response.status === 403, "L'authentification est requise");
+    });
+%}
+
+
+### =========================================================================
+### 5. CONSULTATION DE PROFIL PAR ID
+### =========================================================================
+
+### F. Récupérer un utilisateur par son ID (Admin)
+GET http://localhost:8080/api/users/{{alice_user_id}}
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Vérification structure UserDTO", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.username === "alice.rh", "Le username ne correspond pas");
+        client.assert(response.body.roles.includes("ROLE_RH"), "Le rôle ROLE_RH est manquant");
+        client.assert(response.body.email !== null, "L'email doit être renseigné");
+    });
+%}

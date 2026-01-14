@@ -1,0 +1,141 @@
+### =========================================================================
+### 1. AUTHENTIFICATION
+### !!! TESTER CANDITAT AVANT APPLICATION !!!
+### =========================================================================
+
+# @name loginSophie
+# Sophie est une candidate valide (Scénario 5)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "sophie.onboard",
+  "password": "password123"
+}
+> {% client.global.set("token_sophie", response.body.accessToken); %}
+
+###
+
+# @name loginJean
+# Jean a un consentement expiré (Scénario 2)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.rgpd",
+  "password": "password123"
+}
+> {% client.global.set("token_jean", response.body.accessToken); %}
+
+###
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+
+### =========================================================================
+### 2. GESTION DU PROFIL (Candidat Connecté)
+### =========================================================================
+
+### A. Récupérer mon propre profil (Endpoint /me)
+# @name getMe
+GET http://localhost:8080/api/candidates/me
+Authorization: Bearer {{token_sophie}}
+
+> {%
+    client.global.set("sophie_id", response.body.id);
+    client.test("Profil récupéré avec succès", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.username === "sophie.onboard");
+    });
+%}
+
+### B. Consulter mon profil par ID (Spécification 3.B)
+GET http://localhost:8080/api/candidates/{{sophie_id}}
+Authorization: Bearer {{token_sophie}}
+
+> {%
+    client.test("Accès par ID autorisé pour le propriétaire", function() {
+        client.assert(response.status === 200);
+    });
+%}
+
+### C. Mettre à jour mon profil (Update)
+PUT http://localhost:8080/api/candidates/{{sophie_id}}
+Authorization: Bearer {{token_sophie}}
+Content-Type: application/json
+
+{
+  "telephone": "0700000000",
+  "ville": "Paris"
+}
+
+> {%
+    client.test("Mise à jour réussie", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.ville === "Paris");
+    });
+%}
+
+
+### =========================================================================
+### 3. RGPD : RENOUVELLEMENT DU CONSENTEMENT (Spécification 2)
+### =========================================================================
+
+### D. Renouveler le consentement
+# Jean a un consentement de plus de 2 ans dans le seeder.
+# @name getJeanMe
+GET http://localhost:8080/api/candidates/me
+Authorization: Bearer {{token_jean}}
+
+> {% client.global.set("jean_id", response.body.id); %}
+
+###
+
+### =========================================================================
+### 4. ACCÈS RH & ADMIN (Consultation globale)
+### =========================================================================
+
+### E. Liste de tous les candidats (Réservé RH/ADMIN)
+GET http://localhost:8080/api/candidates
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("RH accède à la liste globale", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.length > 0);
+    });
+%}
+
+
+### =========================================================================
+### 5. TESTS DE SÉCURITÉ (Cas d'échec)
+### =========================================================================
+
+### F. Tentative de voir le profil d'un autre candidat (403 Forbidden)
+# Sophie tente de voir le profil de Jean
+GET http://localhost:8080/api/candidates/{{jean_id}}
+Authorization: Bearer {{token_sophie}}
+
+> {%
+    client.test("Accès interdit entre candidats", function() {
+        client.assert(response.status === 403);
+    });
+%}
+
+### G. Tentative de voir la liste globale par un candidat (403 Forbidden)
+GET http://localhost:8080/api/candidates
+Authorization: Bearer {{token_sophie}}
+
+> {%
+    client.test("Liste globale interdite aux candidats", function() {
+        client.assert(response.status === 403);
+    });
+%}

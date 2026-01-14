@@ -1,0 +1,110 @@
+### Variables Globales
+@baseUrl = http://localhost:8080/api
+@appId = 1
+@candidateId = 1
+@jobOfferId = 1
+
+### 1. Authentification des différents acteurs
+# @name loginRH
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+###
+# @name loginDemandeur
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "dylan.demandeur",
+  "password": "password123"
+}
+> {% client.global.set("token_demandeur", response.body.accessToken); %}
+
+###
+# @name loginCandidat
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.candidat",
+  "password": "password123"
+}
+> {% client.global.set("token_candidat", response.body.accessToken); %}
+
+
+### 2. Candidature initiale (Spec 3.A)
+POST {{baseUrl}}/applications/apply?jobOfferId={{jobOfferId}}&candidateId={{candidateId}}&cvUrl=http://cloud.storage/cv.pdf
+Authorization: Bearer {{token_candidat}}
+
+> {% client.global.set("new_app_id", response.body.id); %}
+
+
+### 3. Le RH change le statut pour "Entretien" (Spec 4.B)
+# Cette action doit normalement être suivie d'une prise de note
+PATCH {{baseUrl}}/applications/{{new_app_id}}/status?status=INTERVIEW_PENDING
+Authorization: Bearer {{token_rh}}
+
+
+### 4. AJOUT DE NOTES (Spec 4.3 - Journal de recrutement)
+
+### 4a. Le RH ajoute une note après le premier contact
+POST {{baseUrl}}/applications/{{new_app_id}}/notes
+Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "stepName": "Qualification RH",
+  "content": "Excellent contact téléphonique. Motivé par le télétravail. Prétentions salariales en phase."
+}
+
+### 4b. Le Demandeur ajoute une note après l'entretien technique
+POST {{baseUrl}}/applications/{{new_app_id}}/notes
+Authorization: Bearer {{token_demandeur}}
+Content-Type: application/json
+
+{
+  "stepName": "Entretien Technique",
+  "content": "Bonne maîtrise de Spring Boot, mais des lacunes sur Docker. À former sur l'infra."
+}
+
+
+### 5. CONSULTATION DU JOURNAL (Spec 4.3)
+
+### 5a. Le Demandeur consulte l'historique complet
+GET {{baseUrl}}/applications/{{new_app_id}}/notes
+Authorization: Bearer {{token_demandeur}}
+
+> {%
+    client.test("Journal accessible au demandeur", function() {
+        client.assert(response.status === 200, "Le demandeur devrait voir les notes");
+        client.assert(response.body.length >= 2, "Le journal doit contenir au moins 2 notes");
+    });
+%}
+
+### 5b. TEST DE CONFIDENTIALITÉ : Le candidat ne doit PAS voir les notes
+GET {{baseUrl}}/applications/{{new_app_id}}/notes
+Authorization: Bearer {{token_candidat}}
+
+> {%
+    client.test("Confidentialité respectée", function() {
+        client.assert(response.status === 403, "Un candidat ne doit pas accéder aux notes internes");
+    });
+%}
+
+
+### 6. Clôture du processus : Embauche (Spec 5)
+PATCH {{baseUrl}}/applications/{{new_app_id}}/status?status=HIRED
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Recrutement finalisé", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "HIRED");
+    });
+%}
