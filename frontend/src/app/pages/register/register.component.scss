@@ -2,46 +2,77 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 64px);
-  padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 80px 24px 24px;
+  /* Top padding for fixed navbar */
+  background: transparent;
+  /* Background handled by body */
 }
 
 .register-card {
   width: 100%;
-  max-width: 420px;
-  padding: 32px;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 480px;
+  padding: 40px;
+  border-radius: 24px !important;
+  /* Glassmorphism effect handled by global .mat-mdc-card override, specific tweaks here */
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+mat-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
 }
 
 .header-icon {
-  background-color: #4caf50;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  font-size: 24px;
+  width: 64px;
+  height: 64px;
+  font-size: 32px;
+  margin-right: 0;
+  /* Override material default */
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 mat-card-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-main);
+  text-align: center;
 }
 
 mat-card-subtitle {
-  color: #666;
+  color: var(--text-muted);
+  font-size: 1rem;
+  text-align: center;
 }
 
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 24px;
+  gap: 20px;
 }
 
 .full-width {
@@ -51,61 +82,70 @@ mat-card-subtitle {
 .error-message {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background-color: #ffebee;
-  color: #c62828;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 16px;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #ef4444;
+  border-radius: 12px;
   font-size: 0.9rem;
+  font-weight: 500;
 
   mat-icon {
     font-size: 20px;
     width: 20px;
     height: 20px;
+    color: #ef4444;
   }
 }
 
 .success-message {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 16px;
+  background-color: #ecfdf5;
+  border: 1px solid #d1fae5;
+  color: #10b981;
+  border-radius: 12px;
   font-size: 0.9rem;
+  font-weight: 500;
 
   mat-icon {
     font-size: 20px;
     width: 20px;
     height: 20px;
+    color: #10b981;
   }
 }
 
 .submit-btn {
-  height: 48px;
-  font-size: 1rem;
-  font-weight: 500;
-  margin-top: 8px;
-  border-radius: 8px;
+  height: 52px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 12px;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
 
-  mat-spinner {
-    display: inline-block;
+  &:disabled {
+    opacity: 0.7;
+    background: #ccc !important;
   }
 }
 
 .login-link {
   text-align: center;
-  margin-top: 16px;
-  color: #666;
+  margin-top: 24px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 
   a {
-    color: #3f51b5;
-    text-decoration: none;
-    font-weight: 500;
-    margin-left: 4px;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-left: 6px;
 
     &:hover {
+      color: var(--primary-hover);
       text-decoration: underline;
     }
   }

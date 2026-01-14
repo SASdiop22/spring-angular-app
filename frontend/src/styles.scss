@@ -1,6 +1,18 @@
 /* Global Styles */
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
+:root {
+  --primary-color: #6366f1; /* Indigo 500 */
+  --primary-hover: #4f46e5;
+  --secondary-color: #ec4899; /* Pink 500 */
+  --bg-gradient-start: #f3f4f6;
+  --bg-gradient-end: #e5e7eb;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -12,25 +24,78 @@ html, body {
 }
 
 body {
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-  background-color: #fafafa;
-  color: #333;
+  font-family: 'Inter', Roboto, "Helvetica Neue", sans-serif;
+  color: var(--text-main);
+  background: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%); /* Example soft gradient */
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Typography Overrides */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.5rem;
 }
 
 a {
   text-decoration: none;
   color: inherit;
+  transition: color 0.2s ease;
 }
 
-/* Material overrides */
+/* Material Overrides */
 .mat-mdc-card {
-  border-radius: 12px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.mat-mdc-raised-button {
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--primary-color) !important;
   border-radius: 8px !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 0 24px !important;
+  height: 44px !important;
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+
+  &:hover {
+    background-color: var(--primary-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(99, 102, 241, 0.4) !important;
+  }
 }
 
 .mat-mdc-form-field {
   width: 100%;
+  
+  .mat-mdc-text-field-wrapper {
+    background-color: #f9fafb !important;
+    border-radius: 8px 8px 0 0 !important; /* Managed by appearance usually, but forcing cleaner look */
+  }
+}
+
+/* Utilities */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.gradient-text {
+  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
 }
