@@ -30,6 +30,16 @@ public class SecurityService {
                 .orElse(false);
     }
 
+    public boolean isApplicationOwner(Long candidateId) {
+        String username = getConnectedUsername(); // Votre méthode existante qui extrait le username du SecurityContext
+
+        // On vérifie si le candidat associé à cet ID a un compte utilisateur
+        // dont le username correspond à celui du token JWT
+        return candidatRepository.findById(candidateId)
+                .map(candidat -> candidat.getUser().getUsername().equals(username))
+                .orElse(false);
+    }
+
     private String getConnectedUsername() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return (principal instanceof UserDetails) ? ((UserDetails) principal).getUsername() : principal.toString();

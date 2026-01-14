@@ -41,6 +41,9 @@ public class ApplicationSeeder implements CommandLineRunner {
         CandidatEntity marie = candidatRepository.findByUserUsername("marie.candidat")
                 .orElseThrow(() -> new RuntimeException("Candidat marie.candidat non trouvé"));
 
+        CandidatEntity cathy = candidatRepository.findByUserUsername("cathy.employe")
+                .orElseThrow(() -> new RuntimeException("Candidat cathy.employe non trouvé"));
+
         JobOfferEntity offerCloud = jobOfferRepository.findAll().stream()
                 .filter(o -> o.getTitle().contains("AWS"))
                 .findFirst()
@@ -74,9 +77,9 @@ public class ApplicationSeeder implements CommandLineRunner {
         // --- CAS 3 : Test Spécification 5 (HIRED & Onboarding) ---
         // On simule un candidat déjà recruté pour vérifier les liens referent_employe_id
         ApplicationEntity app3 = new ApplicationEntity();
-        app3.setCandidate(jean);
+        app3.setCandidate(cathy);
         app3.setJob(offerSI);
-        app3.setCvUrl("https://storage.cloud/cv-jean.pdf");
+        app3.setCvUrl("https://storage.cloud/cv-cathy.pdf");
         app3.setCurrentStatus(ApplicationStatusEnum.HIRED);
 
         // IMPORTANT : Quand un candidat est HIRED, l'offre doit passer en FILLED

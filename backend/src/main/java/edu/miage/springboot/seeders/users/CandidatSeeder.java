@@ -28,8 +28,8 @@ public class CandidatSeeder implements CommandLineRunner {
         UserEntity user = userRepository.findByUsername("jean.candidat").orElseThrow();
         CandidatEntity c = new CandidatEntity();
         c.setUser(user);
-        c.setFirstName("Jean");
-        c.setLastName("Dupont");
+        //c.setFirstName("Jean");
+        //c.setLastName("Dupont");
         c.setVille("Paris");
         c.setConsentDate(LocalDateTime.now().minusMonths(6)); // Conforme
         candidatRepository.save(c);
@@ -37,9 +37,17 @@ public class CandidatSeeder implements CommandLineRunner {
         user = userRepository.findByUsername("marie.candidat").orElseThrow();
         c = new CandidatEntity();
         c.setUser(user);
-        c.setFirstName("Marie");
-        c.setLastName("Hihi");
+        //c.setFirstName("Marie");
+        //c.setLastName("Hihi");
         c.setVille("Paris");
+        c.setConsentDate(LocalDateTime.now().minusMonths(6)); // Conforme
+        candidatRepository.save(c);
+
+        user = userRepository.findByUsername("cathy.employe").orElseThrow();
+        c = new CandidatEntity();
+        c.setUser(user);
+        c.setVille("Marseille");
+        c.setArchived(true);
         c.setConsentDate(LocalDateTime.now().minusMonths(6)); // Conforme
         candidatRepository.save(c);
     }

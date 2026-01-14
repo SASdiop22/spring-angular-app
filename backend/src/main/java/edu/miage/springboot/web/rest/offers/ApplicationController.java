@@ -65,7 +65,7 @@ public class ApplicationController {
      * Spécification 3.B : Un candidat peut voir ses propres candidatures.
      */
     @GetMapping("/candidate/{candidateId}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or (hasAuthority('ROLE_CANDIDAT') and #candidateId == authentication.principal.id)")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or ((hasAuthority('ROLE_CANDIDAT') and  @securityService.isApplicationOwner(#candidateId)))")
     public List<ApplicationDTO> getApplicationsByCandidate(@PathVariable Long candidateId) {
         return applicationService.findByCandidateId(candidateId);
     }
