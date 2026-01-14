@@ -1,0 +1,50 @@
+<mat-toolbar color="primary" class="navbar">
+  <div class="navbar-brand">
+    <mat-icon>work</mat-icon>
+    <span class="brand-text" routerLink="/">JobPortal</span>
+  </div>
+
+  <div class="navbar-links">
+    <a mat-button routerLink="/jobs" routerLinkActive="active">
+      <mat-icon>search</mat-icon>
+      Offres d'emploi
+    </a>
+  </div>
+
+  <span class="spacer"></span>
+
+  <div class="navbar-auth" *ngIf="isAuthenticated$ | async; else loginButtons">
+    <span class="welcome-text">Bienvenue, {{ username }}</span>
+    <button mat-icon-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item routerLink="/profile">
+        <mat-icon>person</mat-icon>
+        <span>Mon Profil</span>
+      </button>
+      <button mat-menu-item routerLink="/my-applications">
+        <mat-icon>description</mat-icon>
+        <span>Mes Candidatures</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Déconnexion</span>
+      </button>
+    </mat-menu>
+  </div>
+
+  <ng-template #loginButtons>
+    <div class="navbar-auth">
+      <a mat-button routerLink="/login">
+        <mat-icon>login</mat-icon>
+        Connexion
+      </a>
+      <a mat-raised-button color="accent" routerLink="/register">
+        <mat-icon>person_add</mat-icon>
+        Inscription
+      </a>
+    </div>
+  </ng-template>
+</mat-toolbar>

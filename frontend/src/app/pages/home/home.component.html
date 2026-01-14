@@ -1,0 +1,90 @@
+<div class="home-container">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">Trouvez votre emploi idéal</h1>
+      <p class="hero-subtitle">
+        Découvrez des opportunités de carrière passionnantes et postulez en quelques clics
+      </p>
+      <div class="hero-actions">
+        <button mat-raised-button color="primary" class="cta-btn" (click)="navigateToJobs()">
+          <mat-icon>search</mat-icon>
+          Voir les offres
+        </button>
+        <button mat-stroked-button color="accent" class="cta-btn secondary" (click)="navigateToRegister()" *ngIf="!isAuthenticated()">
+          <mat-icon>person_add</mat-icon>
+          Créer un compte
+        </button>
+      </div>
+    </div>
+    <div class="hero-illustration">
+      <mat-icon class="hero-icon">work</mat-icon>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <h2 class="section-title">Pourquoi nous choisir ?</h2>
+    <div class="features-grid">
+      <mat-card class="feature-card">
+        <mat-icon class="feature-icon">speed</mat-icon>
+        <h3>Candidature rapide</h3>
+        <p>Postulez en quelques clics avec votre CV</p>
+      </mat-card>
+      <mat-card class="feature-card">
+        <mat-icon class="feature-icon">verified</mat-icon>
+        <h3>Offres vérifiées</h3>
+        <p>Toutes nos offres sont validées par notre équipe RH</p>
+      </mat-card>
+      <mat-card class="feature-card">
+        <mat-icon class="feature-icon">trending_up</mat-icon>
+        <h3>Suivi en temps réel</h3>
+        <p>Suivez l'état de vos candidatures à tout moment</p>
+      </mat-card>
+    </div>
+  </section>
+
+  <!-- Featured Jobs Section -->
+  <section class="jobs-section" *ngIf="featuredJobs.length > 0">
+    <h2 class="section-title">Offres à la une</h2>
+    <div class="jobs-grid">
+      <mat-card class="job-card" *ngFor="let job of featuredJobs" routerLink="/jobs/{{job.id}}">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="job-icon">business</mat-icon>
+          <mat-card-title>{{ job.title }}</mat-card-title>
+          <mat-card-subtitle>{{ job.department }} • {{ job.location || 'Non spécifié' }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="job-description">{{ job.description | slice:0:120 }}...</p>
+          <div class="job-tags">
+            <mat-chip-set>
+              <mat-chip *ngIf="job.remoteDays">
+                <mat-icon>home</mat-icon>
+                {{ job.remoteDays }} jours télétravail
+              </mat-chip>
+              <mat-chip *ngIf="job.salaryRange">
+                <mat-icon>euro</mat-icon>
+                {{ job.salaryRange | number }}€
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button color="primary">Voir l'offre</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+    <div class="view-all">
+      <button mat-stroked-button color="primary" (click)="navigateToJobs()">
+        Voir toutes les offres
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Chargement des offres...</p>
+  </div>
+</div>
