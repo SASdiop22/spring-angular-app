@@ -5,12 +5,13 @@ import edu.miage.springboot.dao.entities.users.*;
 import edu.miage.springboot.dao.repositories.offers.*;
 import edu.miage.springboot.dao.repositories.users.*;
 import edu.miage.springboot.services.interfaces.ApplicationService;
+import edu.miage.springboot.services.interfaces.AiMatchingService; // Version B
 import edu.miage.springboot.utils.mappers.ApplicationMapper;
 import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
+import edu.miage.springboot.web.dtos.ai.MatchingResultDTO; // Version B
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +27,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Autowired private UserRoleRepository userRoleRepository;
     @Autowired private ApplicationMapper applicationMapper;
 
+    // 🔹 AJOUT IA (Version B)
+    @Autowired private AiMatchingService aiMatchingService;
 
     @Override
     @Transactional
@@ -33,13 +36,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (applicationRepository.existsByJobIdAndCandidateId(jobOfferId, candidateId)) {
             throw new IllegalStateException("Vous avez déjà postulé à cette offre.");
         }
+
         JobOfferEntity job = jobOfferRepository.findById(jobOfferId)
                 .orElseThrow(() -> new RuntimeException("Offre non trouvée"));
         CandidatEntity candidate = candidatRepository.findById(candidateId)
                 .orElseThrow(() -> new RuntimeException("Candidat non trouvé"));
 
-        // Spécification 3.A : Vérification RGPD (Consentement < 2 ans)
-        if (candidate.getConsentDate().isBefore(LocalDateTime.now().minusYears(2))) {
+        // Spécification 3.A : Vérification RGPD (Utilisation de la méthode entity)
+        if (!candidate.isRgpdCompliant()) {
             throw new RuntimeException("Consentement RGPD expiré. Veuillez renouveler votre profil.");
         }
 
@@ -50,25 +54,28 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setCoverLetter(coverLetter);
         app.setCurrentStatus(ApplicationStatusEnum.RECEIVED);
 
+        // 🔹 INTEGRATION IA MATCHING (Version B)
+        // Simulation de l'extraction de texte du CV (à lier à votre service de parsing plus tard)
+        String cvText = "Compétences extraites du CV de " + candidate.getUser().getUsername();
+        MatchingResultDTO result = aiMatchingService.matchCvWithJob(cvText, job.getDescription());
+        app.setMatchingScore(result.getMatchingScore());
+
         return applicationMapper.toDto(applicationRepository.save(app));
     }
 
     @Override
     @Transactional
     public ApplicationDTO updateStatus(Long id, ApplicationStatusEnum newStatus, String reason) {
-        // Note : Dans une version réelle, on passerait aussi meetingDate et rejectionReason en paramètres
         ApplicationEntity app = applicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
 
         app.setCurrentStatus(newStatus);
 
-        // --- SPÉCIFICATION 4.B : Gestion des rendez-vous et tests ---
+        // --- SPÉCIFICATION 4.B : Gestion des rendez-vous ---
         if (isStatusRequiringMeeting(newStatus)) {
-            // Dans l'idéal, la date est reçue via un DTO de mise à jour
             if (app.getMeetingDate() == null) {
-                app.setMeetingDate(LocalDateTime.now().plusDays(7)); // Date par défaut pour le test
+                app.setMeetingDate(LocalDateTime.now().plusDays(7));
             }
-            // TODO: emailService.sendMeetingInvitation(app.getCandidate().getUser().getEmail(), app.getMeetingDate())
         }
 
         if (newStatus == ApplicationStatusEnum.REJECTED) {
@@ -76,12 +83,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                 throw new IllegalArgumentException("Le motif de rejet est obligatoire.");
             }
             app.setRejectionReason(reason);
-
-            // Simulation Notification (Spec 4.4)
             sendRejectionEmail(app.getCandidate().getUser().getEmail(), reason);
         }
 
-        // --- SPÉCIFICATION 5 : Processus d'embauche (HIRED) ---
         // --- SPÉCIFICATION 5 : Processus d'embauche (HIRED) ---
         if (newStatus == ApplicationStatusEnum.HIRED) {
             JobOfferEntity job = app.getJob();
@@ -90,29 +94,26 @@ public class ApplicationServiceImpl implements ApplicationService {
 
             UserEntity recruit = app.getCandidate().getUser();
             recruit.setUserType(UserTypeEnum.EMPLOYE);
-            recruit.setReferentEmploye(job.getCreator()); // Correction du lien hiérarchique
+            recruit.setReferentEmploye(job.getCreator()); // Lien Manager
 
             userRoleRepository.findByName("ROLE_EMPLOYE").ifPresent(role -> {
                 recruit.getRoles().clear();
                 recruit.getRoles().add(role);
             });
 
-            // Création du profil Employé métier
+            // Création du profil Employé métier (Spécification 5)
             EmployeEntity newProfile = new EmployeEntity();
             newProfile.setUser(recruit);
             newProfile.setPoste(job.getTitle());
             newProfile.setDepartement(job.getDepartment());
             employeRepository.save(newProfile);
 
-            // Mise à jour explicite du profil candidat
+            // Archivage et synchronisation forcée pour les tests (Correction de la Version A)
             CandidatEntity candidatProfile = app.getCandidate();
             candidatProfile.setArchived(true);
             candidatRepository.saveAndFlush(candidatProfile);
 
-            // Sauvegarde finale de l'utilisateur avec ses nouveaux rôles et son référent
-            recruit.setReferentEmploye(job.getCreator());
             userRepository.saveAndFlush(recruit);
-
             app.setCandidate(candidatProfile);
         }
 
@@ -126,17 +127,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .orElseThrow(() -> new RuntimeException("Candidature introuvable avec l'id : " + id));
     }
 
-    private void sendRejectionEmail(String email, String reason) {
-        // Logique d'envoi de mail (ou simple log pour le moment)
-        System.out.println("E-MAIL AUTO envoyé à " + email + " : Votre candidature a été rejetée pour le motif suivant : " + reason);
-    }
-
-    private boolean isStatusRequiringMeeting(ApplicationStatusEnum status) {
-        return status == ApplicationStatusEnum.INTERVIEW_PENDING ||
-                status == ApplicationStatusEnum.TECHNICAL_TEST_PENDING ||
-                status == ApplicationStatusEnum.OFFER_PENDING;
-    }
-
     @Override
     public List<ApplicationDTO> findAll() {
         return applicationMapper.toDtos(applicationRepository.findAll());
@@ -145,5 +135,15 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public List<ApplicationDTO> findByCandidateId(Long candidateId) {
         return applicationMapper.toDtos(applicationRepository.findByCandidateId(candidateId));
+    }
+
+    private void sendRejectionEmail(String email, String reason) {
+        System.out.println("E-MAIL AUTO : " + email + " rejeté pour : " + reason);
+    }
+
+    private boolean isStatusRequiringMeeting(ApplicationStatusEnum status) {
+        return status == ApplicationStatusEnum.INTERVIEW_PENDING ||
+                status == ApplicationStatusEnum.TECHNICAL_TEST_PENDING ||
+                status == ApplicationStatusEnum.OFFER_PENDING;
     }
 }

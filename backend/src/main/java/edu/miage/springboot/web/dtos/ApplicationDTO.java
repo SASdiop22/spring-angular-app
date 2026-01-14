@@ -1,7 +1,7 @@
 
 package edu.miage.springboot.web.dtos;
 
-import edu.miage.springboot.dao.entities.ApplicationStatusEnum;
+import edu.miage.springboot.dao.entities.offers.ApplicationStatusEnum;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;

@@ -16,7 +16,6 @@ public interface ApplicationMapper {
     @Mapping(source = "job.id", target = "jobOfferId")
     @Mapping(source = "job.title", target = "jobOfferTitle")
     @Mapping(source = "currentStatus", target = "status")
-    @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "createdAt", target = "applicationDate")
     @Mapping(source = "recruitmentNotes", target = "notes") // Support pour la Spec 4.B
     ApplicationDTO toDto(ApplicationEntity entity);
