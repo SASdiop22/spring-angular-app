@@ -18,6 +18,7 @@ import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS})
 public class AuthController {
 
     @Autowired
@@ -56,6 +57,9 @@ public class AuthController {
 
         // ENCODAGE DU MOT DE PASSE (CRUCIAL)
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+
+        // Email généré automatiquement (peut être modifié plus tard par l'utilisateur)
+        newUser.setEmail(registerRequest.getUsername() + "@candidat.local");
 
         // ASSIGNATION DU RÔLE PAR DÉFAUT (ROLE_CANDIDATE)
         UserRoleEntity candidateRole = userRoleRepository.findByName("ROLE_CANDIDATE")

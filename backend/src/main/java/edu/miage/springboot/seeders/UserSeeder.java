@@ -39,6 +39,7 @@ public class UserSeeder implements CommandLineRunner {
         UserRoleEntity userRole = getOrCreateRole("ROLE_EMPLOYE");
         UserRoleEntity adminRole = getOrCreateRole("ROLE_ADMIN");
         UserRoleEntity rhRole = getOrCreateRole("ROLE_RH");
+        UserRoleEntity candidateRole = getOrCreateRole("ROLE_CANDIDATE");
 
         // 2. Création des Utilisateurs et de leurs profils Employés associés
 

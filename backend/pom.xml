@@ -21,14 +21,15 @@
     <artifactId>backend</artifactId>
 
     <dependencies>
+    <!-- Dépendance frontend commentée pour le développement
     <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>frontend</artifactId>
         <version>${project.version}</version>
         <type>jar</type>
-        <!-- we add optional to work with the backend package without building the frontend -->
         <optional>true</optional>
-    </dependency> 
+    </dependency>
+    --> 
     <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -52,6 +53,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -150,7 +152,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
+                            <version>1.18.34</version>
                         </path>
                         <path>
                             <groupId>org.mapstruct</groupId>
@@ -160,6 +162,7 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <!-- Plugin de dépendance commenté pour le développement
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -167,7 +170,7 @@
                 <executions>
                     <execution>
                         <id>merge</id>
-                        <phase>generate-resources</phase> 
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>unpack</goal>
                         </goals>
@@ -185,6 +188,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
         </plugins>
     </build>
 </project>
