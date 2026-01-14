@@ -50,5 +50,6 @@ public class CandidatSeeder implements CommandLineRunner {
         c.setArchived(true);
         c.setConsentDate(LocalDateTime.now().minusMonths(6)); // Conforme
         candidatRepository.save(c);
+
     }
 }

@@ -1,5 +1,6 @@
 package edu.miage.springboot.services.impl.security;
 
+import edu.miage.springboot.dao.repositories.offers.ApplicationRepository;
 import edu.miage.springboot.dao.repositories.offers.JobOfferRepository;
 import edu.miage.springboot.dao.repositories.users.CandidatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class SecurityService {
     @Autowired private CandidatRepository candidatRepository;
     @Autowired private JobOfferRepository jobOfferRepository; // Ajouter ceci
+    @Autowired private ApplicationRepository applicationRepository;
 
     // Pour les candidats
     public boolean isOwner(Long candidateId) {
@@ -30,6 +32,17 @@ public class SecurityService {
                 .orElse(false);
     }
 
+    public boolean isJobOfferOwnerFromApplication(Long applicationId) {
+        String username = getConnectedUsername();
+        return applicationRepository.findById(applicationId)
+                .map(app -> {
+                    // On remonte de Application -> Job -> Creator (Employe) -> User -> Username
+                    String ownerUsername = app.getJob().getCreator().getUser().getUsername();
+                    return ownerUsername.equals(username);
+                })
+                .orElse(false);
+    }
+
     public boolean isApplicationOwner(Long candidateId) {
         String username = getConnectedUsername(); // Votre méthode existante qui extrait le username du SecurityContext
 
@@ -39,6 +52,7 @@ public class SecurityService {
                 .map(candidat -> candidat.getUser().getUsername().equals(username))
                 .orElse(false);
     }
+
 
     private String getConnectedUsername() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

@@ -45,6 +45,12 @@ public class ApplicationEntity {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    @Column(name = "recruitment_notes", columnDefinition = "TEXT")
+    private String recruitmentNotes;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

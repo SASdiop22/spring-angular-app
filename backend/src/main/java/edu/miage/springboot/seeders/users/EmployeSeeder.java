@@ -26,6 +26,9 @@ public class EmployeSeeder implements CommandLineRunner {
                 .orElseThrow(() -> new RuntimeException("User alice.rh non trouvé"));
         UserEntity userAdmin = userRepository.findByUsername("bob.admin")
                 .orElseThrow(() -> new RuntimeException("User bob.admin non trouvé"));
+        UserEntity userDylan = userRepository.findByUsername("dylan.demandeur")
+                .orElseThrow(() -> new RuntimeException("User dylan.demandeur non trouvé"));
+        UserEntity userCathy = userRepository.findByUsername("cathy.employe").orElseThrow();
 
 
 
@@ -38,12 +41,19 @@ public class EmployeSeeder implements CommandLineRunner {
         // On sauvegarde d'abord l'employé RH pour qu'il ait une existence en base
         empRh = employeRepository.save(empRh);
 
-        UserEntity userCathy = userRepository.findByUsername("cathy.employe").orElseThrow();
         EmployeEntity empCathy = new EmployeEntity();
         empCathy.setUser(userCathy);
         empCathy.setPoste("Développeur");
         empCathy.setDepartement("IT");
         employeRepository.save(empCathy);
+
+        EmployeEntity empDylan = new EmployeEntity();
+        empDylan.setUser(userDylan);
+        empDylan.setPoste("Manager IT / Demandeur");
+        empDylan.setDepartement("Informatique");
+        // Si votre entité possède ce champ (vu dans vos logs Hibernate : demandeur_de_poste)
+        empDylan.setDemandeurDePoste(true);
+        employeRepository.save(empDylan);
 
         // 3. Création de l'Employé Admin (Le manager/référent)
         EmployeEntity empAdmin = new EmployeEntity();
@@ -52,6 +62,7 @@ public class EmployeSeeder implements CommandLineRunner {
         empAdmin.setDepartement("Informatique");
         empAdmin.setAdminPrivilege(true);
         empAdmin = employeRepository.save(empAdmin);
+
 
         // 4. Ajout de empRh dans les recrues liées de empAdmin (Spécification 5)
         // Cela établit le lien : empAdmin est le "référent" de empRh

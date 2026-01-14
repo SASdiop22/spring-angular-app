@@ -31,8 +31,10 @@ public class JobOfferSeeder implements CommandLineRunner {
 
         // 1. Récupération d'un employé pour simuler le "Demandeur"
         // Note: Assurez-vous que l'entité Employe est liée à l'User "rh_test" ou "admin"
-        EmployeEntity demandeur = employeRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("Aucun employé trouvé pour créer des offres."));
+        EmployeEntity dylan = employeRepository.findAll().stream()
+                .filter(e -> e.getUser().getUsername().equals("dylan.demandeur"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Dylan n'est pas configuré comme employé"));
 
         // 2. Offre en DRAFT (Spécification 2.A)
         JobOfferEntity draftOffer = new JobOfferEntity();
@@ -41,7 +43,7 @@ public class JobOfferSeeder implements CommandLineRunner {
         draftOffer.setDepartment("IT");
         draftOffer.setLocation("Paris");
         draftOffer.setDeadline(LocalDate.now().plusMonths(2));
-        draftOffer.setCreator(demandeur);
+        draftOffer.setCreator(dylan);
         draftOffer.setStatus(JobStatusEnum.DRAFT);
         draftOffer.setSkillsRequired(Arrays.asList("Java", "Spring Boot"));
         jobOfferRepository.save(draftOffer);
@@ -51,7 +53,7 @@ public class JobOfferSeeder implements CommandLineRunner {
         pendingOffer.setTitle("Chef de Projet SI");
         pendingOffer.setDescription("Pilotage de la transformation digitale.");
         pendingOffer.setDepartment("SI");
-        pendingOffer.setCreator(demandeur);
+        pendingOffer.setCreator(dylan);
         pendingOffer.setStatus(JobStatusEnum.PENDING);
         pendingOffer.setSkillsRequired(Arrays.asList("Agile", "Governance"));
         jobOfferRepository.save(pendingOffer);
@@ -61,7 +63,7 @@ public class JobOfferSeeder implements CommandLineRunner {
         openOffer.setTitle("Expert Cloud AWS");
         openOffer.setDescription("Expertise sur l'infrastructure scalable.");
         openOffer.setDepartment("IT");
-        openOffer.setCreator(demandeur);
+        openOffer.setCreator(dylan);
         openOffer.setSkillsRequired(Arrays.asList("AWS", "Terraform", "Docker"));
         // Simulation de l'enrichissement RH
         openOffer.validateAndPublish(65000.0, 3);

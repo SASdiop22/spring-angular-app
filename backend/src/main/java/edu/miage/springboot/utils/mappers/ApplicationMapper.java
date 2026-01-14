@@ -14,6 +14,8 @@ public interface ApplicationMapper {
     @Mapping(source = "job.id", target = "jobOfferId")
     @Mapping(source = "job.title", target = "jobOfferTitle")
     @Mapping(source = "currentStatus", target = "status")
+        // MapStruct fera le mapping automatique pour meetingDate, rejectionReason et recruitmentNotes
+        // si les noms sont identiques dans l'Entity et le DTO.
     ApplicationDTO toDto(ApplicationEntity entity);
 
     List<ApplicationDTO> toDtos(List<ApplicationEntity> entities);
