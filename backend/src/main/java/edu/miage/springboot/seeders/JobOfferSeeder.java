@@ -1,10 +1,10 @@
 package edu.miage.springboot.seeders;
 
-import edu.miage.springboot.dao.entities.EmployeEntity;
-import edu.miage.springboot.dao.entities.JobOfferEntity;
-import edu.miage.springboot.dao.entities.JobStatusEnum;
-import edu.miage.springboot.dao.repositories.EmployeRepository;
-import edu.miage.springboot.dao.repositories.JobOfferRepository;
+import edu.miage.springboot.dao.entities.users.EmployeEntity;
+import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
+import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
+import edu.miage.springboot.dao.repositories.users.EmployeRepository;
+import edu.miage.springboot.dao.repositories.offers.JobOfferRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 
 @Component
-@Order(2) // S'exécute après UserSeeder pour avoir les employés
+@Order(4) // S'exécute après UserSeeder pour avoir les employés
 public class JobOfferSeeder implements CommandLineRunner {
 
     @Autowired

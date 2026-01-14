@@ -1,7 +1,7 @@
 package edu.miage.springboot.services.interfaces;
 
-import edu.miage.springboot.dao.entities.JobStatusEnum;
-import edu.miage.springboot.web.dtos.JobOfferDTO;
+import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
+import edu.miage.springboot.web.dtos.offers.JobOfferDTO;
 
 import java.util.List;
 

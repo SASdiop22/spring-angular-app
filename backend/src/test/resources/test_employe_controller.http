@@ -1,0 +1,73 @@
+### =========================================================================
+### 1. AUTHENTIFICATION
+### =========================================================================
+
+# @name loginAdmin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+
+> {% client.global.set("admin_token", response.body.accessToken); %}
+
+###
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+
+> {% client.global.set("rh_token", response.body.accessToken); %}
+
+
+### =========================================================================
+### 2. TESTS DES FILTRES DE RÔLES (Endpoints existants)
+### =========================================================================
+
+### A. Récupérer uniquement le personnel RH (Nécessite ROLE_ADMIN)
+GET http://localhost:8080/api/employes/rh
+Authorization: Bearer {{admin_token}}
+
+> {%
+    // On capture l'ID de Alice RH pour les tests suivants
+    client.global.set("alice_id", response.body[0].id);
+%}
+
+### B. Récupérer les demandeurs de poste (Public/Employé)
+GET http://localhost:8080/api/employes/demandeurs
+Authorization: Bearer {{rh_token}}
+
+
+### =========================================================================
+### 3. TEST DE LA HIÉRARCHIE (Spécification 5)
+### =========================================================================
+
+### C. Récupérer les recrues liées à un employé (ex: Bob Admin)
+# Dans votre Seeder, empAdmin (Bob) a Alice RH dans ses recrues
+GET http://localhost:8080/api/employes/{{alice_id}}/recrues
+Authorization: Bearer {{rh_token}}
+
+
+### =========================================================================
+### 4. SÉCURITÉ ET ACCÈS (RBAC)
+### =========================================================================
+
+### D. Test d'interdiction (403) : Un RH tente d'accéder à la liste RH (réservé Admin)
+GET http://localhost:8080/api/employes/rh
+Authorization: Bearer {{rh_token}}
+
+
+### =========================================================================
+### 5. GESTION DES PROFILS (Si implémenté dans votre Service)
+### =========================================================================
+
+### E. Voir le détail d'un employé par ID
+GET http://localhost:8080/api/employes/{{alice_id}}
+Authorization: Bearer {{admin_token}}

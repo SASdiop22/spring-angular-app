@@ -1,0 +1,64 @@
+### =========================================================================
+### 1. CYCLE DE VIE DE L'OFFRE (Spécification 2)
+### =========================================================================
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+###
+
+# @name loginEmploye
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cathy.employe",
+  "password": "password123"
+}
+
+> {% client.global.set("token_employe", response.body.accessToken); %}
+
+###
+
+### A. Création d'un Draft par un Employe (Spec 2.A)
+# @name createDraft
+POST http://localhost:8080/api/joboffers
+Authorization: Bearer {{token_employe}}
+Content-Type: application/json
+
+{
+  "title": "Ingénieur DevOps",
+  "description": "Gestion infrastructure Kubernetes et CI/CD.",
+  "department": "IT",
+  "skillsRequired": ["Docker", "K8s", "Terraform"],
+  "creatorId": 5
+}
+> {% client.global.set("new_offer_id", response.body.id); %}
+
+### B. Passage en PENDING (Validation)
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/status?status=PENDING
+Authorization: Bearer {{token_employe}}
+
+### C. ÉCHEC : Un Employe tente de publier (Sécurité Spec 4.A)
+# Doit retourner 403 Forbidden car il n'a pas rhPrivilege
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=55000&remoteDays=2
+Authorization: Bearer {{token_employe}}
+
+### D. SUCCÈS : Le RH enrichit et publie (Spec 2.A & 4.A)
+# Le statut passe en OPEN
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=62000&remoteDays=3
+Authorization: Bearer {{token_rh}}
+
+### E. Visibilité Publique (Spec 2.A)
+# Accessible sans token (Visiteur)
+GET http://localhost:8080/api/joboffers
+
+### F. Visibilité Publique de la nouvelle offre (Spec 2.A)
+# Accessible sans token (Visiteur)
+GET http://localhost:8080/api/joboffers/{{new_offer_id}}

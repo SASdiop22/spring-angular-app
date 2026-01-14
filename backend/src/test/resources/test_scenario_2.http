@@ -1,0 +1,37 @@
+### =========================================================================
+### 2. GESTION DES CANDIDATURES ET RGPD (Spécification 3)
+### =========================================================================
+
+# @name loginCandidat
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.candidat",
+  "password": "password123"
+}
+> {% client.global.set("token_candidat", response.body.accessToken); %}
+
+
+
+### A. Récupération de l'ID Candidat (pour le script)
+# @name getMyProfile
+GET http://localhost:8080/api/candidates/me
+Authorization: Bearer {{token_candidat}}
+
+> {% client.global.set("candidat_id", response.body.id); %}
+
+### B. Un candidat postule (Spec 3.A)
+POST http://localhost:8080/api/applications/apply?jobOfferId={{new_offer_id}}&candidateId={{candidat_id}}&cvUrl=http://cloud.com/cv.pdf
+Authorization: Bearer {{token_candidat}}
+
+> {% client.global.set("app_id", response.body.id); %}
+
+### C. Sécurité RGPD : Renouvellement (Spec 3.A)
+# Le candidat rafraîchit son consentement
+PATCH http://localhost:8080/api/candidates/{{candidat_id}}/renew-consent
+Authorization: Bearer {{token_candidat}}
+
+### D. Suivi (Dashboard Candidat - Spec 3.B)
+GET http://localhost:8080/api/applications/candidate/{{candidat_id}}
+Authorization: Bearer {{token_candidat}}

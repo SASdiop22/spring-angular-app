@@ -1,7 +1,7 @@
 package edu.miage.springboot.utils.mappers;
 
-import edu.miage.springboot.dao.entities.JobOfferEntity;
-import edu.miage.springboot.web.dtos.JobOfferDTO;
+import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
+import edu.miage.springboot.web.dtos.offers.JobOfferDTO;
 import org.mapstruct.Mapper;
 
 import java.util.List;

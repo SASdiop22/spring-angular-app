@@ -7,8 +7,8 @@ POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "admin",
-  "password": "admin"
+  "username": "bob.admin",
+  "password": "password123"
 }
 
 > {% client.global.set("admin_token", response.body.accessToken); %}
@@ -20,8 +20,8 @@ POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "rh_test",
-  "password": "123456"
+  "username": "alice.rh",
+  "password": "password123"
 }
 
 > {% client.global.set("rh_token", response.body.accessToken); %}
@@ -54,7 +54,7 @@ Authorization: Bearer {{admin_token}}
 ### Spec 5 : Assignation d'un référent (Succès recrutement)
 # Simule le lien hiérarchique entre un candidat (ID: 3) et un employé (ID: 2)
 # Autorisé pour RH ou ADMIN
-PATCH http://localhost:8080/api/users/3/assign-referent/2
+PATCH http://localhost:8080/api/users/1/assign-referent/3
 Authorization: Bearer {{rh_token}}
 
 ### =========================================================================
@@ -75,5 +75,5 @@ Authorization: Bearer {{admin_token}}
 
 ### Spec 5 : Voir mes recrues (Lien hiérarchique)
 # L'employé (ID: 2) regarde qui il a recruté
-GET http://localhost:8080/api/employes/2/recrues
+GET http://localhost:8080/api/employes/3/recrues
 Authorization: Bearer {{rh_token}}

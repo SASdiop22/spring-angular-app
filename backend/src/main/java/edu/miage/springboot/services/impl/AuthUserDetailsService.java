@@ -1,10 +1,8 @@
 package edu.miage.springboot.services.impl;
 
-import edu.miage.springboot.dao.entities.UserEntity;
-import edu.miage.springboot.dao.repositories.UserRepository;
-import edu.miage.springboot.web.dtos.AuthUserDetails;
-
-import java.util.Optional;
+import edu.miage.springboot.dao.entities.users.UserEntity;
+import edu.miage.springboot.dao.repositories.users.UserRepository;
+import edu.miage.springboot.web.dtos.auth.AuthUserDetails;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
