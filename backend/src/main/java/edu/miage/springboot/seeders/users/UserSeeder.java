@@ -23,31 +23,39 @@ public class UserSeeder implements CommandLineRunner {
     public void run(String... args) throws Exception {
         if (userRepository.count() > 0) return;
 
-        UserRoleEntity roleCandidat = getOrCreateRole("ROLE_CANDIDAT");
-        UserRoleEntity roleEmploye = getOrCreateRole("ROLE_EMPLOYE");
-        UserRoleEntity roleRH = getOrCreateRole("ROLE_RH");
-        UserRoleEntity roleAdmin = getOrCreateRole("ROLE_ADMIN");
+        // Rôles
+        UserRoleEntity rCandidat = getOrCreateRole("ROLE_CANDIDAT");
+        UserRoleEntity rEmploye = getOrCreateRole("ROLE_EMPLOYE");
+        UserRoleEntity rRh = getOrCreateRole("ROLE_RH");
+        UserRoleEntity rAdmin = getOrCreateRole("ROLE_ADMIN");
 
-        // Création des comptes utilisateurs de base
-        createBaseUser("jean.candidat", "jean@test.com", "Jean", "Dupont", Set.of(roleCandidat), UserTypeEnum.CANDIDAT);
-        createBaseUser("marie.candidat", "marie@test.com", "Marie", "Hihi", Set.of(roleCandidat), UserTypeEnum.CANDIDAT);
-        createBaseUser("alice.rh", "rh@test.com", "Alice", "RH", Set.of(roleRH), UserTypeEnum.RH);
-        createBaseUser("bob.admin", "admin@test.com", "Admin", "System", Set.of(roleAdmin), UserTypeEnum.ADMIN);
-        createBaseUser("cathy.employe", "employe@test.com", "Cathy", "Employe", Set.of(roleEmploye), UserTypeEnum.EMPLOYE);
-        createBaseUser("dylan.demandeur", "demandeur@test.com", "Dylan", "Demandeur", Set.of(roleEmploye), UserTypeEnum.EMPLOYE);
-        //
+        // --- ACTEURS GLOBAUX ---
+        createUser("alice.rh", "ROLE_RH", UserTypeEnum.RH);
+        createUser("bob.admin", "ROLE_ADMIN", UserTypeEnum.ADMIN);
+
+        // --- ACTEURS SCÉNARIO 1 & 4 (Cycle de vie & Sécurité) ---
+        createUser("cathy.employe", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+
+        // --- ACTEURS SCÉNARIO 2 (RGPD) ---
+        createUser("jean.rgpd", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+
+        // --- ACTEURS SCÉNARIO 3 & 5 (Recrutement complet & Onboarding) ---
+        createUser("marie.hired", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("sophie.onboard", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+
+        // --- ACTEURS SCÉNARIO 6 & 7 (Journal & Rejets) ---
+        createUser("dylan.demandeur", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("paul.rejet", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
     }
 
-    private UserEntity createBaseUser(String username, String email, String prenom, String nom, Set<UserRoleEntity> roles, UserTypeEnum type) {
-        UserEntity user = new UserEntity();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode("password123")); //
-        user.setEmail(email);
-        user.setPrenom(prenom);
-        user.setNom(nom);
-        user.setRoles(roles);
-        user.setUserType(type);
-        return userRepository.save(user);
+    private void createUser(String username, String roleName, UserTypeEnum type) {
+        UserEntity u = new UserEntity();
+        u.setUsername(username);
+        u.setPassword(passwordEncoder.encode("password123"));
+        u.setEmail(username + "@test.com");
+        u.setUserType(type);
+        u.setRoles(Set.of(userRoleRepository.findByName(roleName).get()));
+        userRepository.save(u);
     }
 
     private UserRoleEntity getOrCreateRole(String roleName) {

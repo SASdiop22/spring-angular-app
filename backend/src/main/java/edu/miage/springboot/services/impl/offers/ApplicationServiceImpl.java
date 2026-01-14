@@ -30,6 +30,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional
     public ApplicationDTO apply(Long jobOfferId, Long candidateId, String cvUrl, String coverLetter) {
+        if (applicationRepository.existsByJobIdAndCandidateId(jobOfferId, candidateId)) {
+            throw new IllegalStateException("Vous avez déjà postulé à cette offre.");
+        }
         JobOfferEntity job = jobOfferRepository.findById(jobOfferId)
                 .orElseThrow(() -> new RuntimeException("Offre non trouvée"));
         CandidatEntity candidate = candidatRepository.findById(candidateId)
@@ -52,7 +55,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public ApplicationDTO updateStatus(Long id, ApplicationStatusEnum newStatus) {
+    public ApplicationDTO updateStatus(Long id, ApplicationStatusEnum newStatus, String reason) {
         // Note : Dans une version réelle, on passerait aussi meetingDate et rejectionReason en paramètres
         ApplicationEntity app = applicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
@@ -65,9 +68,20 @@ public class ApplicationServiceImpl implements ApplicationService {
             if (app.getMeetingDate() == null) {
                 app.setMeetingDate(LocalDateTime.now().plusDays(7)); // Date par défaut pour le test
             }
-            // TODO: emailService.sendMeetingInvitation(app.getCandidate().getUser().getEmail(), app.getMeetingDate());
+            // TODO: emailService.sendMeetingInvitation(app.getCandidate().getUser().getEmail(), app.getMeetingDate())
         }
 
+        if (newStatus == ApplicationStatusEnum.REJECTED) {
+            if (reason == null || reason.trim().isEmpty()) {
+                throw new IllegalArgumentException("Le motif de rejet est obligatoire.");
+            }
+            app.setRejectionReason(reason);
+
+            // Simulation Notification (Spec 4.4)
+            sendRejectionEmail(app.getCandidate().getUser().getEmail(), reason);
+        }
+
+        // --- SPÉCIFICATION 5 : Processus d'embauche (HIRED) ---
         // --- SPÉCIFICATION 5 : Processus d'embauche (HIRED) ---
         if (newStatus == ApplicationStatusEnum.HIRED) {
             JobOfferEntity job = app.getJob();
@@ -76,11 +90,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 
             UserEntity recruit = app.getCandidate().getUser();
             recruit.setUserType(UserTypeEnum.EMPLOYE);
+            recruit.setReferentEmploye(job.getCreator()); // Correction du lien hiérarchique
 
-            // Lien automatique avec le demandeur de poste (Manager)
-            recruit.setReferentEmploye(job.getCreator());
-
-            // Mise à jour des rôles
             userRoleRepository.findByName("ROLE_EMPLOYE").ifPresent(role -> {
                 recruit.getRoles().clear();
                 recruit.getRoles().add(role);
@@ -93,15 +104,31 @@ public class ApplicationServiceImpl implements ApplicationService {
             newProfile.setDepartement(job.getDepartment());
             employeRepository.save(newProfile);
 
-            // Archivage du profil candidat
+            // Mise à jour explicite du profil candidat
             CandidatEntity candidatProfile = app.getCandidate();
             candidatProfile.setArchived(true);
-            candidatRepository.save(candidatProfile);
+            candidatRepository.saveAndFlush(candidatProfile);
 
-            userRepository.save(recruit);
+            // Sauvegarde finale de l'utilisateur avec ses nouveaux rôles et son référent
+            recruit.setReferentEmploye(job.getCreator());
+            userRepository.saveAndFlush(recruit);
+
+            app.setCandidate(candidatProfile);
         }
 
         return applicationMapper.toDto(applicationRepository.save(app));
+    }
+
+    @Override
+    public ApplicationDTO findById(Long id) {
+        return applicationRepository.findById(id)
+                .map(applicationMapper::toDto)
+                .orElseThrow(() -> new RuntimeException("Candidature introuvable avec l'id : " + id));
+    }
+
+    private void sendRejectionEmail(String email, String reason) {
+        // Logique d'envoi de mail (ou simple log pour le moment)
+        System.out.println("E-MAIL AUTO envoyé à " + email + " : Votre candidature a été rejetée pour le motif suivant : " + reason);
     }
 
     private boolean isStatusRequiringMeeting(ApplicationStatusEnum status) {

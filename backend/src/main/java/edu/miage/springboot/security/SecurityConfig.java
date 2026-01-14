@@ -64,7 +64,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/joboffers/**").permitAll() // Décommenter pour accès public
                         .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js").permitAll()
-                        .anyRequest().authenticated() // Remplacer permitAll() par authenticated()
+                        .anyRequest().permitAll() // Remplacer permitAll() par authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,9 +18,10 @@ public class ApplicationDTO {
     private Long jobOfferId;
     private String jobOfferTitle;
     private String cvUrl;
+    private String coverLetter;
 
     // --- Nouveaux champs pour les spécifications 4.B et 5 ---
     private LocalDateTime meetingDate;    // Pour les entretiens et tests
     private String rejectionReason;        // Pour le motif de rejet (Spec 4.B)
-    private String recruitmentNotes;      // Pour le suivi interne
+    private List<ApplicationNoteDTO> notes;    // Pour le suivi interne
 }

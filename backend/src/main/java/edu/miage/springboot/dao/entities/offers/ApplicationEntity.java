@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "applications")
@@ -49,7 +51,8 @@ public class ApplicationEntity {
     private String rejectionReason;
 
     @Column(name = "recruitment_notes", columnDefinition = "TEXT")
-    private String recruitmentNotes;
+    @OneToMany(mappedBy = "application")
+    private List<ApplicationNoteEntity> recruitmentNotes = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

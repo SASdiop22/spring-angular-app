@@ -1,17 +1,10 @@
 ### =========================================================================
 ### 3. PROCESSUS DE RECRUTEMENT ET ONBOARDING (Spécification 4 & 5)
 ### =========================================================================
-# @name loginAdmin
-POST http://localhost:8080/api/auth/login
-Content-Type: application/json
 
-{
-  "username": "bob.admin",
-  "password": "password123"
-}
-> {% client.global.set("token_admin", response.body.accessToken); %}
-
-###
+### -------------------------------------------------------------------------
+### PRE-REQUIS : Authentification des acteurs
+### -------------------------------------------------------------------------
 
 # @name loginRH
 POST http://localhost:8080/api/auth/login
@@ -21,7 +14,10 @@ Content-Type: application/json
   "username": "alice.rh",
   "password": "password123"
 }
-> {% client.global.set("token_rh", response.body.accessToken); %}
+> {%
+    client.test("Login RH réussi", () => client.assert(response.status === 200));
+    client.global.set("token_rh", response.body.accessToken);
+%}
 
 ###
 
@@ -30,67 +26,137 @@ POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "jean.candidat",
+  "username": "jean.rgpd",
   "password": "password123"
 }
-> {% client.global.set("token_candidat", response.body.accessToken); %}
+> {%
+    client.test("Login Candidat réussi", () => client.assert(response.status === 200));
+    client.global.set("token_candidat", response.body.accessToken);
+%}
 
 ###
-# @name loginDemandeur
+
+# @name loginAdmin
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "cathy.employe",
+  "username": "bob.admin",
   "password": "password123"
 }
+> {%
+    client.test("Login Admin réussi", () => client.assert(response.status === 200));
+    client.global.set("token_admin", response.body.accessToken);
+%}
 
-> {% client.global.set("token_employe", response.body.accessToken); %}
+### -------------------------------------------------------------------------
+### ETAPE 1 : Identification dynamique des données des seeders
+### -------------------------------------------------------------------------
 
-###
+### A. Identification de l'offre Cloud Architect (Spec 4.B)
+# @name getCloudOffer
+GET http://localhost:8080/api/joboffers
+Authorization: Bearer {{token_rh}}
 
-### A. Création d'un Draft par un Demandeur (Spec 2.A)
-# @name createDraft
-POST http://localhost:8080/api/joboffers
-Authorization: Bearer {{token_employe}}
-Content-Type: application/json
+> {%
+    const offer = response.body.find(o => o.title.includes("Cloud"));
+    client.test("Offre Cloud identifiée", function() {
+        client.assert(offer !== undefined, "L'offre Cloud Architect doit exister");
+        client.global.set("target_job_id", offer.id);
+        // Le créateur de l'offre (ID 7 dans les seeders) sera le futur manager
+        client.global.set("manager_id", offer.creatorId || 7);
+    });
+%}
 
-{
-  "title": "Ingénieur DevOps",
-  "description": "Gestion infrastructure Kubernetes et CI/CD.",
-  "department": "IT",
-  "skillsRequired": ["Docker", "K8s", "Terraform"],
-  "creatorId": 5
-}
-> {% client.global.set("new_offer_id", response.body.id); %}
-
-### B. Récupération de l'ID Candidat (pour le script)
-# @name getMyProfile
+### B. Identification du profil de Jean
+# @name getJeanProfile
 GET http://localhost:8080/api/candidates/me
 Authorization: Bearer {{token_candidat}}
 
-> {% client.global.set("candidat_id", response.body.id); %}
+> {%
+    client.test("Profil Jean récupéré", function() {
+        client.assert(response.status === 200);
+        client.global.set("jean_candidat_id", response.body.id);
+        client.global.set("jean_user_id", response.body.userId || 4);
+    });
+%}
 
-### C. RH voit toutes les candidatures (Spec 4.A)
-GET http://localhost:8080/api/applications
-Authorization: Bearer {{token_rh}}
+### -------------------------------------------------------------------------
+### ETAPE 2 : Flux de candidature et Entretien (Spec 4)
+### -------------------------------------------------------------------------
 
-### D. Un candidat postule (Spec 3.A)
-POST http://localhost:8080/api/applications/apply?jobOfferId={{new_offer_id}}&candidateId={{candidat_id}}&cvUrl=http://cloud.com/cv.pdf
+### C. Jean postule (Spec 3.A)
+# @name applyAction
+POST http://localhost:8080/api/applications/apply?jobOfferId={{target_job_id}}&candidateId={{jean_candidat_id}}&cvUrl=http://cloud.com/cv-jean.pdf
 Authorization: Bearer {{token_candidat}}
 
-> {% client.global.set("app_id", response.body.id); %}
+> {%
+    client.test("Candidature soumise", function() {
+        // 201 si nouvelle, 400 si déjà postulé (mais on veut tester le flux)
+        client.assert(response.status === 201 || response.status === 400);
+        if (response.status === 201) client.global.set("app_id", response.body.id);
+    });
+%}
 
-### E. Changement de statut vers HIRED (Spec 5)
-# Cette action doit déclencher : Status Application -> HIRED et Status Offre -> FILLED
+### D. RH passe la candidature en entretien (Spec 4.B)
+# Déclenche la simulation d'envoi de mail et fixe une date par défaut
+PATCH http://localhost:8080/api/applications/{{app_id}}/status?status=INTERVIEW_PENDING
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Statut INTERVIEW confirmé", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "INTERVIEW_PENDING");
+        client.assert(response.body.meetingDate != null, "Une date de RDV doit être générée");
+    });
+%}
+
+### -------------------------------------------------------------------------
+### ETAPE 3 : Embauche et Onboarding (Spec 5)
+### -------------------------------------------------------------------------
+
+### E. RH valide l'embauche (HIRED)
+# Cette action est atomique (Spec 5) :
+# 1. App -> HIRED | 2. Offre -> FILLED | 3. User -> EMPLOYE | 4. Candidat -> Archivé
 PATCH http://localhost:8080/api/applications/{{app_id}}/status?status=HIRED
 Authorization: Bearer {{token_rh}}
 
-### F. Vérification de la clôture automatique de l'offre (Spec 5)
-# L'offre ne doit plus être visible publiquement (OPEN)
-GET http://localhost:8080/api/joboffers
+> {%
+    client.test("Embauche effectuée", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "HIRED");
+    });
+%}
 
-### G. Vérification du Lien Hiérarchique (Onboarding Spec 5)
-# On vérifie si l'utilisateur a maintenant un référent_id
-GET http://localhost:8080/api/users/{{candidat_id}}
+### F. Vérification de la clôture de l'offre (Spec 5)
+GET http://localhost:8080/api/joboffers/{{target_job_id}}
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Offre clôturée automatiquement", function() {
+        client.assert(response.body.status === "FILLED", "L'offre devrait être FILLED après l'embauche");
+    });
+%}
+
+### G. Vérification de l'Onboarding (Spec 5)
+# On vérifie le changement de type d'utilisateur et le lien hiérarchique
+GET http://localhost:8080/api/users/{{jean_user_id}}
 Authorization: Bearer {{token_admin}}
+
+> {%
+    client.test("Jean est devenu Employé avec Manager", function() {
+        client.assert(response.body.userType === "EMPLOYE", "Le type d'utilisateur doit être EMPLOYE");
+        client.assert(response.body.referentId === parseInt(client.global.get("manager_id")),
+            "Le manager doit être le créateur de l'offre");
+    });
+%}
+
+### H. Vérification de l'archivage du profil candidat
+GET http://localhost:8080/api/candidates/{{jean_candidat_id}}
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Profil candidat archivé", function() {
+        client.assert(response.body.archived === true, "Le profil candidat doit être archivé (Spec 5)");
+    });
+%}

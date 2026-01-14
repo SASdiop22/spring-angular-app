@@ -14,5 +14,7 @@ public interface ApplicationService {
 
     List<ApplicationDTO> findByCandidateId(Long candidateId);
 
-    ApplicationDTO updateStatus(Long id, ApplicationStatusEnum status);
+    ApplicationDTO updateStatus(Long id, ApplicationStatusEnum status, String reason);
+
+    ApplicationDTO findById(Long id);
 }

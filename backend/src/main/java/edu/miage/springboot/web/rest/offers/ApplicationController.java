@@ -52,6 +52,18 @@ public class ApplicationController {
         }
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN') or (hasAuthority('ROLE_CANDIDAT') and @securityService.isApplicationOwner(#id))")
+    public ResponseEntity<ApplicationDTO> getApplicationById(@PathVariable Long id) {
+        try {
+            // Le service doit implémenter une méthode findById ou getById
+            ApplicationDTO application = applicationService.findById(id);
+            return ResponseEntity.ok(application);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     /**
      * Spécification 4.A : Seuls les RH et Admin voient la liste globale.
      */
@@ -78,7 +90,14 @@ public class ApplicationController {
     @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN')")
     public ResponseEntity<ApplicationDTO> updateStatus(
             @PathVariable Long id,
-            @RequestParam ApplicationStatusEnum status) {
-        return ResponseEntity.ok(applicationService.updateStatus(id, status));
+            @RequestParam ApplicationStatusEnum status,
+            @RequestParam(required = false) String reason) { // On récupère le motif ici
+
+        try {
+            ApplicationDTO updated = applicationService.updateStatus(id, status, reason);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().header("Error-Message", e.getMessage()).build();
+        }
     }
 }

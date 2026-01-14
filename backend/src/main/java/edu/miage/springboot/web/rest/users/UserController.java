@@ -55,22 +55,11 @@ public class UserController {
     }
 
     @PatchMapping("/{candidatId}/assign-referent/{employeId}")
-    @PreAuthorize("hasAuthority('ROLE_RH') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN')")
     public ResponseEntity<UserDTO> assignReferent(@PathVariable Long candidatId, @PathVariable Long employeId) {
-        // 1. Récupérer le candidat (UserEntity)
-        UserEntity candidat = userRepository.findById(candidatId)
-                .orElseThrow(() -> new RuntimeException("Candidat non trouvé"));
-
-        // 2. Récupérer l'employé référent (EmployeEntity)
-        // Note: On suppose l'existence d'un employeRepository injecté
-        EmployeEntity employe = employeRepository.findById(employeId)
-                .orElseThrow(() -> new RuntimeException("Employé référent non trouvé"));
-
-        // 3. Appliquer la logique métier définie dans UserServiceImpl
-        userService.finaliserEmbauche(candidat, employe); //
-
-        // 4. Retourner le DTO mis à jour
-        return ResponseEntity.ok(convertToDTO(candidat));
+        // Appeler le service qui va gérer les vérifications d'existence
+        UserDTO updatedUser = userService.assignReferent(candidatId, employeId);
+        return ResponseEntity.ok(updatedUser);
     }
 
     // Méthode de mapping (À déplacer idéalement dans un Service ou Mapper dédié)

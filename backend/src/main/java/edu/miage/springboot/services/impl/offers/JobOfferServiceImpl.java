@@ -130,6 +130,11 @@ public class JobOfferServiceImpl implements JobOfferService {
         JobOfferEntity entity = jobOfferRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Offre introuvable"));
 
+        // Vérifiez que les paramètres ne sont pas nulls avant l'appel métier
+        if (salary == null || remoteDays == null) {
+            throw new IllegalArgumentException("Le salaire et le télétravail sont obligatoires pour publier.");
+        }
+
         // Utilise la méthode métier interne de l'entité
         entity.validateAndPublish(salary, remoteDays);
 

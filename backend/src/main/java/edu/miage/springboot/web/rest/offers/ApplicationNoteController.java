@@ -1,6 +1,6 @@
 package edu.miage.springboot.web.rest.offers;
 
-import edu.miage.springboot.services.impl.ApplicationNoteServiceImpl;
+import edu.miage.springboot.services.impl.offers.ApplicationNoteServiceImpl;
 import edu.miage.springboot.web.dtos.offers.ApplicationNoteDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

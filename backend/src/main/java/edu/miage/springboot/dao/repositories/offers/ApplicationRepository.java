@@ -21,4 +21,6 @@ public interface ApplicationRepository extends JpaRepository<ApplicationEntity, 
     List<ApplicationEntity> findByCandidateAndCreatedAtAfter(UserEntity candidate, LocalDateTime date);
 
     List<ApplicationEntity> findByCandidateId(Long candidateId);
+
+    boolean existsByJobIdAndCandidateId(Long jobOfferId, Long candidateId);
 }

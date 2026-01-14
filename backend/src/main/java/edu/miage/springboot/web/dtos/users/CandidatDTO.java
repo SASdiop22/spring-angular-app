@@ -20,6 +20,7 @@ public class CandidatDTO {
     private String telephone;
     private String ville;
     private LocalDateTime consentDate;
+    private boolean archived;
 
     // Champ calculé pour faciliter le travail du Front-end
     private boolean rgpdCompliant;

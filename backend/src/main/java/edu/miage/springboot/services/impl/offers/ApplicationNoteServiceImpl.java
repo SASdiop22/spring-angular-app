@@ -1,4 +1,4 @@
-package edu.miage.springboot.services.impl;
+package edu.miage.springboot.services.impl.offers;
 
 import edu.miage.springboot.dao.entities.offers.ApplicationEntity;
 import edu.miage.springboot.dao.entities.offers.ApplicationNoteEntity;

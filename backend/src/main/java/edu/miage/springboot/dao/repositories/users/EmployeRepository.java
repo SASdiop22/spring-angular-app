@@ -22,4 +22,10 @@ public interface EmployeRepository extends JpaRepository<EmployeEntity, Long> {
     List<EmployeEntity> findByRhPrivilegeTrue();
 
     Optional<EmployeEntity> findByUser(UserEntity rhUser);
+
+    // Spring va automatiquement faire la jointure avec UserEntity
+    Optional<EmployeEntity> findByUserUsername(String username);
+
+    // Optionnel : pratique si vous travaillez avec les IDs techniques
+    Optional<EmployeEntity> findByUserId(Long userId);
 }

@@ -62,6 +62,4 @@ public class CandidatEntity {
         }
     }
 
-    public void setArchived(boolean b) {
-    }
 }

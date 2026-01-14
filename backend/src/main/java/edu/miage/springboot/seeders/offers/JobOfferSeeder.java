@@ -15,60 +15,44 @@ import java.time.LocalDate;
 import java.util.Arrays;
 
 @Component
-@Order(4) // S'exécute après UserSeeder pour avoir les employés
+@Order(4)
 public class JobOfferSeeder implements CommandLineRunner {
-
-    @Autowired
-    private JobOfferRepository jobOfferRepository;
-
-    @Autowired
-    private EmployeRepository employeRepository;
+    @Autowired private JobOfferRepository jobOfferRepository;
+    @Autowired private EmployeRepository employeRepository;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
         if (jobOfferRepository.count() > 0) return;
 
-        // 1. Récupération d'un employé pour simuler le "Demandeur"
-        // Note: Assurez-vous que l'entité Employe est liée à l'User "rh_test" ou "admin"
-        EmployeEntity dylan = employeRepository.findAll().stream()
-                .filter(e -> e.getUser().getUsername().equals("dylan.demandeur"))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Dylan n'est pas configuré comme employé"));
+        EmployeEntity cathy = employeRepository.findByUserUsername("cathy.employe").get();
+        EmployeEntity dylan = employeRepository.findByUserUsername("dylan.demandeur").get();
 
-        // 2. Offre en DRAFT (Spécification 2.A)
-        JobOfferEntity draftOffer = new JobOfferEntity();
-        draftOffer.setTitle("Développeur Java Junior");
-        draftOffer.setDescription("Poste en alternance pour projet innovant.");
-        draftOffer.setDepartment("IT");
-        draftOffer.setLocation("Paris");
-        draftOffer.setDeadline(LocalDate.now().plusMonths(2));
-        draftOffer.setCreator(dylan);
-        draftOffer.setStatus(JobStatusEnum.DRAFT);
-        draftOffer.setSkillsRequired(Arrays.asList("Java", "Spring Boot"));
-        jobOfferRepository.save(draftOffer);
+        // Offre ID 1 : Pour Scénario 1 (S'arrête en DRAFT/PENDING)
+        createOffer("Dev Java S1", cathy, JobStatusEnum.DRAFT);
 
-        // 3. Offre en PENDING (En attente de validation RH)
-        JobOfferEntity pendingOffer = new JobOfferEntity();
-        pendingOffer.setTitle("Chef de Projet SI");
-        pendingOffer.setDescription("Pilotage de la transformation digitale.");
-        pendingOffer.setDepartment("SI");
-        pendingOffer.setCreator(dylan);
-        pendingOffer.setStatus(JobStatusEnum.PENDING);
-        pendingOffer.setSkillsRequired(Arrays.asList("Agile", "Governance"));
-        jobOfferRepository.save(pendingOffer);
+        // Offre ID 2 : Pour Scénario 2 (Ouverte pour Jean)
+        createOffer("Data Analyst S2", dylan, JobStatusEnum.OPEN);
 
-        // 4. Offre OPEN (Publiée avec salaire et télétravail - Spécification 2.A/B)
-        JobOfferEntity openOffer = new JobOfferEntity();
-        openOffer.setTitle("Expert Cloud AWS");
-        openOffer.setDescription("Expertise sur l'infrastructure scalable.");
-        openOffer.setDepartment("IT");
-        openOffer.setCreator(dylan);
-        openOffer.setSkillsRequired(Arrays.asList("AWS", "Terraform", "Docker"));
-        // Simulation de l'enrichissement RH
-        openOffer.validateAndPublish(65000.0, 3);
-        jobOfferRepository.save(openOffer);
+        // Offre ID 3 : Pour Scénario 3 (Flux complet)
+        createOffer("Product Manager S3", dylan, JobStatusEnum.OPEN);
 
-        System.out.println(">> JobOfferSeeder : Offres de test (DRAFT, PENDING, OPEN) créées.");
+        // Offre ID 4 : Pour Scénario 6 & 7 (Notes & Rejets)
+        createOffer("Cloud Architect S6-7", dylan, JobStatusEnum.OPEN);
+    }
+
+    private void createOffer(String title, EmployeEntity creator, JobStatusEnum status) {
+        JobOfferEntity o = new JobOfferEntity();
+        o.setTitle(title);
+        o.setCreator(creator);
+        o.setStatus(status);
+        o.setDepartment(creator.getDepartement());
+        if(status == JobStatusEnum.OPEN) {
+            o.setSalaryRange(50000.0);
+            o.setRemoteDays(2);
+        }
+        jobOfferRepository.save(o);
     }
 }
+
+
