@@ -1,0 +1,97 @@
+### =========================================================================
+### 1. AUTHENTIFICATION
+### =========================================================================
+
+# @name loginAdmin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+
+> {% client.global.set("admin_token", response.body.accessToken); %}
+
+###
+
+# @name loginRh
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+
+> {% client.global.set("rh_token", response.body.accessToken); %}
+
+
+### =========================================================================
+### 2. CYCLE DE VIE DE L'OFFRE (LOGIQUE MÉTIER)
+### =========================================================================
+
+### A. Création d'une offre (Statut DRAFT par défaut)
+# @name createOffer
+POST http://localhost:8080/api/joboffers
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "title": "Architecte Solutions Cloud",
+  "description": "Expertise Azure et Kubernetes requise.",
+  "department": "IT Cloud",
+  "creatorId": 3,
+  "skillsRequired": ["Azure", "Kubernetes", "Docker"]
+}
+
+> {% client.global.set("new_offer_id", response.body.id); %}
+
+###
+
+### B. Passage en PENDING (En attente de validation RH)
+# On utilise l'ID récupéré dynamiquement à l'étape précédente
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/status?status=PENDING
+Authorization: Bearer {{admin_token}}
+
+###
+
+### C. Publication de l'offre (Passage en OPEN)
+# Le RH définit le salaire et le télétravail
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=85000&remoteDays=2
+Authorization: Bearer {{rh_token}}
+
+###
+
+### D. Consultation de toutes les offres publiques (OPEN uniquement)
+GET http://localhost:8080/api/joboffers
+
+###
+
+### E. Recherche par mot-clé
+GET http://localhost:8080/api/joboffers/search?keyword=Architecte
+
+###
+
+### F. Consultation détaillée d'une offre par ID
+GET http://localhost:8080/api/joboffers/{{new_offer_id}}
+
+### =========================================================================
+### 3. ADMINISTRATION ET GESTION PRIVILÉGIÉE
+### =========================================================================
+
+### G. Consultation Back-Office (Toutes les offres, même DRAFT/CLOSED)
+GET http://localhost:8080/api/joboffers/privilege
+Authorization: Bearer {{admin_token}}
+
+###
+
+### H. Clôture manuelle d'une offre
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/close
+Authorization: Bearer {{rh_token}}
+
+###
+
+### I. Suppression définitive
+DELETE http://localhost:8080/api/joboffers/{{new_offer_id}}
+Authorization: Bearer {{rh_token}}

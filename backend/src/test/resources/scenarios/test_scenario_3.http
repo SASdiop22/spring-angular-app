@@ -1,0 +1,96 @@
+### =========================================================================
+### 3. PROCESSUS DE RECRUTEMENT ET ONBOARDING (Spécification 4 & 5)
+### =========================================================================
+# @name loginAdmin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+> {% client.global.set("token_admin", response.body.accessToken); %}
+
+###
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+###
+
+# @name loginCandidat
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.candidat",
+  "password": "password123"
+}
+> {% client.global.set("token_candidat", response.body.accessToken); %}
+
+###
+# @name loginDemandeur
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cathy.employe",
+  "password": "password123"
+}
+
+> {% client.global.set("token_employe", response.body.accessToken); %}
+
+###
+
+### A. Création d'un Draft par un Demandeur (Spec 2.A)
+# @name createDraft
+POST http://localhost:8080/api/joboffers
+Authorization: Bearer {{token_employe}}
+Content-Type: application/json
+
+{
+  "title": "Ingénieur DevOps",
+  "description": "Gestion infrastructure Kubernetes et CI/CD.",
+  "department": "IT",
+  "skillsRequired": ["Docker", "K8s", "Terraform"],
+  "creatorId": 5
+}
+> {% client.global.set("new_offer_id", response.body.id); %}
+
+### B. Récupération de l'ID Candidat (pour le script)
+# @name getMyProfile
+GET http://localhost:8080/api/candidates/me
+Authorization: Bearer {{token_candidat}}
+
+> {% client.global.set("candidat_id", response.body.id); %}
+
+### C. RH voit toutes les candidatures (Spec 4.A)
+GET http://localhost:8080/api/applications
+Authorization: Bearer {{token_rh}}
+
+### D. Un candidat postule (Spec 3.A)
+POST http://localhost:8080/api/applications/apply?jobOfferId={{new_offer_id}}&candidateId={{candidat_id}}&cvUrl=http://cloud.com/cv.pdf
+Authorization: Bearer {{token_candidat}}
+
+> {% client.global.set("app_id", response.body.id); %}
+
+### E. Changement de statut vers HIRED (Spec 5)
+# Cette action doit déclencher : Status Application -> HIRED et Status Offre -> FILLED
+PATCH http://localhost:8080/api/applications/{{app_id}}/status?status=HIRED
+Authorization: Bearer {{token_rh}}
+
+### F. Vérification de la clôture automatique de l'offre (Spec 5)
+# L'offre ne doit plus être visible publiquement (OPEN)
+GET http://localhost:8080/api/joboffers
+
+### G. Vérification du Lien Hiérarchique (Onboarding Spec 5)
+# On vérifie si l'utilisateur a maintenant un référent_id
+GET http://localhost:8080/api/users/{{candidat_id}}
+Authorization: Bearer {{token_admin}}

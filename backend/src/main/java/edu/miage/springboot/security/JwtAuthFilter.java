@@ -1,6 +1,6 @@
 package edu.miage.springboot.security;
 
-import edu.miage.springboot.services.impl.AuthUserDetailsService;
+import edu.miage.springboot.services.impl.security.AuthUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

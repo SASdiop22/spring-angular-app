@@ -1,14 +1,16 @@
 package edu.miage.springboot.security;
 
-import edu.miage.springboot.services.impl.AuthUserDetailsService;
+import edu.miage.springboot.services.impl.security.AuthUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -26,6 +28,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
     @Autowired
     JwtAuthFilter jwtAuthFilter;
@@ -58,14 +61,10 @@ public class SecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/login","/api/auth/signin")
-                        .permitAll()
-                        .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js")
-                        .permitAll()
-                        .requestMatchers("/actuator/**")
-                        .hasRole("ADMIN")
-                        .anyRequest()
-                        .authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/joboffers/**").permitAll() // Décommenter pour accès public
+                        .requestMatchers("/", "/index.html", "*.ico", "*.css", "*.js").permitAll()
+                        .anyRequest().authenticated() // Remplacer permitAll() par authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

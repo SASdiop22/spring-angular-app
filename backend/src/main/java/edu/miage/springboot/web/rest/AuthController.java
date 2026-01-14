@@ -1,12 +1,12 @@
 package edu.miage.springboot.web.rest;
 
-import edu.miage.springboot.dao.entities.UserEntity;
-import edu.miage.springboot.dao.entities.UserRoleEntity;
-import edu.miage.springboot.dao.repositories.UserRepository;
-import edu.miage.springboot.dao.repositories.UserRoleRepository;
+import edu.miage.springboot.dao.entities.users.UserEntity;
+import edu.miage.springboot.dao.entities.users.UserRoleEntity;
+import edu.miage.springboot.dao.repositories.users.UserRepository;
+import edu.miage.springboot.dao.repositories.users.UserRoleRepository;
 import edu.miage.springboot.security.JwtService;
-import edu.miage.springboot.web.dtos.AuthRequestDTO;
-import edu.miage.springboot.web.dtos.AuthResponseDTO;
+import edu.miage.springboot.web.dtos.auth.AuthRequestDTO;
+import edu.miage.springboot.web.dtos.auth.AuthResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -58,7 +58,7 @@ public class AuthController {
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
         // ASSIGNATION DU RÔLE PAR DÉFAUT (ROLE_CANDIDATE)
-        UserRoleEntity candidateRole = (UserRoleEntity) userRoleRepository.findByName("ROLE_CANDIDATE")
+        UserRoleEntity candidateRole = userRoleRepository.findByName("ROLE_CANDIDAT")
                 .orElseThrow(() -> new RuntimeException("Rôle par défaut introuvable. Avez-vous lancé le Seeder ?"));
 
         newUser.setRoles(Collections.singleton(candidateRole));

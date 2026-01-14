@@ -1,0 +1,91 @@
+### =========================================================================
+### 1. AUTHENTIFICATION
+### =========================================================================
+
+# @name loginJean
+# Candidat Standard
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.candidat",
+  "password": "password123"
+}
+
+> {% client.global.set("token_jean", response.body.accessToken); %}
+
+###
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+
+### =========================================================================
+### 2. GESTION DU PROFIL (Candidat Connecté)
+### =========================================================================
+
+### A. Récupérer mon propre profil (Endpoint /me)
+# Permet de récupérer l'ID dynamiquement pour les requêtes suivantes
+# @name getMe
+GET http://localhost:8080/api/candidates/me
+Authorization: Bearer {{token_jean}}
+
+> {% client.global.set("my_id", response.body.id); %}
+
+### B. Consulter mon profil par ID
+# Test de : (hasRole('CANDIDAT') and securityService.isOwner(#id))
+GET http://localhost:8080/api/candidates/{{my_id}}
+Authorization: Bearer {{token_jean}}
+
+### C. Mettre à jour mon profil
+PUT http://localhost:8080/api/candidates/{{my_id}}
+Authorization: Bearer {{token_jean}}
+Content-Type: application/json
+
+{
+  "firstName": "Jean-Pierre",
+  "lastName": "Dupont",
+  "telephone": "0601020304",
+  "ville": "Lyon"
+}
+
+
+### =========================================================================
+### 3. RGPD : RENOUVELLEMENT DU CONSENTEMENT (Spec 3.A)
+### =========================================================================
+
+### D. Renouveler le consentement
+# Cette action réinitialise la date de consentement à aujourd'hui
+PATCH http://localhost:8080/api/candidates/{{my_id}}/renew-consent
+Authorization: Bearer {{token_jean}}
+
+
+### =========================================================================
+### 4. ACCÈS RH (Consultation globale)
+### =========================================================================
+
+### E. Liste de tous les candidats (Interdit aux candidats, réservé RH/ADMIN)
+GET http://localhost:8080/api/candidates
+Authorization: Bearer {{token_rh}}
+
+
+### =========================================================================
+### 5. TESTS DE SÉCURITÉ (Cas d'échec attendus)
+### =========================================================================
+
+### F. Tentative de voir un autre profil par un candidat (403 Forbidden)
+# Supposons que l'ID 999 n'appartienne pas à Jean
+GET http://localhost:8080/api/candidates/999
+Authorization: Bearer {{token_jean}}
+
+### G. Tentative d'accès à la liste globale par un candidat (403 Forbidden)
+GET http://localhost:8080/api/candidates
+Authorization: Bearer {{token_jean}}

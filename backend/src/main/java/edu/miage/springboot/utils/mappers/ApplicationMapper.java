@@ -1,8 +1,8 @@
 
 package edu.miage.springboot.utils.mappers;
 
-import edu.miage.springboot.dao.entities.ApplicationEntity;
-import edu.miage.springboot.web.dtos.ApplicationDTO;
+import edu.miage.springboot.dao.entities.offers.ApplicationEntity;
+import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -14,7 +14,7 @@ public interface ApplicationMapper {
 
     // Conversion Entity -> DTO
     @Mapping(source = "candidate.id", target = "candidateId")
-    @Mapping(source = "candidate.username", target = "candidateName")
+    @Mapping(source = "candidate.user.username", target = "candidateName")
     @Mapping(source = "job.id", target = "jobOfferId")
     @Mapping(source = "job.title", target = "jobOfferTitle")
     @Mapping(source = "currentStatus", target = "status")

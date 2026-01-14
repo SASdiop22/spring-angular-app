@@ -1,16 +1,18 @@
 package edu.miage.springboot.services.interfaces;
 
-import edu.miage.springboot.dao.entities.UserEntity;
-import edu.miage.springboot.web.dtos.ApplicationDTO;
-import org.springframework.web.multipart.MultipartFile;
+import edu.miage.springboot.dao.entities.offers.ApplicationStatusEnum;
+import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
 
 import java.util.List;
 
 public interface ApplicationService {
     // La méthode principale pour postuler
-    public void apply(Long jobOfferId, Long candidateId, String cvUrl, String coverLetter);
+    public ApplicationDTO apply(Long jobOfferId, Long candidateId, String cvUrl, String coverLetter);
 
-    public void finalizeRecruitment(Long applicationId, UserEntity currentUser);
     // Pour que le recruteur puisse voir toutes les candidatures
     List<ApplicationDTO> findAll();
+
+    List<ApplicationDTO> findByCandidateId(Long candidateId);
+
+    ApplicationDTO updateStatus(Long id, ApplicationStatusEnum status);
 }
