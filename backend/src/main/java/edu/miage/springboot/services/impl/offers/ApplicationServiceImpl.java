@@ -5,11 +5,15 @@ import edu.miage.springboot.dao.entities.offers.ApplicationStatusEnum;
 import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
 import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
 import edu.miage.springboot.dao.entities.users.CandidatEntity;
+import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.users.UserEntity;
+import edu.miage.springboot.dao.entities.users.UserTypeEnum;
 import edu.miage.springboot.dao.repositories.offers.ApplicationRepository;
 import edu.miage.springboot.dao.repositories.offers.JobOfferRepository;
 import edu.miage.springboot.dao.repositories.users.CandidatRepository;
+import edu.miage.springboot.dao.repositories.users.EmployeRepository;
 import edu.miage.springboot.dao.repositories.users.UserRepository;
+import edu.miage.springboot.dao.repositories.users.UserRoleRepository;
 import edu.miage.springboot.services.interfaces.ApplicationService;
 import edu.miage.springboot.utils.mappers.ApplicationMapper;
 import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
@@ -34,6 +38,12 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Autowired
     private CandidatRepository candidatRepository;
 
+    @Autowired
+    private EmployeRepository employeRepository;
+
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+
     @Override
     @Transactional
     public ApplicationDTO apply(Long jobOfferId, Long candidateId, String cvUrl, String coverLetter) {
@@ -48,6 +58,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         // Nous avons besoin de l'objet CandidatEntity complet pour la persistance de l'application
         CandidatEntity candidate = candidatRepository.findById(candidateId)
                 .orElseThrow(() -> new RuntimeException("Profil candidat introuvable"));
+
+        if (candidate.isArchived()) {
+            throw new IllegalStateException("Ce profil candidat est archivé. Vous ne pouvez plus postuler avec ce compte.");
+        }
 
         JobOfferEntity job = jobOfferRepository.findById(jobOfferId)
                 .orElseThrow(() -> new RuntimeException("Offre d'emploi introuvable"));
@@ -65,24 +79,50 @@ public class ApplicationServiceImpl implements ApplicationService {
         return applicationMapper.toDto(savedApp);
     }
 
+    // Dans ApplicationServiceImpl.java
     @Override
     @Transactional
     public ApplicationDTO updateStatus(Long id, ApplicationStatusEnum status) {
+
         ApplicationEntity app = applicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
 
+        if (status == ApplicationStatusEnum.HIRED && app.getCandidate().isArchived()) {
+            throw new RuntimeException("Ce candidat a déjà été recruté et son profil est archivé.");
+        }
+
         app.setCurrentStatus(status);
 
-        // SPEC 5 : Si le candidat est marqué comme RECRUTÉ (HIRED)
         if (status == ApplicationStatusEnum.HIRED) {
-            // 1. Clôturer l'offre automatiquement
+            // 1. Clôture de l'offre
             JobOfferEntity job = app.getJob();
             job.setStatus(JobStatusEnum.FILLED);
             jobOfferRepository.save(job);
 
-            // 2. Onboarding : Le candidat est rattaché au créateur de l'offre (Manager)
+            // 2. Mutation de l'Utilisateur
             UserEntity recruit = app.getCandidate().getUser();
-            recruit.setReferentEmploye(job.getCreator());
+            recruit.setUserType(UserTypeEnum.EMPLOYE);
+            recruit.setReferentEmploye(job.getCreator()); // Lien avec le demandeur
+
+            // 3. Gestion des Rôles Spring Security
+            userRoleRepository.findByName("ROLE_EMPLOYE").ifPresent(role -> {
+                recruit.getRoles().clear(); // On retire ROLE_CANDIDAT
+                recruit.getRoles().add(role);
+            });
+
+            // 4. Création du profil Employé
+            EmployeEntity newProfile = new EmployeEntity();
+            newProfile.setUser(recruit);
+            // Correction des noms de méthodes selon vos entités :
+            newProfile.setPoste(job.getTitle());
+            newProfile.setDepartement(job.getDepartment());
+            employeRepository.save(newProfile);
+
+            // 5. Archivage du profil Candidat
+            CandidatEntity candidatProfile = app.getCandidate();
+            candidatProfile.setArchived(true);
+            candidatRepository.save(candidatProfile);
+
             userRepository.save(recruit);
         }
 

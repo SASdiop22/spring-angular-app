@@ -1,11 +1,15 @@
 package edu.miage.springboot.web.rest.users;
 
+import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.users.UserEntity;
+import edu.miage.springboot.dao.repositories.users.EmployeRepository;
 import edu.miage.springboot.dao.repositories.users.UserRepository;
+import edu.miage.springboot.services.impl.users.UserServiceImpl;
 import edu.miage.springboot.web.dtos.users.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -18,6 +22,12 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EmployeRepository employeRepository;
+
+    @Autowired
+    private UserServiceImpl userService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -47,10 +57,20 @@ public class UserController {
     @PatchMapping("/{candidatId}/assign-referent/{employeId}")
     @PreAuthorize("hasAuthority('ROLE_RH') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<UserDTO> assignReferent(@PathVariable Long candidatId, @PathVariable Long employeId) {
-        // Logique de mise à jour simplifiée pour l'exemple
-        return userRepository.findById(candidatId).map(candidat -> {
-            return ResponseEntity.ok(convertToDTO(userRepository.save(candidat)));
-        }).orElse(ResponseEntity.notFound().build());
+        // 1. Récupérer le candidat (UserEntity)
+        UserEntity candidat = userRepository.findById(candidatId)
+                .orElseThrow(() -> new RuntimeException("Candidat non trouvé"));
+
+        // 2. Récupérer l'employé référent (EmployeEntity)
+        // Note: On suppose l'existence d'un employeRepository injecté
+        EmployeEntity employe = employeRepository.findById(employeId)
+                .orElseThrow(() -> new RuntimeException("Employé référent non trouvé"));
+
+        // 3. Appliquer la logique métier définie dans UserServiceImpl
+        userService.finaliserEmbauche(candidat, employe); //
+
+        // 4. Retourner le DTO mis à jour
+        return ResponseEntity.ok(convertToDTO(candidat));
     }
 
     // Méthode de mapping (À déplacer idéalement dans un Service ou Mapper dédié)

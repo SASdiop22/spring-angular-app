@@ -35,6 +35,8 @@ public class CandidatEntity {
 
     private String ville;
 
+    private boolean archived;
+
     /**
      * Spécification 3.A : RGPD
      * Date du dernier consentement (doit être < 2 ans pour postuler).
@@ -58,5 +60,8 @@ public class CandidatEntity {
         if (this.consentDate == null) {
             this.consentDate = LocalDateTime.now();
         }
+    }
+
+    public void setArchived(boolean b) {
     }
 }

@@ -40,8 +40,6 @@ public class CandidatController {
     @GetMapping("/me")
     @PreAuthorize("hasRole('CANDIDAT')")
     public ResponseEntity<CandidatDTO> getCurrentCandidate(@AuthenticationPrincipal UserDetails userDetails) {
-        // On récupère le profil via le username extrait du JWT
-        // Note: Nécessite l'ajout d'une méthode findByUsername dans le Service
         return ResponseEntity.ok(candidatService.findByUsername(userDetails.getUsername()));
     }
 

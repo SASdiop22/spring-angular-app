@@ -1,6 +1,8 @@
 package edu.miage.springboot.web.rest.offers;
 
 import edu.miage.springboot.dao.entities.offers.ApplicationStatusEnum;
+import edu.miage.springboot.dao.entities.users.CandidatEntity;
+import edu.miage.springboot.dao.repositories.users.CandidatRepository;
 import edu.miage.springboot.services.interfaces.ApplicationService;
 import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,9 @@ public class ApplicationController {
     @Autowired
     private ApplicationService applicationService;
 
+    @Autowired
+    private CandidatRepository candidatRepository;
+
     /**
      * Spécification 3.A : Un candidat postule.
      * La vérification RGPD (< 2 ans) doit être gérée dans le service (applicationService.apply).
@@ -31,6 +36,14 @@ public class ApplicationController {
             @RequestParam(required = false) String coverLetter
     ){
         try {
+            // On vérifie si le candidat n'est pas déjà archivé (embauché)
+            CandidatEntity candidate = candidatRepository.findById(candidateId)
+                    .orElseThrow(() -> new RuntimeException("Candidat non trouvé"));
+
+            if (candidate.isArchived()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(null); // Ou un message : "Profil archivé, redirection vers espace employé"
+            }
             ApplicationDTO newApplication = applicationService.apply(jobOfferId, candidateId, cvUrl, coverLetter);
             return ResponseEntity.status(HttpStatus.CREATED).body(newApplication);
         } catch (Exception e) {

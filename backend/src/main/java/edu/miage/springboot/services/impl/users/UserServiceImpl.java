@@ -11,7 +11,9 @@ import edu.miage.springboot.dao.entities.users.UserEntity;
 import edu.miage.springboot.dao.repositories.users.UserRepository;
 import edu.miage.springboot.dao.repositories.users.UserRoleRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.stereotype.Service;
 
+@Service
 public class UserServiceImpl {
 
 
@@ -38,8 +40,15 @@ public class UserServiceImpl {
 
     // Spec 5 : Lier le candidat recruté à l'employé (Demandeur)
     @Transactional
-    public void finaliserEmbauche(UserEntity candidat, EmployeEntity employe) {
-        candidat.setReferentEmploye(employe);
+    public void finaliserEmbauche(UserEntity candidat, EmployeEntity referent) {
+        if (candidat == null || referent == null) {
+            throw new IllegalArgumentException("Le candidat et le référent doivent exister.");
+        }
+
+        // SPEC 5 : Établissement effectif du lien hiérarchique
+        candidat.setReferentEmploye(referent);
+
+        // Sauvegarde pour persister le champ referent_employe_id
         userRepository.save(candidat);
     }
 
