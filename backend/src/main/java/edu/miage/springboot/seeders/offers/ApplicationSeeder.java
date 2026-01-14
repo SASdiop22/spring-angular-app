@@ -1,4 +1,4 @@
-package edu.miage.springboot.seeders;
+package edu.miage.springboot.seeders.offers;
 
 import edu.miage.springboot.dao.entities.offers.ApplicationEntity;
 import edu.miage.springboot.dao.entities.offers.ApplicationStatusEnum;

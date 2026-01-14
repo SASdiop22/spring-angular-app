@@ -1,4 +1,4 @@
-package edu.miage.springboot.seeders;
+package edu.miage.springboot.seeders.offers;
 
 import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.offers.JobOfferEntity;

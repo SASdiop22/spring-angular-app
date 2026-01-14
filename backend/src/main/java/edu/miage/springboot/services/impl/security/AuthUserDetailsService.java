@@ -1,4 +1,4 @@
-package edu.miage.springboot.services.impl;
+package edu.miage.springboot.services.impl.security;
 
 import edu.miage.springboot.dao.entities.users.UserEntity;
 import edu.miage.springboot.dao.repositories.users.UserRepository;

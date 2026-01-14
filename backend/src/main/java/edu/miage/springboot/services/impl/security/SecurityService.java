@@ -1,9 +1,6 @@
-package edu.miage.springboot.services.impl;
+package edu.miage.springboot.services.impl.security;
 
-import edu.miage.springboot.dao.entities.users.UserEntity;
 import edu.miage.springboot.dao.repositories.offers.JobOfferRepository;
-import edu.miage.springboot.dao.repositories.users.UserRepository;
-import edu.miage.springboot.dao.entities.users.CandidatEntity;
 import edu.miage.springboot.dao.repositories.users.CandidatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;

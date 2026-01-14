@@ -1,4 +1,4 @@
-package edu.miage.springboot.seeders;
+package edu.miage.springboot.seeders.users;
 
 import edu.miage.springboot.dao.entities.users.*;
 import edu.miage.springboot.dao.repositories.users.*;
@@ -9,7 +9,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Set;
 
 @Component

@@ -1,4 +1,4 @@
-package edu.miage.springboot.seeders;
+package edu.miage.springboot.seeders.users;
 
 import edu.miage.springboot.dao.entities.users.UserEntity;
 import edu.miage.springboot.dao.repositories.users.CandidatRepository;

@@ -1,7 +1,7 @@
 package edu.miage.springboot.web.rest.users;
 
 import edu.miage.springboot.services.interfaces.CandidatService;
-import edu.miage.springboot.services.impl.SecurityService;
+import edu.miage.springboot.services.impl.security.SecurityService;
 import edu.miage.springboot.web.dtos.users.CandidatDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

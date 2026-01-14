@@ -1,4 +1,4 @@
-package edu.miage.springboot.seeders;
+package edu.miage.springboot.seeders.users;
 
 import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.users.UserEntity;
@@ -9,9 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 @Order(2)
