@@ -165,7 +165,7 @@ Content-Type: application/json
 
 # Note: On ré-applique ou on change le statut pour pouvoir embaucher (cas de succès)
 # @name hireAction
-POST {{baseUrl}}/{{paul_id}}/hire
+POST {{baseUrl}}/{{current_app_id}}/hire
 Authorization: Bearer {{admin_token}}
 
 > {%

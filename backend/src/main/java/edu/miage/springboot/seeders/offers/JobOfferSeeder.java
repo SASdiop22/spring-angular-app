@@ -46,6 +46,7 @@ public class JobOfferSeeder implements CommandLineRunner {
         o.setTitle(title);
         o.setCreator(creator);
         o.setStatus(status);
+        o.setDepartment(creator.getDepartement());
         o.setPublishedAt(LocalDate.now().atStartOfDay());
         o.setDescription("Description pour " + title);
 
