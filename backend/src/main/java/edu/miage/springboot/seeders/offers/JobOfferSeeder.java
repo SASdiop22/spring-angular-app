@@ -46,11 +46,20 @@ public class JobOfferSeeder implements CommandLineRunner {
         o.setTitle(title);
         o.setCreator(creator);
         o.setStatus(status);
-        o.setDepartment(creator.getDepartement());
-        if(status == JobStatusEnum.OPEN) {
-            o.setSalaryRange(50000.0);
-            o.setRemoteDays(2);
+        o.setPublishedAt(LocalDate.now().atStartOfDay());
+        o.setDescription("Description pour " + title);
+
+        // --- AJOUT DES SKILLS REQUIS ---
+        if (title.contains("Dev Java")) {
+            o.setSkillsRequired(Arrays.asList("Java", "Spring Boot", "PostgreSQL"));
+        } else if (title.contains("Data Analyst")) {
+            o.setSkillsRequired(Arrays.asList("Python", "SQL", "Tableau"));
+        } else if (title.contains("Product Manager")) {
+            o.setSkillsRequired(Arrays.asList("Agile", "Product Management", "Jira"));
+        } else if (title.contains("Cloud Architect")) {
+            o.setSkillsRequired(Arrays.asList("AWS", "Kubernetes", "Docker", "Terraform"));
         }
+
         jobOfferRepository.save(o);
     }
 }

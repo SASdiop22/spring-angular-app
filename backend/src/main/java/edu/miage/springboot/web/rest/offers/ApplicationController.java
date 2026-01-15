@@ -75,6 +75,7 @@ public class ApplicationController {
         applicationService.hireCandidate(id);
         return ResponseEntity.ok().build();
     }
+
     /**
      * Spécification 4.A : Planifier un entretien.
      */

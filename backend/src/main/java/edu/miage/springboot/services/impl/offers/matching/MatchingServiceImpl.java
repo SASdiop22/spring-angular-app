@@ -1,14 +1,15 @@
-package edu.miage.springboot.services.impl.offers;
+package edu.miage.springboot.services.impl.offers.matching;
 
 import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
 import edu.miage.springboot.dao.entities.users.CandidatEntity;
+import edu.miage.springboot.services.interfaces.MatchingService;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class MatchingService {
+public class MatchingServiceImpl implements MatchingService {
 
     // Calcule le % de correspondance entre l'offre et le candidat
     public Integer calculateMatchScore(JobOfferEntity offer, CandidatEntity candidate) {

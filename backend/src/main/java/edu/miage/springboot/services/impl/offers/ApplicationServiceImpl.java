@@ -14,6 +14,7 @@ import edu.miage.springboot.dao.repositories.users.CandidatRepository;
 import edu.miage.springboot.dao.repositories.users.EmployeRepository;
 import edu.miage.springboot.dao.repositories.users.UserRepository;
 import edu.miage.springboot.dao.repositories.users.UserRoleRepository;
+import edu.miage.springboot.services.impl.offers.matching.MatchingServiceImpl;
 import edu.miage.springboot.services.interfaces.ApplicationService;
 import edu.miage.springboot.utils.mappers.ApplicationMapper;
 import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
@@ -44,7 +45,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Autowired
     private UserRoleRepository userRoleRepository;
     @Autowired
-    private MatchingService matchingService;
+    private MatchingServiceImpl matchingService;
 
     @Override
     @Transactional
@@ -153,19 +154,12 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // 4. Calcul automatique du score de matching (Spécification 4.A)
         // Ici, on peut simuler ou appeler une logique de comparaison de mots-clés
-        app.setMatchingScore(calculateMatchingScore(job, candidate));
+        app.setMatchingScore(matchingService.calculateMatchScore(job, candidate));
 
         return applicationMapper.toDto(applicationRepository.save(app));
     }
 
-    /**
-     * Logique simplifiée pour la Spécification 4.A
-     */
-    private Integer calculateMatchingScore(JobOfferEntity job, CandidatEntity candidate) {
-        // Logique métier : par exemple, comparer les tags de l'offre
-        // avec les compétences du candidat. Retourne une valeur sur 100.
-        return 75;
-    }
+
 
     // Dans ApplicationServiceImpl.java
     @Transactional

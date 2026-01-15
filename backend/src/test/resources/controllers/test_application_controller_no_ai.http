@@ -39,6 +39,19 @@ Content-Type: application/json
 }
 > {% client.global.set("token_paul", response.body.accessToken); %}
 
+###
+
+# @name loginPaul (Candidat)
+POST {{authUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "sophie.onboard",
+  "password": "password123"
+}
+> {% client.global.set("token_jean", response.body.accessToken); %}
+
+
 
 ### 2. INITIALISATION DES DONNÉES (RÉCUPÉRATION DES IDs)
 ### -------------------------------------------------------------------------
@@ -50,8 +63,10 @@ Authorization: Bearer {{admin_token}}
 > {%
     var paul = response.body.find(u => u.username === "paul.rejet");
     var bob = response.body.find(u => u.username === "bob.admin");
+    var jean = response.body.find(u => u.username === "sophie.onboard");
     client.global.set("paul_id", paul.id);
     client.global.set("bob_id", bob.id);
+    client.global.set("jean_id", jean.id);
 %}
 
 
@@ -59,7 +74,7 @@ Authorization: Bearer {{admin_token}}
 ### -------------------------------------------------------------------------
 
 # @name applyAction
-POST {{baseUrl}}/apply?jobOfferId=1&candidateId={{paul_id}}&cvUrl=http://storage.com/cv.pdf&coverLetter=Motivation
+POST {{baseUrl}}/apply?jobOfferId=2&candidateId={{paul_id}}&cvUrl=http://storage.com/cv.pdf&coverLetter=Motivation
 Authorization: Bearer {{token_paul}}
 
 > {%
@@ -102,7 +117,33 @@ Authorization: Bearer {{token_paul}}
 ### 6. TEST : REJET AVEC MOTIF (SPEC 4.B)
 ### -------------------------------------------------------------------------
 
-PATCH {{baseUrl}}/{{current_app_id}}/status
+# @name applyAction
+POST {{baseUrl}}/apply?jobOfferId=2&candidateId={{jean_id}}&cvUrl=http://storage.com/cv.pdf&coverLetter=Motivation
+Authorization: Bearer {{token_jean}}
+
+> {%
+    client.test("Candidature réussie", function() {
+        client.assert(response.status === 201, "Le statut devrait être 201 Created");
+        client.global.set("jean_app_id", response.body.id);
+    });
+%}
+
+###
+
+# On utilise l'ID de Bob (Admin/Employé) comme interviewer
+PATCH {{baseUrl}}/{{jean_app_id}}/schedule-interview?date=2026-02-15T14:30:00&interviewerId={{bob_id}}&location=Bureau 402, Paris
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Entretien planifié avec succès", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "INTERVIEW_PENDING");
+    });
+%}
+
+###
+
+PATCH {{baseUrl}}/{{jean_app_id}}/status
 Authorization: Bearer {{token_rh}}
 Content-Type: application/json
 
@@ -124,7 +165,7 @@ Content-Type: application/json
 
 # Note: On ré-applique ou on change le statut pour pouvoir embaucher (cas de succès)
 # @name hireAction
-POST {{baseUrl}}/{{current_app_id}}/hire
+POST {{baseUrl}}/{{paul_id}}/hire
 Authorization: Bearer {{admin_token}}
 
 > {%

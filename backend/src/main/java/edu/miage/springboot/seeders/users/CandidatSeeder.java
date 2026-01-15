@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 @Component
 @Order(3)
@@ -32,12 +33,25 @@ public class CandidatSeeder implements CommandLineRunner {
         createCand("paul.rejet", LocalDateTime.now().minusDays(5));
     }
 
+    // Dans CandidatSeeder.java, modifie la méthode createCand
     private void createCand(String username, LocalDateTime consentDate) {
         UserEntity u = userRepository.findByUsername(username).orElseThrow();
         CandidatEntity c = new CandidatEntity();
         c.setUser(u);
         c.setVille("Lyon");
         c.setConsentDate(consentDate);
+
+        // --- AJOUT DES SKILLS ---
+        if (username.equals("marie.hired")) {
+            c.setSkills(Arrays.asList("Java", "Spring Boot", "PostgreSQL", "Angular"));
+        } else if (username.equals("paul.rejet")) {
+            c.setSkills(Arrays.asList("Python", "Django", "Docker")); // Profil non-Java pour tester les scores bas
+        } else if (username.equals("sophie.onboard")) {
+            c.setSkills(Arrays.asList("Product Management", "Agile", "Jira", "Figma"));
+        } else if (username.equals("jean.rgpd")) {
+            c.setSkills(Arrays.asList("Java", "Hibernate"));
+        }
+
         candidatRepository.save(c);
     }
 }
