@@ -24,4 +24,5 @@ public class ApplicationDTO {
     private LocalDateTime meetingDate;    // Pour les entretiens et tests
     private String rejectionReason;        // Pour le motif de rejet (Spec 4.B)
     private List<ApplicationNoteDTO> notes;    // Pour le suivi interne
+    private LocalDateTime createdAt;
 }

@@ -1,5 +1,6 @@
 package edu.miage.springboot.utils.mappers;
 
+import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.users.UserEntity;
 import edu.miage.springboot.dao.entities.users.UserRoleEntity;
 import edu.miage.springboot.web.dtos.users.UserDTO;
@@ -17,10 +18,13 @@ public interface UserMapper {
 
     @Mapping(source = "roles", target = "roles", qualifiedByName = "mapRoles")
     @Mapping(source = "employeProfile.id", target = "employeProfileId")
+
+    // ÉTAPE A : On lie le champ referentEmploye à notre méthode de log
     @Mapping(source = "referentEmploye.id", target = "referentId")
     UserDTO toDto(UserEntity entity);
 
     List<UserDTO> toDtos(List<UserEntity> entities);
+
 
     /**
      * Convertit le Set de UserRoleEntity en Set de String (noms des rôles)

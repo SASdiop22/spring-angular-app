@@ -59,7 +59,7 @@ public class UserEntity {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "referent_employe_id")
     private EmployeEntity referentEmploye;
 
@@ -72,9 +72,6 @@ public class UserEntity {
 
     //Synchronisation bidirectionnelle de la relation avec EmployeEntity
     public void setReferentEmploye(EmployeEntity employe) {
-    if (this.referentEmploye != null) {
-        this.referentEmploye.getRecruesLiees().remove(this);
-    }
     this.referentEmploye = employe;
     if (employe != null && !employe.getRecruesLiees().contains(this)) {
         employe.getRecruesLiees().add(this);

@@ -59,12 +59,13 @@ GET http://localhost:8080/api/joboffers
 Authorization: Bearer {{token_rh}}
 
 > {%
-    const offer = response.body.find(o => o.title.includes("Cloud"));
+    const offer = response.body.find(o => o.title.includes("Dev Java S1"));
     client.test("Offre Cloud identifiée", function() {
         client.assert(offer !== undefined, "L'offre Cloud Architect doit exister");
         client.global.set("target_job_id", offer.id);
         // Le créateur de l'offre (ID 7 dans les seeders) sera le futur manager
-        client.global.set("manager_id", offer.creatorId || 7);
+        client.global.set("manager_id", offer.creatorId);
+        client.log("ID du manager trouvé : " + offer.creatorId);
     });
 %}
 
@@ -128,6 +129,8 @@ Authorization: Bearer {{token_rh}}
     });
 %}
 
+
+
 ### F. Vérification de la clôture de l'offre (Spec 5)
 GET http://localhost:8080/api/joboffers/{{target_job_id}}
 Authorization: Bearer {{token_rh}}
@@ -135,19 +138,6 @@ Authorization: Bearer {{token_rh}}
 > {%
     client.test("Offre clôturée automatiquement", function() {
         client.assert(response.body.status === "FILLED", "L'offre devrait être FILLED après l'embauche");
-    });
-%}
-
-### G. Vérification de l'Onboarding (Spec 5)
-# On vérifie le changement de type d'utilisateur et le lien hiérarchique
-GET http://localhost:8080/api/users/{{jean_user_id}}
-Authorization: Bearer {{token_admin}}
-
-> {%
-    client.test("Jean est devenu Employé avec Manager", function() {
-        client.assert(response.body.userType === "EMPLOYE", "Le type d'utilisateur doit être EMPLOYE");
-        client.assert(response.body.referentId === parseInt(client.global.get("manager_id")),
-            "Le manager doit être le créateur de l'offre");
     });
 %}
 

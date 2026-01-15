@@ -29,7 +29,7 @@ public class JobOfferSeeder implements CommandLineRunner {
         EmployeEntity dylan = employeRepository.findByUserUsername("dylan.demandeur").get();
 
         // Offre ID 1 : Pour Scénario 1 (S'arrête en DRAFT/PENDING)
-        createOffer("Dev Java S1", cathy, JobStatusEnum.DRAFT);
+        createOffer("Dev Java S1", dylan, JobStatusEnum.OPEN);
 
         // Offre ID 2 : Pour Scénario 2 (Ouverte pour Jean)
         createOffer("Data Analyst S2", dylan, JobStatusEnum.OPEN);

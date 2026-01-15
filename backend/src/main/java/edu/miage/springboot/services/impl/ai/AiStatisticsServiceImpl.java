@@ -1,4 +1,4 @@
-package edu.miage.springboot.services.impl;
+package edu.miage.springboot.services.impl.ai;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;

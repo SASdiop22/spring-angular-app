@@ -4,11 +4,13 @@ import edu.miage.springboot.dao.entities.offers.*;
 import edu.miage.springboot.dao.entities.users.*;
 import edu.miage.springboot.dao.repositories.offers.*;
 import edu.miage.springboot.dao.repositories.users.*;
+import edu.miage.springboot.services.impl.users.UserServiceImpl;
 import edu.miage.springboot.services.interfaces.ApplicationService;
 import edu.miage.springboot.services.interfaces.AiMatchingService; // Version B
 import edu.miage.springboot.utils.mappers.ApplicationMapper;
 import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
 import edu.miage.springboot.web.dtos.ai.MatchingResultDTO; // Version B
+import edu.miage.springboot.web.dtos.users.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Autowired private EmployeRepository employeRepository;
     @Autowired private UserRoleRepository userRoleRepository;
     @Autowired private ApplicationMapper applicationMapper;
+    @Autowired private UserServiceImpl userService;
 
     // 🔹 AJOUT IA (Version B)
     @Autowired private AiMatchingService aiMatchingService;
@@ -57,8 +60,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         // 🔹 INTEGRATION IA MATCHING (Version B)
         // Simulation de l'extraction de texte du CV (à lier à votre service de parsing plus tard)
         String cvText = "Compétences extraites du CV de " + candidate.getUser().getUsername();
-        MatchingResultDTO result = aiMatchingService.matchCvWithJob(cvText, job.getDescription());
-        app.setMatchingScore(result.getMatchingScore());
+        //MatchingResultDTO result = aiMatchingService.matchCvWithJob(cvText, job.getDescription());
+        //app.setMatchingScore(result.getMatchingScore());
+        app.setMatchingScore(50); // Score par défaut temporaire
 
         return applicationMapper.toDto(applicationRepository.save(app));
     }
@@ -89,35 +93,43 @@ public class ApplicationServiceImpl implements ApplicationService {
         // --- SPÉCIFICATION 5 : Processus d'embauche (HIRED) ---
         if (newStatus == ApplicationStatusEnum.HIRED) {
             JobOfferEntity job = app.getJob();
-            job.setStatus(JobStatusEnum.FILLED);
-            jobOfferRepository.save(job);
-
             UserEntity recruit = app.getCandidate().getUser();
-            recruit.setUserType(UserTypeEnum.EMPLOYE);
-            recruit.setReferentEmploye(job.getCreator()); // Lien Manager
 
+            // 1. Établissement du lien hiérarchique (Correction majeure) [cite: 5, 7]
+            if (job.getCreator() != null) {
+                recruit.setReferentEmploye(job.getCreator()); // Fixe le referent_employe_id en base
+            }
+
+            // 2. Mutation du profil
+            recruit.setUserType(UserTypeEnum.EMPLOYE);
             userRoleRepository.findByName("ROLE_EMPLOYE").ifPresent(role -> {
                 recruit.getRoles().clear();
                 recruit.getRoles().add(role);
             });
 
-            // Création du profil Employé métier (Spécification 5)
+            // 3. Mise à jour de l'offre
+            job.setStatus(JobStatusEnum.FILLED);
+            jobOfferRepository.save(job);
+
+            // 4. Création du profil Employé [cite: 1, 7]
             EmployeEntity newProfile = new EmployeEntity();
             newProfile.setUser(recruit);
             newProfile.setPoste(job.getTitle());
             newProfile.setDepartement(job.getDepartment());
             employeRepository.save(newProfile);
 
-            // Archivage et synchronisation forcée pour les tests (Correction de la Version A)
+            // 5. Archivage du candidat
             CandidatEntity candidatProfile = app.getCandidate();
             candidatProfile.setArchived(true);
-            candidatRepository.saveAndFlush(candidatProfile);
+            candidatRepository.save(candidatProfile);
 
+            // 6. Sauvegarde forcée de l'utilisateur pour que le Mapper voit le referentId
             userRepository.saveAndFlush(recruit);
-            app.setCandidate(candidatProfile);
         }
 
-        return applicationMapper.toDto(applicationRepository.save(app));
+        // Sauvegarde et retour du DTO rafraîchi
+        ApplicationEntity savedApp = applicationRepository.saveAndFlush(app);
+        return applicationMapper.toDto(savedApp);
     }
 
     @Override

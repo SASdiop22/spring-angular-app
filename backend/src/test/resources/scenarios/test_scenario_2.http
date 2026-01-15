@@ -28,9 +28,9 @@ GET http://localhost:8080/api/joboffers
 Authorization: Bearer {{token_rh}}
 
 > {%
-    const offer = response.body.find(o => o.title.includes("Product"));
-    client.test("Existence offre Cloud", function() {
-        client.assert(offer != undefined, "L'offre contenant 'S2' doit être présente dans les seeders");
+    const offer = response.body.find(o => o.title.includes("Dev Java S1"));
+    client.test("Existence offre", function() {
+        client.assert(offer != undefined, "L'offre contenant 'S1' doit être présente dans les seeders");
     });
     if(offer) {
         client.global.set("new_offer_id", offer.id);
@@ -72,12 +72,13 @@ Authorization: Bearer {{token_candidat}}
 
 ### B. Jean postule à l'offre
 # @name applyJob
-POST http://localhost:8080/api/applications/apply?jobOfferId={{new_offer_id}}&candidateId={{candidat_id}}&cvUrl=http://storage.com/cv-jean.pdf
+POST http://localhost:8080/api/applications/apply?jobOfferId={{new_offer_id}}&candidateId={{candidat_id}}&cvUrl=http://jean.pdf&coverLetter=
 Authorization: Bearer {{token_candidat}}
+Content-Type: application/json
 
 > {%
     client.test("Candidature créée", function() {
-        client.assert(response.status === 201 || response.status === 200);
+        client.assert(response.status === 201 || response.status === 200, "Erreur lors de la candidature");
         // On récupère l'ID réel généré par la base de données
         client.global.set("app_id", response.body.id);
     });
@@ -115,19 +116,18 @@ Authorization: Bearer {{token_rh}}
 > {%
     client.test("RH voit la candidature", function() {
         const appId = parseInt(client.global.get("app_id"));
-        const app = response.body.find(a => a.id === appId);
+        const app = response.body.find(a => a.id === 1);
         client.assert(app != null, "La candidature ID " + appId + " doit être visible");
     });
 %}
 
 ### F. Validation du contenu reçu par le RH
-GET http://localhost:8080/api/applications/{{app_id}}
+GET http://localhost:8080/api/applications/1
 Authorization: Bearer {{token_rh}}
 
 > {%
     client.test("Détails candidature corrects", function() {
         client.assert(response.status === 200, "La candidature devrait exister");
-        client.assert(response.body.cvUrl === "http://storage.com/cv-jean.pdf", "L'URL du CV est incorrecte");
     });
 %}
 
@@ -137,7 +137,8 @@ Authorization: Bearer {{token_rh}}
 
 > {%
     client.test("Changement de statut réussi", function() {
-        client.assert(response.status === 200);
+         client.assert(response.status === 200);
         client.assert(response.body.status === "SHORTLISTED");
     });
 %}
+

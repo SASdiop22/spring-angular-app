@@ -1,4 +1,4 @@
-package edu.miage.springboot.services.impl;
+package edu.miage.springboot.services.impl.offers;
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

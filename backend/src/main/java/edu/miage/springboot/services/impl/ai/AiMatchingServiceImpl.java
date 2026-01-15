@@ -1,4 +1,4 @@
-package edu.miage.springboot.services.impl;
+package edu.miage.springboot.services.impl.ai;
 
 import java.time.Duration;
 import java.util.Map;

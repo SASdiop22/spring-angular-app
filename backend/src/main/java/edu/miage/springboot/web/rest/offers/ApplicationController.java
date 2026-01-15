@@ -46,9 +46,9 @@ public class ApplicationController {
             }
             ApplicationDTO newApplication = applicationService.apply(jobOfferId, candidateId, cvUrl, coverLetter);
             return ResponseEntity.status(HttpStatus.CREATED).body(newApplication);
-        } catch (Exception e) {
-            // En cas d'erreur, on peut retourner un 400 avec le message
-            return ResponseEntity.badRequest().build();
+        }catch (Exception e) {
+            e.printStackTrace(); // Pour voir l'erreur exacte dans la console Spring
+            return ResponseEntity.badRequest().header("X-Error-Reason", e.getMessage()).build();
         }
     }
 
