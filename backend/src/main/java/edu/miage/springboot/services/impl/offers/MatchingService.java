@@ -1,7 +1,7 @@
 package edu.miage.springboot.services.impl.offers;
 
 import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
-import edu.miage.springboot.dao.entities.users.UserEntity;
+import edu.miage.springboot.dao.entities.users.CandidatEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class MatchingService {
 
     // Calcule le % de correspondance entre l'offre et le candidat
-    public Integer calculateMatchScore(JobOfferEntity offer, UserEntity candidate) {
+    public Integer calculateMatchScore(JobOfferEntity offer, CandidatEntity candidate) {
         List<String> requiredSkills = offer.getSkillsRequired();
         List<String> candidateSkills = candidate.getSkills(); // Nécessite l'ajout fait dans UserEntity
 

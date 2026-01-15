@@ -3,12 +3,16 @@ package edu.miage.springboot.services.impl.offers;
 import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
 import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
+import edu.miage.springboot.dao.entities.users.UserEntity;
+import edu.miage.springboot.dao.entities.users.UserTypeEnum;
 import edu.miage.springboot.dao.repositories.users.EmployeRepository;
 import edu.miage.springboot.dao.repositories.offers.JobOfferRepository;
+import edu.miage.springboot.dao.repositories.users.UserRepository;
 import edu.miage.springboot.services.interfaces.JobOfferService;
 import edu.miage.springboot.utils.mappers.JobOfferMapper;
 import edu.miage.springboot.web.dtos.offers.JobOfferDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +29,7 @@ public class JobOfferServiceImpl implements JobOfferService {
     private JobOfferMapper jobOfferMapper;
 
     @Autowired
-    private EmployeRepository employeRepository; // Nécessaire pour lier le créateur
+    private UserRepository userRepository;
 
     @Override
     public List<JobOfferDTO> findAll() {
@@ -109,16 +113,33 @@ public class JobOfferServiceImpl implements JobOfferService {
     @Override
     @Transactional
     public JobOfferDTO createJobOffer(JobOfferDTO jobOfferDTO) {
-        JobOfferEntity entity = jobOfferMapper.dtoToEntity(jobOfferDTO);
+        // 1. Récupérer l'utilisateur connecté via le Token JWT (Sécurité)
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur connecté introuvable."));
 
-        // Liaison avec le créateur (Demandeur de poste)
-        if (jobOfferDTO.getCreatorId() != null) {
-            EmployeEntity creator = employeRepository.findById(jobOfferDTO.getCreatorId())
-                    .orElseThrow(() -> new RuntimeException("Employé créateur introuvable"));
-            entity.setCreator(creator);
+        // 2. Vérifier que c'est un Employé
+        if (currentUser.getEmployeProfile() == null) {
+            throw new RuntimeException("Accès refusé : Seul un employé peut créer une demande de poste.");
         }
 
-        entity.setStatus(JobStatusEnum.DRAFT);
+        JobOfferEntity entity = jobOfferMapper.dtoToEntity(jobOfferDTO);
+
+        // 3. Associer le VRAI créateur (pas celui du JSON)
+        entity.setCreator(currentUser.getEmployeProfile());
+
+        // 4. Logique Métier : RH vs Demandeur
+        boolean isRH = currentUser.getUserType() == UserTypeEnum.RH;
+
+        if (isRH) {
+            // Le RH passe directement en PENDING (ou garde ce qu'il a mis si pertinent)
+            // On évite le DRAFT inutile pour eux
+            entity.setStatus(JobStatusEnum.PENDING);
+        } else {
+            // Le Demandeur est FORCÉ en DRAFT (Brouillon)
+            entity.setStatus(JobStatusEnum.DRAFT);
+        }
+
         return jobOfferMapper.entityToDto(jobOfferRepository.save(entity));
     }
 
@@ -152,6 +173,7 @@ public class JobOfferServiceImpl implements JobOfferService {
 
         return jobOfferMapper.entityToDto(jobOfferRepository.save(existing));
     }
+
 
     @Override
     public void deleteJobOffer(Long id) {

@@ -48,6 +48,11 @@ public class CandidatEntity {
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApplicationEntity> applications = new ArrayList<>();
 
+    // Compétences du candidat
+    @ElementCollection
+    @CollectionTable(name = "candidat_skills", joinColumns = @JoinColumn(name = "candidat_id"))
+    @Column(name = "skill")
+    private List<String> skills = new ArrayList<>();
     /**
      * Méthode utilitaire pour valider la règle RGPD des 2 ans
      */

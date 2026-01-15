@@ -43,7 +43,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Autowired
     private UserRoleRepository userRoleRepository;
-
+    @Autowired
+    private MatchingService matchingService;
     @Override
     @Transactional
     public ApplicationDTO apply(Long jobOfferId, Long candidateId, String cvUrl, String coverLetter) {
@@ -74,6 +75,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setCoverLetter(coverLetter);
         app.setCurrentStatus(ApplicationStatusEnum.RECEIVED);
 
+        // On récupère les skills de l'offre
+        List<String> jobSkills = job.getSkillsRequired();
+        // On récupère les skills du candidat
+        List<String> candidateSkills = candidate.getSkills();
+
+        // Appel du service
+        Integer score = matchingService.calculateMatchScore(job, candidate);
+        app.setMatchingScore(score);
         // La date de création est gérée par le @PrePersist dans ApplicationEntity
         ApplicationEntity savedApp = applicationRepository.save(app);
         return applicationMapper.toDto(savedApp);
@@ -125,6 +134,22 @@ public class ApplicationServiceImpl implements ApplicationService {
 
             userRepository.save(recruit);
         }
+
+        return applicationMapper.toDto(applicationRepository.save(app));
+    }
+    @Transactional
+    @Override
+    public ApplicationDTO scheduleInterview(Long applicationId, LocalDateTime date, Long interviewerId) {
+        ApplicationEntity app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
+
+        EmployeEntity interviewer = employeRepository.findById(interviewerId)
+                .orElseThrow(() -> new RuntimeException("Interviewer introuvable"));
+
+        // Mise à jour des infos
+        app.setMeetingDate(date);
+        app.setInterviewer(interviewer);
+        app.setCurrentStatus(ApplicationStatusEnum.INTERVIEW_PENDING);
 
         return applicationMapper.toDto(applicationRepository.save(app));
     }
