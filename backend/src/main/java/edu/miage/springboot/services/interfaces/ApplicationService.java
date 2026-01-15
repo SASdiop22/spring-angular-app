@@ -2,6 +2,7 @@ package edu.miage.springboot.services.interfaces;
 
 import edu.miage.springboot.dao.entities.offers.ApplicationStatusEnum;
 import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
+import edu.miage.springboot.web.dtos.offers.ApplicationStatusUpdateDTO;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ public interface ApplicationService {
 
     List<ApplicationDTO> findByCandidateId(Long candidateId);
 
-    ApplicationDTO updateStatus(Long id, ApplicationStatusEnum status, String reason);
+    ApplicationDTO updateStatus(Long id, ApplicationStatusUpdateDTO updateDto);
 
     ApplicationDTO findById(Long id);
 }

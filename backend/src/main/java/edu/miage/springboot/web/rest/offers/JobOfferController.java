@@ -3,10 +3,12 @@ package edu.miage.springboot.web.rest.offers;
 import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
 import edu.miage.springboot.services.interfaces.JobOfferService;
 import edu.miage.springboot.web.dtos.offers.JobOfferDTO;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,9 +47,11 @@ public class JobOfferController {
      * Note: On autorise ADMIN/RH par extension.
      */
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_RH', 'ROLE_EMPLOYE')")
-    public ResponseEntity<JobOfferDTO> create(@RequestBody JobOfferDTO jobOfferDTO) {
-        return new ResponseEntity<>(jobOfferService.createJobOffer(jobOfferDTO), HttpStatus.CREATED);
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_RH', 'ROLE_EMPLOYE')") // Spec 1 : Un employé (demandeur) crée l'offre
+    public ResponseEntity<JobOfferDTO> createOffer(@Valid @RequestBody JobOfferDTO dto) {
+        // Le service forcera le statut PENDING
+        JobOfferDTO created = jobOfferService.createJobOffer(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**

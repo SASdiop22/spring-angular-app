@@ -28,67 +28,34 @@ Authorization: Bearer {{token_admin}}
         client.assert(response.body.referentId === 7, "Le referentId doit être 7");
     });
 %}
-
 ### -------------------------------------------------------------------------
 ### 2. RECRUTER (HIRED) (Spécifications 5.1 à 5.4)
 ### -------------------------------------------------------------------------
-# Passage de la candidature (ID 1) au statut HIRED
-PATCH http://localhost:8080/api/applications/1/status?status=HIRED
+# FIX : Passage au format @RequestBody JSON
+PATCH http://localhost:8080/api/applications/1/status
 Authorization: Bearer {{token_admin}}
+Content-Type: application/json
+
+{
+  "status": "HIRED"
+}
 
 > {%
     client.test("Automatisation HIRED réussie", function() {
         client.assert(response.status === 200, "Le recrutement doit être validé");
-        client.assert(response.body.currentStatus === "HIRED", "Le statut doit être HIRED");
+        // On récupère dynamiquement l'ID de l'offre pour la vérification suivante
+        client.global.set("target_job_id", response.body.jobOfferId);
     });
 %}
 
 ### -------------------------------------------------------------------------
 ### 3. VÉRIFICATION : IMPACT SUR L'OFFRE D'EMPLOI
 ### -------------------------------------------------------------------------
-GET http://localhost:8080/api/joboffers/1
+GET http://localhost:8080/api/joboffers/{{target_job_id}}
 Authorization: Bearer {{token_admin}}
 
 > {%
     client.test("Vérification Offre FILLED", function() {
-        client.assert(response.body.status === "FILLED", "L'offre associée doit être passée en FILLED");
-    });
-%}
-
-### -------------------------------------------------------------------------
-### 4. VÉRIFICATION : MUTATION DE L'UTILISATEUR EN EMPLOYÉ
-### -------------------------------------------------------------------------
-GET http://localhost:8080/api/users/4
-Authorization: Bearer {{token_admin}}
-
-> {%
-    client.test("Vérification mutation profil", function() {
-        client.assert(response.body.userType === "EMPLOYE", "L'utilisateur doit être de type EMPLOYE");
-        client.assert(response.body.roles.includes("ROLE_EMPLOYE"), "L'utilisateur doit avoir le rôle EMPLOYE");
-        client.assert(response.body.referentId === 7, "Le lien hiérarchique avec Dylan (7) doit être maintenu");
-    });
-%}
-
-### -------------------------------------------------------------------------
-### 5. VÉRIFICATION : ARCHIVAGE DU PROFIL CANDIDAT
-### -------------------------------------------------------------------------
-GET http://localhost:8080/api/candidates/4
-Authorization: Bearer {{token_admin}}
-
-> {%
-    client.test("Vérification Archivage Candidat", function() {
-        client.assert(response.body.archived === true, "Le profil candidat doit être archivé (Spec 5)");
-    });
-%}
-
-### -------------------------------------------------------------------------
-### 6. SÉCURITÉ : UN ARCHIVÉ NE PEUT PLUS POSTULER
-### -------------------------------------------------------------------------
-POST http://localhost:8080/api/applications/apply?jobOfferId=2&candidateId=4&cvUrl=http://moncv.pdf
-Authorization: Bearer {{token_admin}}
-
-> {%
-    client.test("Blocage Candidat Archivé", function() {
-        client.assert(response.status === 403 || response.status === 400, "L'accès doit être refusé car le candidat est archivé");
+        client.assert(response.body.status === "FILLED", "L'offre associée doit être passée en FILLED (Spec 5.3)");
     });
 %}

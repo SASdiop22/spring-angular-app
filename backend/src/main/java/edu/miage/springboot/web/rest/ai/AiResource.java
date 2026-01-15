@@ -1,6 +1,5 @@
-package edu.miage.springboot.web.rest;
+package edu.miage.springboot.web.rest.ai;
 
-import edu.miage.springboot.web.dtos.*;
 import edu.miage.springboot.web.dtos.ai.MatchingResultDTO;
 import edu.miage.springboot.services.interfaces.AiMatchingService;
 import edu.miage.springboot.services.interfaces.CvTextExtractorService;

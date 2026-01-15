@@ -1,4 +1,4 @@
-package edu.miage.springboot.web.dtos;
+package edu.miage.springboot.web.dtos.ai;
 
 import java.util.Map;
 

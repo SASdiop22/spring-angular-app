@@ -1,6 +1,8 @@
 package edu.miage.springboot.web.dtos.offers;
 
 import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,8 +18,9 @@ public class JobOfferDTO {
     private String description;
     private LocalDate deadline;
     private String department;
-    private Double salaryRange;
-    private Integer remoteDays;
+    private Double salaryRange; // Spécification 2.A (Enrichi par RH)
+
+    private Integer remoteDays; // Spécification 2.A (Enrichi par RH)
     private JobStatusEnum status;
 
     // Correction : On peut garder l'ID, mais il est souvent utile

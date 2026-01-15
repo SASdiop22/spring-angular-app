@@ -1,7 +1,7 @@
 ### Variables Globales
 @baseUrl = http://localhost:8080/api
 @jobOfferId = 1
-@candidateId = 1
+@candidateId = 6
 
 ### 1. Authentification des acteurs
 # @name loginRH
@@ -20,7 +20,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "username": "dylan.demandeur",
+  "username": "marie.hired",
   "password": "password123"
 }
 > {% client.global.set("token_demandeur", response.body.accessToken); %}
@@ -31,7 +31,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "username": "jean.candidat",
+  "username": "paul.rejet",
   "password": "password123"
 }
 > {% client.global.set("token_candidat", response.body.accessToken); %}
@@ -59,25 +59,37 @@ Content-Type: application/json
 ### 4. TEST SPEC 4.4 : GESTION DES REJETS
 
 ### 4a. Tentative de rejet SANS motif (Doit échouer)
-# @name rejectionFail
-PATCH {{baseUrl}}/applications/{{app_id}}/status?status=REJECTED
+# Le backend doit valider que si status == REJECTED, alors reason est requis.
+PATCH {{baseUrl}}/applications/{{app_id}}/status
 Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "status": "REJECTED"
+}
 
 > {%
     client.test("Le rejet sans motif doit être bloqué", function() {
-        client.assert(response.status === 400, "Le serveur aurait dû renvoyer une erreur 400");
+        // Si votre service lance une exception quand le motif manque :
+        client.assert(response.status === 400, "Attendu 400 car reason est absent");
     });
 %}
 
 ### 4b. Rejet AVEC motif obligatoire (Doit réussir)
-# @name rejectionSuccess
-PATCH {{baseUrl}}/applications/{{app_id}}/status?status=REJECTED&reason=Expérience insuffisante sur l'environnement technique cible (Microservices).
+PATCH {{baseUrl}}/applications/{{app_id}}/status
 Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "status": "REJECTED",
+  "reason": "Expérience insuffisante sur l'environnement technique cible (Microservices)."
+}
 
 > {%
     client.test("Le rejet avec motif est validé", function() {
         client.assert(response.status === 200);
         client.assert(response.body.status === "REJECTED");
+        client.assert(response.body.rejectionReason != null);
     });
 %}
 

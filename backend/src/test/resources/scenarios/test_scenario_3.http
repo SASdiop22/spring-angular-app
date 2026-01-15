@@ -99,16 +99,24 @@ Authorization: Bearer {{token_candidat}}
     });
 %}
 
-### D. RH passe la candidature en entretien (Spec 4.B)
-# Déclenche la simulation d'envoi de mail et fixe une date par défaut
-PATCH http://localhost:8080/api/applications/{{app_id}}/status?status=INTERVIEW_PENDING
+### D. RH passe la candidature en entretien (Spec 4.B & 4.2)
+# FIX : Envoi des données logistiques obligatoires
+PATCH http://localhost:8080/api/applications/{{app_id}}/status
 Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "status": "INTERVIEW_PENDING",
+  "meetingDate": "2026-02-15T10:30:00",
+  "meetingLocation": "Siège social - Salle 402 (ou lien Teams)"
+}
 
 > {%
-    client.test("Statut INTERVIEW confirmé", function() {
-        client.assert(response.status === 200);
+    client.test("Statut INTERVIEW confirmé avec logistique", function() {
+        client.assert(response.status === 200, "Le serveur devrait accepter la requête avec date et lieu");
         client.assert(response.body.status === "INTERVIEW_PENDING");
-        client.assert(response.body.meetingDate != null, "Une date de RDV doit être générée");
+        client.assert(response.body.meetingDate != null, "La date de RDV doit être présente dans la réponse");
+        client.log("Entretien fixé le : " + response.body.meetingDate);
     });
 %}
 
@@ -117,10 +125,13 @@ Authorization: Bearer {{token_rh}}
 ### -------------------------------------------------------------------------
 
 ### E. RH valide l'embauche (HIRED)
-# Cette action est atomique (Spec 5) :
-# 1. App -> HIRED | 2. Offre -> FILLED | 3. User -> EMPLOYE | 4. Candidat -> Archivé
-PATCH http://localhost:8080/api/applications/{{app_id}}/status?status=HIRED
+PATCH http://localhost:8080/api/applications/3/status
 Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "status": "HIRED"
+}
 
 > {%
     client.test("Embauche effectuée", function() {

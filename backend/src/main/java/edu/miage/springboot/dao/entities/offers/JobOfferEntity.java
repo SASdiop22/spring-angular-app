@@ -65,7 +65,6 @@ public class JobOfferEntity {
         this.remoteDays = remoteDays;
         this.status = JobStatusEnum.OPEN;
         this.publishedAt = LocalDateTime.now();
-        this.publishedAt = java.time.LocalDateTime.now();
     }
 
 }

@@ -5,6 +5,7 @@ import edu.miage.springboot.dao.entities.users.CandidatEntity;
 import edu.miage.springboot.dao.repositories.users.CandidatRepository;
 import edu.miage.springboot.services.interfaces.ApplicationService;
 import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
+import edu.miage.springboot.web.dtos.offers.ApplicationStatusUpdateDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -88,16 +90,21 @@ public class ApplicationController {
      */
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN')")
-    public ResponseEntity<ApplicationDTO> updateStatus(
-            @PathVariable Long id,
-            @RequestParam ApplicationStatusEnum status,
-            @RequestParam(required = false) String reason) { // On récupère le motif ici
+    public ResponseEntity<ApplicationDTO> apply(
+            @RequestParam Long jobOfferId,
+            @RequestParam Long candidateId,
+            @RequestParam String cvUrl,
+            @RequestBody Map<String, String> body) { // Utilisation du RequestBody
 
         try {
-            ApplicationDTO updated = applicationService.updateStatus(id, status, reason);
-            return ResponseEntity.ok(updated);
+            String coverLetter = body.get("coverLetter");
+            return new ResponseEntity<>(
+                    applicationService.apply(jobOfferId, candidateId, cvUrl, coverLetter),
+                    HttpStatus.CREATED
+            );
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().header("Error-Message", e.getMessage()).build();
+            // Renvoie une 400 Bad Request avec le message d'erreur de la spec
+            return ResponseEntity.badRequest().header("X-Error-Message", e.getMessage()).build();
         }
     }
 }

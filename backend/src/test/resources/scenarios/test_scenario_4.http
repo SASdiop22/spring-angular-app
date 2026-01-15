@@ -83,10 +83,16 @@ Authorization: Bearer {{token_candidat}}
 ### -------------------------------------------------------------------------
 
 ### 1. ÉCHEC : Le manager (Cathy) tente de s'auto-recruter (valider le statut)
-# Seul le RH ou l'Admin peut passer à HIRED.
-# Attendu : 403 Forbidden
-PATCH http://localhost:8080/api/applications/1/status?status=HIRED
+### 1. ÉCHEC : Le manager tente de valider un statut (Spec 4.A)
+# Seul le RH ou l'Admin peut modifier un statut.
+# On envoie un JSON valide pour être sûr que le rejet est dû au ROLE et non au format.
+PATCH http://localhost:8080/api/applications/1/status
 Authorization: Bearer {{token_employe}}
+Content-Type: application/json
+
+{
+  "status": "HIRED"
+}
 
 ### 2. ÉCHEC : Un candidat tente de publier une offre d'emploi
 # Attendu : 403 Forbidden

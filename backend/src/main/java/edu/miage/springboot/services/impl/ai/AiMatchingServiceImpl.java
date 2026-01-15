@@ -44,6 +44,7 @@ public class AiMatchingServiceImpl implements AiMatchingService {
                 "  \"recommendation\": \"short sentence\"\n" +
                 "}";
 
+        //CONFIG MODELE
         Map<String, Object> body = Map.of(
                 "model", "llama3",
                 "prompt", prompt,

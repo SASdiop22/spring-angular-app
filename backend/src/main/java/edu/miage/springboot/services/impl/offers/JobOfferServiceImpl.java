@@ -55,7 +55,7 @@ public class JobOfferServiceImpl implements JobOfferService {
                 .orElseThrow(() -> new RuntimeException("Offre introuvable"));
 
         // Sécurité métier : On ne publie que ce qui est en attente (PENDING) ou en brouillon (DRAFT)
-        if (entity.getStatus() == JobStatusEnum.CLOSED || entity.getStatus() == JobStatusEnum.FILLED) {
+        if (entity.getStatus() != JobStatusEnum.PENDING && entity.getStatus() != JobStatusEnum.DRAFT) {
             throw new IllegalStateException("Impossible de publier une offre clôturée ou pourvue.");
         }
 
@@ -110,6 +110,10 @@ public class JobOfferServiceImpl implements JobOfferService {
     @Transactional
     public JobOfferDTO createJobOffer(JobOfferDTO jobOfferDTO) {
         JobOfferEntity entity = jobOfferMapper.dtoToEntity(jobOfferDTO);
+
+        // Spec 2.A : Forcer le statut à PENDING (ou DRAFT selon votre choix interne)
+        // Ici, on le passe en PENDING pour que les RH le voient immédiatement.
+        entity.setStatus(JobStatusEnum.PENDING);
 
         // Liaison avec le créateur (Demandeur de poste)
         if (jobOfferDTO.getCreatorId() != null) {

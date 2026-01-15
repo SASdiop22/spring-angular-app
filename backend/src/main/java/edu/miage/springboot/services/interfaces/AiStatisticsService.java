@@ -1,6 +1,6 @@
 package edu.miage.springboot.services.interfaces;
 
-import edu.miage.springboot.web.dtos.AiStatisticsDTO;
+import edu.miage.springboot.web.dtos.ai.AiStatisticsDTO;
 
 public interface AiStatisticsService {
 

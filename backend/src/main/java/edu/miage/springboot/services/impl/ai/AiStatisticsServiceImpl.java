@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import edu.miage.springboot.dao.entities.AiAnalysisResultEntity;
 import edu.miage.springboot.dao.repositories.AiAnalysisResultRepository;
 import edu.miage.springboot.services.interfaces.AiStatisticsService;
-import edu.miage.springboot.web.dtos.AiStatisticsDTO;
+import edu.miage.springboot.web.dtos.ai.AiStatisticsDTO;
 
 
 @Service

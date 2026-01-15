@@ -1,7 +1,9 @@
 package edu.miage.springboot.services.impl.offers;
 
+import edu.miage.springboot.dao.entities.AiAnalysisResultEntity;
 import edu.miage.springboot.dao.entities.offers.*;
 import edu.miage.springboot.dao.entities.users.*;
+import edu.miage.springboot.dao.repositories.AiAnalysisResultRepository;
 import edu.miage.springboot.dao.repositories.offers.*;
 import edu.miage.springboot.dao.repositories.users.*;
 import edu.miage.springboot.services.impl.users.UserServiceImpl;
@@ -10,7 +12,10 @@ import edu.miage.springboot.services.interfaces.AiMatchingService; // Version B
 import edu.miage.springboot.utils.mappers.ApplicationMapper;
 import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
 import edu.miage.springboot.web.dtos.ai.MatchingResultDTO; // Version B
+import edu.miage.springboot.web.dtos.offers.ApplicationStatusUpdateDTO;
 import edu.miage.springboot.web.dtos.users.UserDTO;
+import jakarta.servlet.http.HttpServletResponse;
+import org.antlr.v4.runtime.misc.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +33,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Autowired private EmployeRepository employeRepository;
     @Autowired private UserRoleRepository userRoleRepository;
     @Autowired private ApplicationMapper applicationMapper;
+    @Autowired
+    private AiAnalysisResultRepository aiAnalysisResultRepository;
     @Autowired private UserServiceImpl userService;
 
     // 🔹 AJOUT IA (Version B)
@@ -58,37 +65,70 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setCurrentStatus(ApplicationStatusEnum.RECEIVED);
 
         // 🔹 INTEGRATION IA MATCHING (Version B)
-        // Simulation de l'extraction de texte du CV (à lier à votre service de parsing plus tard)
-        String cvText = "Compétences extraites du CV de " + candidate.getUser().getUsername();
-        //MatchingResultDTO result = aiMatchingService.matchCvWithJob(cvText, job.getDescription());
-        //app.setMatchingScore(result.getMatchingScore());
-        app.setMatchingScore(50); // Score par défaut temporaire
+        try {
+            // On construit un texte simple pour l'analyse
+            String textToAnalyze = "CANDIDATE LETTER: " + coverLetter;
+            MatchingResultDTO aiResult = aiMatchingService.matchCvWithJob(textToAnalyze, job.getDescription());
+
+            // On stocke le score
+            app.setMatchingScore(aiResult.getMatchingScore());
+
+            // Appel au service IA injecté
+
+            AiAnalysisResultEntity detail = new AiAnalysisResultEntity();
+            detail.setApplicationId(app.getId());
+            detail.setJobOfferId(job.getId());
+            detail.setMatchingScore(aiResult.getMatchingScore());
+            detail.setStrengths(String.join(", ", aiResult.getStrengths()));
+            detail.setMissingSkills(String.join(", ", aiResult.getMissingSkills()));
+            detail.setRecommendation(aiResult.getRecommendation());
+
+
+            aiAnalysisResultRepository.save(detail);
+
+            // Mise à jour de l'entité avec le score retourné par Llama3
+            app.setMatchingScore(aiResult.getMatchingScore());
+
+            // Optionnel : Vous pourriez loguer la recommandation de l'IA ici
+            System.out.println("IA Recommendation: " + aiResult.getRecommendation());
+
+        } catch (Exception e) {
+            // En cas d'échec de l'IA (ex: Ollama hors ligne), on met un score par défaut
+            // pour ne pas bloquer la candidature technique
+            app.setMatchingScore(0);
+            System.err.println("IA Matching failed: " + e.getMessage());
+        }
 
         return applicationMapper.toDto(applicationRepository.save(app));
     }
 
     @Override
     @Transactional
-    public ApplicationDTO updateStatus(Long id, ApplicationStatusEnum newStatus, String reason) {
+    public ApplicationDTO updateStatus(Long id, ApplicationStatusUpdateDTO updateDto) {
         ApplicationEntity app = applicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
 
-        app.setCurrentStatus(newStatus);
+        ApplicationStatusEnum newStatus = updateDto.getStatus();
 
-        // --- SPÉCIFICATION 4.B : Gestion des rendez-vous ---
-        if (isStatusRequiringMeeting(newStatus)) {
-            if (app.getMeetingDate() == null) {
-                app.setMeetingDate(LocalDateTime.now().plusDays(7));
-            }
-        }
-
+        // --- SPÉCIFICATION 4.4 : Motif de rejet obligatoire ---
         if (newStatus == ApplicationStatusEnum.REJECTED) {
-            if (reason == null || reason.trim().isEmpty()) {
+            if (updateDto.getReason() == null || updateDto.getReason().trim().isEmpty()) {
                 throw new IllegalArgumentException("Le motif de rejet est obligatoire.");
             }
-            app.setRejectionReason(reason);
-            sendRejectionEmail(app.getCandidate().getUser().getEmail(), reason);
+            app.setRejectionReason(updateDto.getReason());
         }
+
+        // --- SPÉCIFICATION 4.2 : Données logistiques obligatoires ---
+        if (isStatusRequiringMeeting(newStatus)) {
+            if (updateDto.getMeetingDate() == null || updateDto.getMeetingLocation() == null) {
+                throw new IllegalArgumentException("La date, l'heure et le lieu sont obligatoires pour fixer un entretien.");
+            }
+            app.setMeetingDate(updateDto.getMeetingDate());
+            app.setMeetingLocation(updateDto.getMeetingLocation());
+            // Ici, vous pourriez déclencher l'envoi d'email automatique avec ces détails
+        }
+
+        app.setCurrentStatus(newStatus);
 
         // --- SPÉCIFICATION 5 : Processus d'embauche (HIRED) ---
         if (newStatus == ApplicationStatusEnum.HIRED) {
@@ -152,6 +192,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private void sendRejectionEmail(String email, String reason) {
         System.out.println("E-MAIL AUTO : " + email + " rejeté pour : " + reason);
     }
+
+
 
     private boolean isStatusRequiringMeeting(ApplicationStatusEnum status) {
         return status == ApplicationStatusEnum.INTERVIEW_PENDING ||

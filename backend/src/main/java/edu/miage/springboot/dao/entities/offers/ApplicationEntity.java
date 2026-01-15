@@ -41,6 +41,9 @@ public class ApplicationEntity {
     @Column(name = "meeting_date")
     private LocalDateTime meetingDate;
 
+    @Column(name = "meeting_location")
+    private String meetingLocation;
+
     @Column(name = "matching_score")
     private Integer matchingScore;
 
