@@ -43,6 +43,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Autowired
     private UserRoleRepository userRoleRepository;
+    @Autowired
+    private MatchingService matchingService;
 
     @Override
     @Transactional
@@ -136,6 +138,13 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return applicationMapper.toDto(applicationRepository.save(app));
     }
+
+    @Override
+    public ApplicationDTO findById(Long id) {
+        return applicationMapper.toDto(applicationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Candidature introuvable")));
+    }
+
     @Transactional
     @Override
     public ApplicationDTO scheduleInterview(Long applicationId, LocalDateTime date, Long interviewerId) {

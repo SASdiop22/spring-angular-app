@@ -1,18 +1,193 @@
-<!--<mat-list>
-  <mat-list-item *ngFor="let folder of folders">
-    <mat-icon matListItemIcon>folder</mat-icon>
-    <h4 matLine>{{ folder.name }}</h4>
-  </mat-list-item>
-</mat-list>-->
+<!-- Transformed into a modern recruitment homepage -->
+<div class="recruitment-homepage">
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <mat-icon>work</mat-icon>
+          <span>TalentHub</span>
+        </div>
+        <nav class="nav">
+          <a href="#" class="nav-link">Offres d'emploi</a>
+          <a href="#" class="nav-link">Entreprises</a>
+          <a href="#" class="nav-link">Candidats</a>
+        </nav>
+        <div class="header-actions">
+          <button mat-button class="outlined-button">Se connecter</button>
+          <button mat-raised-button class="primary-button">S'inscrire</button>
+        </div>
+      </div>
+    </div>
+  </header>
 
-<mat-list>
-  <div mat-subheader>Folders</div>
-  @for (folder of folders; track folder) {
-    <mat-list-item (click)="onClickFolder(folder)">
-      <mat-icon matListItemIcon>folder</mat-icon>
-      <div matListItemTitle>{{folder.name}}</div>
-      <div matListItemLine>date</div>
-    </mat-list-item>
-  }
-</mat-list>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1 class="hero-title">Trouvez votre prochain emploi de rêve</h1>
+        <p class="hero-subtitle">Des milliers d'opportunités vous attendent. Trouvez le poste parfait qui correspond à vos compétences et ambitions.</p>
 
+        <div class="search-bar">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput placeholder="Titre du poste, mots-clés...">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="location-field">
+            <mat-icon matPrefix>location_on</mat-icon>
+            <input matInput placeholder="Ville, région...">
+          </mat-form-field>
+          <button mat-raised-button class="secondary-button search-button">
+            <mat-icon>search</mat-icon>
+            Rechercher
+          </button>
+        </div>
+
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-number">10,000+</span>
+            <span class="stat-label">Offres d'emploi</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">5,000+</span>
+            <span class="stat-label">Entreprises</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">50,000+</span>
+            <span class="stat-label">Candidats</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Job Listings Section -->
+  <section class="job-listings">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Offres d'emploi récentes</h2>
+        <button mat-button class="view-all-button">
+          Voir toutes les offres
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+
+      <div class="jobs-grid">
+        @for (folder of folders; track folder.id) {
+          <mat-card class="job-card" (click)="onClickFolder(folder)">
+            <mat-card-header>
+              <div mat-card-avatar class="company-logo">
+                <mat-icon>business</mat-icon>
+              </div>
+              <mat-card-title>{{folder.name}}</mat-card-title>
+              <mat-card-subtitle>Entreprise Tech</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="job-info">
+                <div class="info-item">
+                  <mat-icon>location_on</mat-icon>
+                  <span>Paris, France</span>
+                </div>
+                <div class="info-item">
+                  <mat-icon>work</mat-icon>
+                  <span>CDI</span>
+                </div>
+                <div class="info-item">
+                  <mat-icon>schedule</mat-icon>
+                  <span>Il y a 2 jours</span>
+                </div>
+              </div>
+              <div class="skills">
+                <span class="skill-tag">Angular</span>
+                <span class="skill-tag">Java</span>
+                <span class="skill-tag">Spring Boot</span>
+              </div>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button class="apply-button">
+                <mat-icon>send</mat-icon>
+                Postuler
+              </button>
+              <button mat-icon-button>
+                <mat-icon>bookmark_border</mat-icon>
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-title centered">Pourquoi choisir TalentHub ?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <mat-icon>speed</mat-icon>
+          </div>
+          <h3>Recherche rapide</h3>
+          <p>Trouvez des milliers d'offres en quelques secondes grâce à notre moteur de recherche intelligent</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <mat-icon>verified</mat-icon>
+          </div>
+          <h3>Entreprises vérifiées</h3>
+          <p>Toutes nos entreprises partenaires sont vérifiées et approuvées</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <mat-icon>notifications_active</mat-icon>
+          </div>
+          <h3>Alertes personnalisées</h3>
+          <p>Recevez des notifications pour les offres qui correspondent à votre profil</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <h3>Suivi de candidatures</h3>
+          <p>Gérez toutes vos candidatures depuis un seul tableau de bord</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>TalentHub</h4>
+          <p>La plateforme de recrutement qui connecte les talents aux opportunités</p>
+        </div>
+        <div class="footer-section">
+          <h4>Liens rapides</h4>
+          <a href="#">Offres d'emploi</a>
+          <a href="#">Entreprises</a>
+          <a href="#">À propos</a>
+          <a href="#">Contact</a>
+        </div>
+        <div class="footer-section">
+          <h4>Pour les entreprises</h4>
+          <a href="#">Publier une offre</a>
+          <a href="#">Tarifs</a>
+          <a href="#">FAQ</a>
+        </div>
+        <div class="footer-section">
+          <h4>Suivez-nous</h4>
+          <div class="social-links">
+            <button mat-icon-button><mat-icon>facebook</mat-icon></button>
+            <button mat-icon-button><mat-icon>twitter</mat-icon></button>
+            <button mat-icon-button><mat-icon>linkedin</mat-icon></button>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 TalentHub. Tous droits réservés.</p>
+      </div>
+    </div>
+  </footer>
+</div>

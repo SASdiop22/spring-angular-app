@@ -1,4 +1,31 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --primary-color: #1a2942;
+  --secondary-color: #059669;
+  --accent-color: #10b981;
+  --background-light: #fafafa;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+}
 
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body {
+  margin: 0;
+  font-family: 'Inter', 'Roboto', "Helvetica Neue", sans-serif;
+  background-color: var(--background-light);
+  color: var(--text-primary);
+}
+
+.mat-mdc-raised-button.primary-button {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+.mat-mdc-raised-button.secondary-button {
+  background-color: var(--secondary-color) !important;
+  color: white !important;
+}
+
+.mat-mdc-outlined-button.outlined-button {
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+}

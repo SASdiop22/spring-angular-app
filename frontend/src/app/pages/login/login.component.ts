@@ -9,10 +9,12 @@ import { Router } from '@angular/router';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent implements OnInit{
+export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
+  errorMessage: string = '';
+  isLoading: boolean = false;
 
-  constructor(private fb: FormBuilder,private authService:AuthService,private router:Router) {}
+  constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {}
 
   ngOnInit() {
     this.loginForm = this.fb.group({
@@ -26,10 +28,18 @@ export class LoginComponent implements OnInit{
       return;
     }
 
-    this.authService.login(this.loginForm.value)
-      .subscribe((response:AuthResponse) => {
-        sessionStorage.setItem("ACCESS_TOKEN",response.accessToken);
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.authService.login(this.loginForm.value).subscribe({
+      next: (response: AuthResponse) => {
+        sessionStorage.setItem("ACCESS_TOKEN", response.accessToken);
         this.router.navigateByUrl("/");
-      });
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.message || 'Erreur de connexion';
+        this.isLoading = false;
+      }
+    });
   }
 }

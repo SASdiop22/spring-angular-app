@@ -3,12 +3,16 @@ package edu.miage.springboot.services.impl.offers;
 import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
 import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
+import edu.miage.springboot.dao.entities.users.UserEntity;
+import edu.miage.springboot.dao.entities.users.UserTypeEnum;
 import edu.miage.springboot.dao.repositories.users.EmployeRepository;
 import edu.miage.springboot.dao.repositories.offers.JobOfferRepository;
+import edu.miage.springboot.dao.repositories.users.UserRepository;
 import edu.miage.springboot.services.interfaces.JobOfferService;
 import edu.miage.springboot.utils.mappers.JobOfferMapper;
 import edu.miage.springboot.web.dtos.offers.JobOfferDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
