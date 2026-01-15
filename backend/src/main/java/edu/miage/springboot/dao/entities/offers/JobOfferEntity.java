@@ -60,6 +60,11 @@ public class JobOfferEntity {
     private LocalDateTime createdAt;
     private LocalDateTime publishedAt;
 
+    @ElementCollection
+    @CollectionTable(name = "employe_skills", joinColumns = @JoinColumn(name = "employe_id"))
+    @Column(name = "skill")
+    private List<String> skills = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

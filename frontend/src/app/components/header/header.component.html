@@ -1,0 +1,45 @@
+<header class="main-header">
+  <div class="header-container">
+    <!-- Logo/Home -->
+    <div class="header-logo">
+      <button (click)="goHome()" class="logo-btn" title="Accueil">
+        <mat-icon>work</mat-icon>
+        <span>JobMatch</span>
+      </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="header-nav">
+      <button mat-button (click)="goToJobOffers()" class="nav-item">
+        <mat-icon>business_center</mat-icon>
+        Offres d'emploi
+      </button>
+
+      <button
+        *ngIf="isAuthenticated"
+        mat-button
+        [matMenuTriggerFor]="menu"
+        class="nav-item user-menu"
+      >
+        <mat-icon>account_circle</mat-icon>
+        Menu
+      </button>
+
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="goToProfile()">
+          <mat-icon>person</mat-icon>
+          <span>Mon profil</span>
+        </button>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Déconnexion</span>
+        </button>
+      </mat-menu>
+
+      <button *ngIf="!isAuthenticated" mat-raised-button color="primary" (click)="router.navigate(['/login'])">
+        Connexion
+      </button>
+    </nav>
+  </div>
+</header>
+

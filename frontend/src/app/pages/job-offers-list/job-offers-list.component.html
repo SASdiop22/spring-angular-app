@@ -1,0 +1,147 @@
+<div class="job-offers-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="container">
+      <h1>Toutes les offres d'emploi</h1>
+      <p>{{ filteredOffers.length }} offre(s) disponible(s)</p>
+    </div>
+  </header>
+
+  <div class="container main-content">
+    <!-- Sidebar avec filtres -->
+    <aside class="filters-sidebar">
+      <div class="filters-header">
+        <h2>Filtres</h2>
+        <button class="reset-btn" (click)="resetFilters()">Réinitialiser</button>
+      </div>
+
+      <!-- Recherche par mot-clé -->
+      <div class="filter-group">
+        <label>Mot-clé</label>
+        <input 
+          type="text" 
+          [(ngModel)]="searchKeyword" 
+          (keyup.enter)="searchByKeyword()"
+          placeholder="Rechercher..."
+          class="filter-input">
+        <button class="search-btn" (click)="searchByKeyword()">Rechercher</button>
+      </div>
+
+      <!-- Type de contrat -->
+      <div class="filter-group">
+        <label>Type de contrat</label>
+        <select [(ngModel)]="selectedContractType" (change)="applyFilters()" class="filter-select">
+          <option value="">Tous les types</option>
+          <option *ngFor="let type of contractTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+
+      <!-- Localisation -->
+      <div class="filter-group">
+        <label>Localisation</label>
+        <select [(ngModel)]="selectedLocation" (change)="applyFilters()" class="filter-select">
+          <option value="">Toutes les villes</option>
+          <option *ngFor="let location of locations" [value]="location">{{ location }}</option>
+        </select>
+      </div>
+
+      <!-- Salaire -->
+      <div class="filter-group">
+        <label>Salaire (€)</label>
+        <div class="salary-inputs">
+          <input 
+            type="number" 
+            [(ngModel)]="minSalary" 
+            (change)="applyFilters()"
+            placeholder="Min"
+            class="filter-input">
+          <span>-</span>
+          <input 
+            type="number" 
+            [(ngModel)]="maxSalary" 
+            (change)="applyFilters()"
+            placeholder="Max"
+            class="filter-input">
+        </div>
+      </div>
+
+      <!-- Télétravail -->
+      <div class="filter-group">
+        <label>Jours de télétravail (min)</label>
+        <select [(ngModel)]="selectedRemoteDays" (change)="applyFilters()" class="filter-select">
+          <option value="">Peu importe</option>
+          <option value="1">1+ jours</option>
+          <option value="2">2+ jours</option>
+          <option value="3">3+ jours</option>
+          <option value="4">4+ jours</option>
+          <option value="5">100% télétravail</option>
+        </select>
+      </div>
+    </aside>
+
+    <!-- Liste des offres -->
+    <main class="offers-content">
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement des offres...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="error && !loading" class="error-state">
+        <p>{{ error }}</p>
+        <button (click)="loadJobOffers()">Réessayer</button>
+      </div>
+
+      <!-- No results -->
+      <div *ngIf="!loading && !error && filteredOffers.length === 0" class="empty-state">
+        <h3>Aucune offre trouvée</h3>
+        <p>Essayez de modifier vos critères de recherche</p>
+        <button (click)="resetFilters()">Réinitialiser les filtres</button>
+      </div>
+
+      <!-- Job offers grid -->
+      <div *ngIf="!loading && !error && filteredOffers.length > 0" class="offers-grid">
+        <div *ngFor="let offer of filteredOffers" class="offer-card" (click)="viewDetails(offer.id)">
+          <div class="offer-header">
+            <h3>{{ offer.title }}</h3>
+            <span class="contract-badge">{{ offer.contractType }}</span>
+          </div>
+          
+          <p class="offer-description">{{ offer.description }}</p>
+          
+          <div class="offer-details">
+            <div class="detail-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>{{ offer.location }}</span>
+            </div>
+            
+            <div class="detail-item" *ngIf="offer.salary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              <span>{{ offer.salary | number:'1.0-0' }}€</span>
+            </div>
+            
+            <div class="detail-item" *ngIf="offer.remoteDays !== null">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <span>{{ offer.remoteDays }} jour(s) télétravail</span>
+            </div>
+          </div>
+          
+          <div class="offer-footer">
+            <button class="view-btn">Voir l'offre</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

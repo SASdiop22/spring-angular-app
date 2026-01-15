@@ -1,0 +1,149 @@
+<div class="job-detail-container">
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement de l'offre...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-state">
+    <h3>Erreur</h3>
+    <p>{{ error }}</p>
+    <button (click)="goBack()">Retour aux offres</button>
+  </div>
+
+  <!-- Job Offer Detail -->
+  <div *ngIf="jobOffer && !loading" class="job-detail-content">
+    <!-- Header -->
+    <div class="detail-header">
+      <div class="container">
+        <button class="back-btn" (click)="goBack()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Retour
+        </button>
+        
+        <div class="header-content">
+          <h1>{{ jobOffer.title }}</h1>
+          <div class="header-meta">
+            <span class="contract-badge">{{ jobOffer.contractType }}</span>
+            <span class="location">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              {{ jobOffer.location }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container main-section">
+      <!-- Main Content -->
+      <div class="detail-main">
+        <!-- Success Message -->
+        <div *ngIf="applicationSuccess" class="success-message">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <p>Votre candidature a été envoyée avec succès!</p>
+        </div>
+
+        <!-- Description -->
+        <section class="detail-section">
+          <h2>Description du poste</h2>
+          <p class="description">{{ jobOffer.description }}</p>
+        </section>
+
+        <!-- Application Form -->
+        <section *ngIf="showApplicationForm" class="application-form-section">
+          <h2>Postuler à cette offre</h2>
+          
+          <div *ngIf="applicationError" class="error-message">
+            {{ applicationError }}
+          </div>
+
+          <form (ngSubmit)="submitApplication()">
+            <div class="form-group">
+              <label for="cvUrl">URL de votre CV *</label>
+              <input 
+                type="url" 
+                id="cvUrl"
+                [(ngModel)]="cvUrl"
+                name="cvUrl"
+                placeholder="https://example.com/mon-cv.pdf"
+                required
+                class="form-input">
+              <small>Veuillez fournir un lien vers votre CV (PDF, Google Drive, etc.)</small>
+            </div>
+
+            <div class="form-group">
+              <label for="coverLetter">Lettre de motivation (optionnelle)</label>
+              <textarea 
+                id="coverLetter"
+                [(ngModel)]="coverLetter"
+                name="coverLetter"
+                rows="6"
+                placeholder="Expliquez pourquoi vous êtes le candidat idéal pour ce poste..."
+                class="form-textarea"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" (click)="toggleApplicationForm()" class="btn-secondary" [disabled]="applying">
+                Annuler
+              </button>
+              <button type="submit" class="btn-primary" [disabled]="applying">
+                <span *ngIf="!applying">Envoyer ma candidature</span>
+                <span *ngIf="applying">Envoi en cours...</span>
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="detail-sidebar">
+        <!-- Apply Card -->
+        <div class="apply-card">
+          <button 
+            *ngIf="!showApplicationForm" 
+            class="apply-btn" 
+            (click)="toggleApplicationForm()">
+            Postuler maintenant
+          </button>
+
+          <div class="info-grid">
+            <div class="info-item" *ngIf="jobOffer.salary">
+              <div class="info-label">Salaire</div>
+              <div class="info-value">{{ jobOffer.salary | number:'1.0-0' }}€</div>
+            </div>
+
+            <div class="info-item">
+              <div class="info-label">Type de contrat</div>
+              <div class="info-value">{{ jobOffer.contractType }}</div>
+            </div>
+
+            <div class="info-item">
+              <div class="info-label">Localisation</div>
+              <div class="info-value">{{ jobOffer.location }}</div>
+            </div>
+
+            <div class="info-item" *ngIf="jobOffer.remoteDays !== null">
+              <div class="info-label">Télétravail</div>
+              <div class="info-value">{{ jobOffer.remoteDays }} jour(s)/semaine</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Company Info (placeholder) -->
+        <div class="company-card">
+          <h3>À propos de l'entreprise</h3>
+          <p>Rejoignez notre équipe dynamique et contribuez à des projets innovants.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>

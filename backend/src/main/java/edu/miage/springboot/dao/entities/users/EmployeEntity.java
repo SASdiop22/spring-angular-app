@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
@@ -48,6 +49,10 @@ public class EmployeEntity {
     @OneToMany(mappedBy = "referentEmploye")
     private List<UserEntity> recruesLiees = new ArrayList<>();
 
+    @ElementCollection
+    @CollectionTable(name = "employe_skills", joinColumns = @JoinColumn(name = "employe_id"))
+    @Column(name = "skill")
+    private List<String> skills = new ArrayList<>();
     /**
      * Helper pour lier l'utilisateur et l'employé
      */

@@ -1,0 +1,231 @@
+<div class="recruitment-homepage">
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <div class="logo" (click)="router.navigate(['/'])">
+          <mat-icon>work</mat-icon>
+          <span>TalentHub</span>
+        </div>
+        <nav class="nav">
+          <a (click)="goToJobOffers()" class="nav-link">Offres d'emploi</a>
+          <a routerLink="/candidates" class="nav-link">Candidats</a>
+          <a routerLink="/dashboard" class="nav-link" *ngIf="isAuthenticated()">Tableau de bord</a>
+        </nav>
+        <div class="header-actions">
+          <button mat-button class="outlined-button" (click)="goToLogin()" *ngIf="!isAuthenticated()">
+            Se connecter
+          </button>
+          <button mat-raised-button class="primary-button" (click)="goToRegister()" *ngIf="!isAuthenticated()">
+            S'inscrire
+          </button>
+          <button mat-icon-button [matMenuTriggerFor]="menu" *ngIf="isAuthenticated()">
+            <mat-icon>account_circle</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item routerLink="/profile">
+              <mat-icon>person</mat-icon>
+              <span>Mon profil</span>
+            </button>
+            <button mat-menu-item routerLink="/applications">
+              <mat-icon>description</mat-icon>
+              <span>Mes candidatures</span>
+            </button>
+            <button mat-menu-item (click)="logout()">
+              <mat-icon>logout</mat-icon>
+              <span>Déconnexion</span>
+            </button>
+          </mat-menu>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1 class="hero-title">Trouvez votre prochain emploi de rêve</h1>
+        <p class="hero-subtitle">
+          Des milliers d'opportunités vous attendent. Trouvez le poste parfait qui correspond à vos compétences et ambitions.
+        </p>
+
+        <div class="search-bar">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput placeholder="Titre du poste, mots-clés..." [(ngModel)]="searchKeyword" (keyup.enter)="onSearch()">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="location-field">
+            <mat-icon matPrefix>location_on</mat-icon>
+            <input matInput placeholder="Ville, région..." [(ngModel)]="searchLocation">
+          </mat-form-field>
+          <button mat-raised-button class="secondary-button search-button" (click)="onSearch()">
+            <mat-icon>search</mat-icon>
+            Rechercher
+          </button>
+        </div>
+
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-number">{{ jobOffers.length }}+</span>
+            <span class="stat-label">Offres d'emploi</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">500+</span>
+            <span class="stat-label">Entreprises</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">5,000+</span>
+            <span class="stat-label">Candidats</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Job Listings Section -->
+  <section class="job-listings">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Offres d'emploi récentes</h2>
+        <button mat-button class="view-all-button" (click)="goToJobOffers()">
+          Voir toutes les offres
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Chargement des offres...</p>
+      </div>
+
+      <div *ngIf="!loading && jobOffers.length === 0" class="no-results">
+        <mat-icon>search_off</mat-icon>
+        <h3>Aucune offre disponible</h3>
+        <p>Aucune offre d'emploi ne correspond à vos critères de recherche.</p>
+      </div>
+
+      <div class="jobs-grid" *ngIf="!loading && jobOffers.length > 0">
+        <mat-card class="job-card" *ngFor="let job of jobOffers.slice(0, 6)" (click)="onViewJobDetail(job.id)">
+          <mat-card-header>
+            <div mat-card-avatar class="company-logo">
+              <mat-icon>business</mat-icon>
+            </div>
+            <mat-card-title>{{ job.title }}</mat-card-title>
+            <mat-card-subtitle>{{ job.department || 'Entreprise' }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="job-description">{{ job.description.substring(0, 120) }}{{ job.description && job.description.length > 120 ? '...' : '' }}</p>
+            <div class="job-info">
+              <div class="info-item" *ngIf="job.location">
+                <mat-icon>location_on</mat-icon>
+                <span>{{ job.location }}</span>
+              </div>
+              <div class="info-item" *ngIf="job.salaryRange">
+                <mat-icon>payments</mat-icon>
+                <span>{{ job.salaryRange }}€</span>
+              </div>
+              <div class="info-item" *ngIf="job.remoteDays !== null && job.remoteDays !== undefined">
+                <mat-icon>home</mat-icon>
+                <span>{{ job.remoteDays }} jours télétravail</span>
+              </div>
+              <div class="info-item">
+                <mat-icon>schedule</mat-icon>
+                <span>{{ getTimeSincePublished(job.publishedAt) }}</span>
+              </div>
+            </div>
+            <div class="skills" *ngIf="job.skillsRequired && job.skillsRequired.length > 0">
+              <span class="skill-tag" *ngFor="let skill of job.skillsRequired.slice(0, 3)">{{ skill }}</span>
+              <span class="skill-tag" *ngIf="job.skillsRequired.length > 3">+{{ job.skillsRequired.length - 3 }}</span>
+            </div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-button class="apply-button" (click)="onApply(job.id); $event.stopPropagation()">
+              <mat-icon>send</mat-icon>
+              Postuler
+            </button>
+            <button mat-icon-button (click)="$event.stopPropagation()">
+              <mat-icon>bookmark_border</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-title centered">Pourquoi choisir TalentHub ?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <mat-icon>speed</mat-icon>
+          </div>
+          <h3>Recherche rapide</h3>
+          <p>Trouvez des milliers d'offres en quelques secondes grâce à notre moteur de recherche intelligent</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <mat-icon>verified</mat-icon>
+          </div>
+          <h3>Entreprises vérifiées</h3>
+          <p>Toutes nos entreprises partenaires sont vérifiées et approuvées</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <mat-icon>notifications_active</mat-icon>
+          </div>
+          <h3>Alertes personnalisées</h3>
+          <p>Recevez des notifications pour les offres qui correspondent à votre profil</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <h3>Suivi de candidatures</h3>
+          <p>Gérez toutes vos candidatures depuis un seul tableau de bord</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>TalentHub</h4>
+          <p>La plateforme de recrutement qui connecte les talents aux opportunités</p>
+        </div>
+        <div class="footer-section">
+          <h4>Liens rapides</h4>
+          <a (click)="goToJobOffers()">Offres d'emploi</a>
+          <a routerLink="/about">À propos</a>
+          <a routerLink="/contact">Contact</a>
+        </div>
+        <div class="footer-section">
+          <h4>Pour les entreprises</h4>
+          <a routerLink="/job-offers/create">Publier une offre</a>
+          <a routerLink="/pricing">Tarifs</a>
+          <a routerLink="/faq">FAQ</a>
+        </div>
+        <div class="footer-section">
+          <h4>Suivez-nous</h4>
+          <div class="social-links">
+            <button mat-icon-button><mat-icon>facebook</mat-icon></button>
+            <button mat-icon-button aria-label="Twitter">
+              <mat-icon>{{ 'close' }}</mat-icon>
+            </button>
+            <button mat-icon-button aria-label="LinkedIn">
+              <mat-icon>business</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 TalentHub. Tous droits réservés.</p>
+      </div>
+    </div>
+  </footer>
+</div>

@@ -46,6 +46,27 @@ public class UserSeeder implements CommandLineRunner {
         // --- ACTEURS SCÉNARIO 6 & 7 (Journal & Rejets) ---
         createUser("dylan.demandeur", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
         createUser("paul.rejet", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+
+        // --- EMPLOYÉS SUPPLÉMENTAIRES (pour enrichir la base) ---
+        createUser("emma.marketing", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("francois.finance", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("genevieve.ventes", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("henry.it", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("isabelle.rh", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("jerome.tech", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("kathleen.ops", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+
+        // --- CANDIDATS SUPPLÉMENTAIRES (pour enrichir la base) ---
+        createUser("marie.dupont", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("jean.martin", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("claire.bernard", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("pierre.durand", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("alice.rousseau", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("bob.leblanc", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("celine.moreau", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("david.michel", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+
+        System.out.println("✓ UserSeeder : " + userRepository.count() + " utilisateurs créés");
     }
 
     private void createUser(String username, String roleName, UserTypeEnum type) {
