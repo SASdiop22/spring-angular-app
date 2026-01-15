@@ -1,25 +1,5 @@
 <!-- Transformed into a modern recruitment homepage -->
 <div class="recruitment-homepage">
-  <!-- Header -->
-  <header class="header">
-    <div class="container">
-      <div class="header-content">
-        <div class="logo">
-          <mat-icon>work</mat-icon>
-          <span>TalentHub</span>
-        </div>
-        <nav class="nav">
-          <a href="#" class="nav-link">Offres d'emploi</a>
-          <a href="#" class="nav-link">Entreprises</a>
-          <a href="#" class="nav-link">Candidats</a>
-        </nav>
-        <div class="header-actions">
-          <button mat-button class="outlined-button">Se connecter</button>
-          <button mat-raised-button class="primary-button">S'inscrire</button>
-        </div>
-      </div>
-    </div>
-  </header>
 
   <!-- Hero Section -->
   <section class="hero">
@@ -104,7 +84,7 @@
               </div>
             </mat-card-content>
             <mat-card-actions>
-              <button mat-button class="apply-button">
+              <button *ngIf="isCandidat" mat-button class="apply-button">
                 <mat-icon>send</mat-icon>
                 Postuler
               </button>

@@ -14,13 +14,18 @@ import { MatInputModule } from "@angular/material/input"
 import { FolderListComponent } from "./pages/folder-list/folder-list.component"
 import { MatListModule } from "@angular/material/list"
 import { MatIconModule } from "@angular/material/icon"
+import { MatCommonModule } from "@angular/material/core"
 import { JwtInterceptor } from "./interceptors/JwtInterceptor"
 import { FileListComponent } from "./pages/file-list/file-list.component"
 import { HomeComponent } from "./pages/home/home.component"
 import { JobOffersListComponent } from "./pages/job-offers-list/job-offers-list.component"
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner"
 import { MatMenuModule } from "@angular/material/menu"
+import { MatSelectModule } from "@angular/material/select"
 import { JobDetailComponent } from "./pages/job-detail/job-detail.component"
+import { AddJobOfferComponent } from "./pages/add-job-offer/add-job-offer.component"
+import { CandidatesComponent } from "./pages/candidates/candidates.component"
+import { DashboardComponent } from "./pages/dashboard/dashboard.component"
 import { HeaderComponent } from "./components/header/header.component"
 
 @NgModule({
@@ -32,6 +37,9 @@ import { HeaderComponent } from "./components/header/header.component"
     HomeComponent,
     JobOffersListComponent,
     JobDetailComponent,
+    AddJobOfferComponent,
+    CandidatesComponent,
+    DashboardComponent,
     HeaderComponent,
   ],
   imports: [
@@ -42,6 +50,7 @@ import { HeaderComponent } from "./components/header/header.component"
     FormsModule,
     HttpClientModule,
     MatIconModule,
+    MatCommonModule,
     MatCardModule,
     MatFormFieldModule,
     MatButtonModule,
@@ -49,8 +58,10 @@ import { HeaderComponent } from "./components/header/header.component"
     MatListModule,
     MatProgressSpinnerModule,
     MatMenuModule,
+    MatSelectModule,
   ],
   providers: [provideAnimationsAsync(), { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }],
   bootstrap: [AppComponent],
 })
 export class AppModule { }
+

@@ -17,10 +17,14 @@ export class JobDetailComponent implements OnInit {
 
   showApplicationForm = false
   isAuthenticated = false
+  isRH = false
+  isCandidat = false
 
   // Formulaire de candidature
   cvUrl = ""
   coverLetter = ""
+  cvFile: File | null = null
+  coverLetterFile: File | null = null
   applying = false
   applicationSuccess = false
   applicationError: string | null = null
@@ -35,6 +39,8 @@ export class JobDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.isAuthenticated = this.authService.authenticated()
+    this.isRH = this.authService.isRH()
+    this.isCandidat = this.authService.isCandidat()
     const id = this.route.snapshot.paramMap.get("id")
 
     if (id) {
@@ -66,9 +72,32 @@ export class JobDetailComponent implements OnInit {
   }
 
   submitApplication(): void {
-    if (!this.jobOffer || !this.cvUrl.trim()) {
-      this.applicationError = "Veuillez remplir tous les champs obligatoires"
+    if (!this.jobOffer || !this.cvFile) {
+      this.applicationError = "Veuillez importer votre CV en PDF"
       return
+    }
+
+    // Validation du fichier CV
+    if (!this.cvFile.name.endsWith('.pdf')) {
+      this.applicationError = "Le CV doit être au format PDF"
+      return
+    }
+
+    if (this.cvFile.size > 5 * 1024 * 1024) {
+      this.applicationError = "Le fichier CV ne doit pas dépasser 5 MB"
+      return
+    }
+
+    // Validation du fichier de lettre de motivation (optionnel)
+    if (this.coverLetterFile) {
+      if (!this.coverLetterFile.name.endsWith('.pdf')) {
+        this.applicationError = "La lettre de motivation doit être au format PDF"
+        return
+      }
+      if (this.coverLetterFile.size > 5 * 1024 * 1024) {
+        this.applicationError = "La lettre de motivation ne doit pas dépasser 5 MB"
+        return
+      }
     }
 
     // TODO: Récupérer le vrai candidateId depuis l'utilisateur connecté
@@ -77,14 +106,18 @@ export class JobDetailComponent implements OnInit {
     this.applying = true
     this.applicationError = null
 
-    this.applicationService.apply(this.jobOffer.id, candidateId, this.cvUrl, this.coverLetter).subscribe({
+    // Pour l'instant, utiliser le nom du fichier comme URL (à remplacer par un vrai upload)
+    const cvUrl = this.cvFile.name
+    const coverLetterUrl = this.coverLetterFile ? this.coverLetterFile.name : undefined
+
+    this.applicationService.apply(this.jobOffer.id, candidateId, cvUrl, coverLetterUrl).subscribe({
       next: () => {
         this.applicationSuccess = true
         this.applying = false
         this.showApplicationForm = false
         // Réinitialiser le formulaire
-        this.cvUrl = ""
-        this.coverLetter = ""
+        this.cvFile = null
+        this.coverLetterFile = null
       },
       error: (err: any) => {
         this.applicationError = err.error?.message || "Erreur lors de la candidature"
@@ -92,6 +125,20 @@ export class JobDetailComponent implements OnInit {
         console.error("[v0] Error applying:", err)
       },
     })
+  }
+
+  onCvFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement
+    if (input.files && input.files.length > 0) {
+      this.cvFile = input.files[0]
+    }
+  }
+
+  onCoverLetterFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement
+    if (input.files && input.files.length > 0) {
+      this.coverLetterFile = input.files[0]
+    }
   }
 
   goBack(): void {

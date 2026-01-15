@@ -114,8 +114,8 @@ public class JobOfferServiceImpl implements JobOfferService {
     @Transactional
     public JobOfferDTO createJobOffer(JobOfferDTO jobOfferDTO) {
         // 1. Récupérer l'utilisateur connecté via le Token JWT (Sécurité)
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserEntity currentUser = userRepository.findByEmail(email)
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur connecté introuvable."));
 
         // 2. Vérifier que c'est un Employé
@@ -132,9 +132,9 @@ public class JobOfferServiceImpl implements JobOfferService {
         boolean isRH = currentUser.getUserType() == UserTypeEnum.RH;
 
         if (isRH) {
-            // Le RH passe directement en PENDING (ou garde ce qu'il a mis si pertinent)
-            // On évite le DRAFT inutile pour eux
-            entity.setStatus(JobStatusEnum.PENDING);
+            // Le RH publie directement en OPEN (l'offre est immédiatement visible)
+            entity.setStatus(JobStatusEnum.OPEN);
+            entity.setPublishedAt(LocalDateTime.now());
         } else {
             // Le Demandeur est FORCÉ en DRAFT (Brouillon)
             entity.setStatus(JobStatusEnum.DRAFT);

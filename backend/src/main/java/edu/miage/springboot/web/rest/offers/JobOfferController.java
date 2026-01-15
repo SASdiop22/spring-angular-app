@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,14 +29,23 @@ public class JobOfferController {
         return jobOfferService.findAllOpen();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<JobOfferDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(jobOfferService.findById(id));
-    }
-
     @GetMapping("/search")
     public List<JobOfferDTO> search(@RequestParam String keyword) {
         return jobOfferService.searchJobOffers(keyword);
+    }
+
+    /**
+     * Spécification 4.A : Seuls les RH/ADMIN voient toutes les offres (DRAFT, PENDING...).
+     */
+    @GetMapping("/privilege")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_RH')")
+    public List<JobOfferDTO> getAllWithPrivilege() {
+        return jobOfferService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<JobOfferDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(jobOfferService.findById(id));
     }
 
     // --- ACCÈS EMPLOYÉ / DEMANDEUR (Spec 2.A) ---
@@ -82,14 +90,6 @@ public class JobOfferController {
         return ResponseEntity.ok(publishedOffer);
     }
 
-    /**
-     * Spécification 4.A : Seuls les RH/ADMIN voient toutes les offres (DRAFT, PENDING...).
-     */
-    @GetMapping("/privilege")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_RH')")
-    public List<JobOfferDTO> getAllWithPrivilege() {
-        return jobOfferService.findAll();
-    }
 
     /**
      * Spécification 2.B : Clôture administrative de l'offre.
@@ -105,5 +105,15 @@ public class JobOfferController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         jobOfferService.deleteJobOffer(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Mettre à jour une offre d'emploi
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_RH')")
+    public ResponseEntity<JobOfferDTO> updateOffer(@PathVariable Long id, @Valid @RequestBody JobOfferDTO dto) {
+        JobOfferDTO updated = jobOfferService.updateJobOffer(id, dto);
+        return ResponseEntity.ok(updated);
     }
 }

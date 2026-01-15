@@ -20,51 +20,51 @@ public class UserSeeder implements CommandLineRunner {
 
     @Override
     @Transactional
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         if (userRepository.count() > 0) return;
 
-        // Rôles
-        UserRoleEntity rCandidat = getOrCreateRole("ROLE_CANDIDAT");
-        UserRoleEntity rEmploye = getOrCreateRole("ROLE_EMPLOYE");
-        UserRoleEntity rRh = getOrCreateRole("ROLE_RH");
-        UserRoleEntity rAdmin = getOrCreateRole("ROLE_ADMIN");
+        // Rôles (SANS le préfixe ROLE_ - celui-ci sera ajouté par AuthUserDetails)
+        getOrCreateRole("CANDIDAT");
+        getOrCreateRole("EMPLOYE");
+        getOrCreateRole("RH");
+        getOrCreateRole("ADMIN");
 
         // --- ACTEURS GLOBAUX ---
-        createUser("alice.rh", "ROLE_RH", UserTypeEnum.RH);
-        createUser("bob.admin", "ROLE_ADMIN", UserTypeEnum.ADMIN);
+        createUser("alice.rh", "RH", UserTypeEnum.RH);
+        createUser("bob.admin", "ADMIN", UserTypeEnum.ADMIN);
 
         // --- ACTEURS SCÉNARIO 1 & 4 (Cycle de vie & Sécurité) ---
-        createUser("cathy.employe", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("cathy.employe", "EMPLOYE", UserTypeEnum.EMPLOYE);
 
         // --- ACTEURS SCÉNARIO 2 (RGPD) ---
-        createUser("jean.rgpd", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("jean.rgpd", "CANDIDAT", UserTypeEnum.CANDIDAT);
 
         // --- ACTEURS SCÉNARIO 3 & 5 (Recrutement complet & Onboarding) ---
-        createUser("marie.hired", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
-        createUser("sophie.onboard", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("marie.hired", "CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("sophie.onboard", "CANDIDAT", UserTypeEnum.CANDIDAT);
 
         // --- ACTEURS SCÉNARIO 6 & 7 (Journal & Rejets) ---
-        createUser("dylan.demandeur", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
-        createUser("paul.rejet", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("dylan.demandeur", "EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("paul.rejet", "CANDIDAT", UserTypeEnum.CANDIDAT);
 
         // --- EMPLOYÉS SUPPLÉMENTAIRES (pour enrichir la base) ---
-        createUser("emma.marketing", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
-        createUser("francois.finance", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
-        createUser("genevieve.ventes", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
-        createUser("henry.it", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
-        createUser("isabelle.rh", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
-        createUser("jerome.tech", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
-        createUser("kathleen.ops", "ROLE_EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("emma.marketing", "EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("francois.finance", "EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("genevieve.ventes", "EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("henry.it", "EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("isabelle.rh", "EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("jerome.tech", "EMPLOYE", UserTypeEnum.EMPLOYE);
+        createUser("kathleen.ops", "EMPLOYE", UserTypeEnum.EMPLOYE);
 
         // --- CANDIDATS SUPPLÉMENTAIRES (pour enrichir la base) ---
-        createUser("marie.dupont", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
-        createUser("jean.martin", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
-        createUser("claire.bernard", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
-        createUser("pierre.durand", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
-        createUser("alice.rousseau", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
-        createUser("bob.leblanc", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
-        createUser("celine.moreau", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
-        createUser("david.michel", "ROLE_CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("marie.dupont", "CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("jean.martin", "CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("claire.bernard", "CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("pierre.durand", "CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("alice.rousseau", "CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("bob.leblanc", "CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("celine.moreau", "CANDIDAT", UserTypeEnum.CANDIDAT);
+        createUser("david.michel", "CANDIDAT", UserTypeEnum.CANDIDAT);
 
         System.out.println("✓ UserSeeder : " + userRepository.count() + " utilisateurs créés");
     }
@@ -75,7 +75,8 @@ public class UserSeeder implements CommandLineRunner {
         u.setPassword(passwordEncoder.encode("password123"));
         u.setEmail(username + "@test.com");
         u.setUserType(type);
-        u.setRoles(Set.of(userRoleRepository.findByName(roleName).get()));
+        u.setRoles(Set.of(userRoleRepository.findByName(roleName)
+                .orElseThrow(() -> new RuntimeException("Rôle non trouvé: " + roleName))));
         userRepository.save(u);
     }
 

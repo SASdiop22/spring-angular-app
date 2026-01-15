@@ -305,7 +305,8 @@ public class JobOfferSeeder implements CommandLineRunner {
 
         // Ajouter les compétences requises
         if (skills != null) {
-            skills.forEach(skill -> offer.getSkills().add(skill));
+
+            skills.forEach(skill -> offer.getSkillsRequired().add(skill));
         }
 
         // Ajouter des métadonnées supplémentaires

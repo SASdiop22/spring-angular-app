@@ -76,7 +76,7 @@ public class EmployeSeeder implements CommandLineRunner {
             return;
         }
 
-        UserEntity user = userOptional.get();
+        UserEntity user = userOptional.orElseThrow();
         EmployeEntity employe = new EmployeEntity();
         employe.setUser(user);
         employe.setDepartement(department);

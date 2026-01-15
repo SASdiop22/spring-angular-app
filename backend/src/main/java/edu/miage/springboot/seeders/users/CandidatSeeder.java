@@ -138,7 +138,7 @@ public class CandidatSeeder implements CommandLineRunner {
             return;
         }
 
-        UserEntity user = userOptional.get();
+        UserEntity user = userOptional.orElseThrow();
         CandidatEntity candidat = new CandidatEntity();
         candidat.setUser(user);
         candidat.setVille(ville);

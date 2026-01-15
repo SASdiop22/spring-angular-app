@@ -24,7 +24,7 @@
           </svg>
           Retour
         </button>
-        
+
         <div class="header-content">
           <h1>{{ jobOffer.title }}</h1>
           <div class="header-meta">
@@ -58,37 +58,44 @@
           <p class="description">{{ jobOffer.description }}</p>
         </section>
 
-        <!-- Application Form -->
-        <section *ngIf="showApplicationForm" class="application-form-section">
+        <!-- Application Form - Visible only for candidates -->
+        <section *ngIf="showApplicationForm && isCandidat" class="application-form-section">
           <h2>Postuler à cette offre</h2>
-          
+
           <div *ngIf="applicationError" class="error-message">
             {{ applicationError }}
           </div>
 
           <form (ngSubmit)="submitApplication()">
             <div class="form-group">
-              <label for="cvUrl">URL de votre CV *</label>
-              <input 
-                type="url" 
-                id="cvUrl"
-                [(ngModel)]="cvUrl"
-                name="cvUrl"
-                placeholder="https://example.com/mon-cv.pdf"
+              <label for="cvFile">Importer votre CV (PDF) *</label>
+              <input
+                type="file"
+                id="cvFile"
+                (change)="onCvFileSelected($event)"
+                accept=".pdf"
                 required
                 class="form-input">
-              <small>Veuillez fournir un lien vers votre CV (PDF, Google Drive, etc.)</small>
+              <small>Veuillez importer votre CV au format PDF (taille max: 5 MB)</small>
+              <div *ngIf="cvFile" class="file-info">
+                <mat-icon>description</mat-icon>
+                <span>{{ cvFile.name }}</span>
+              </div>
             </div>
 
             <div class="form-group">
-              <label for="coverLetter">Lettre de motivation (optionnelle)</label>
-              <textarea 
-                id="coverLetter"
-                [(ngModel)]="coverLetter"
-                name="coverLetter"
-                rows="6"
-                placeholder="Expliquez pourquoi vous êtes le candidat idéal pour ce poste..."
-                class="form-textarea"></textarea>
+              <label for="coverLetterFile">Importer votre lettre de motivation (optionnel - PDF)</label>
+              <input
+                type="file"
+                id="coverLetterFile"
+                (change)="onCoverLetterFileSelected($event)"
+                accept=".pdf"
+                class="form-input">
+              <small>Format PDF, taille max: 5 MB</small>
+              <div *ngIf="coverLetterFile" class="file-info">
+                <mat-icon>description</mat-icon>
+                <span>{{ coverLetterFile.name }}</span>
+              </div>
             </div>
 
             <div class="form-actions">
@@ -108,9 +115,9 @@
       <aside class="detail-sidebar">
         <!-- Apply Card -->
         <div class="apply-card">
-          <button 
-            *ngIf="!showApplicationForm" 
-            class="apply-btn" 
+          <button
+            *ngIf="!showApplicationForm && isCandidat"
+            class="apply-btn"
             (click)="toggleApplicationForm()">
             Postuler maintenant
           </button>

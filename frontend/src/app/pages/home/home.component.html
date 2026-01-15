@@ -1,45 +1,4 @@
 <div class="recruitment-homepage">
-  <!-- Header -->
-  <header class="header">
-    <div class="container">
-      <div class="header-content">
-        <div class="logo" (click)="router.navigate(['/'])">
-          <mat-icon>work</mat-icon>
-          <span>TalentHub</span>
-        </div>
-        <nav class="nav">
-          <a (click)="goToJobOffers()" class="nav-link">Offres d'emploi</a>
-          <a routerLink="/candidates" class="nav-link">Candidats</a>
-          <a routerLink="/dashboard" class="nav-link" *ngIf="isAuthenticated()">Tableau de bord</a>
-        </nav>
-        <div class="header-actions">
-          <button mat-button class="outlined-button" (click)="goToLogin()" *ngIf="!isAuthenticated()">
-            Se connecter
-          </button>
-          <button mat-raised-button class="primary-button" (click)="goToRegister()" *ngIf="!isAuthenticated()">
-            S'inscrire
-          </button>
-          <button mat-icon-button [matMenuTriggerFor]="menu" *ngIf="isAuthenticated()">
-            <mat-icon>account_circle</mat-icon>
-          </button>
-          <mat-menu #menu="matMenu">
-            <button mat-menu-item routerLink="/profile">
-              <mat-icon>person</mat-icon>
-              <span>Mon profil</span>
-            </button>
-            <button mat-menu-item routerLink="/applications">
-              <mat-icon>description</mat-icon>
-              <span>Mes candidatures</span>
-            </button>
-            <button mat-menu-item (click)="logout()">
-              <mat-icon>logout</mat-icon>
-              <span>Déconnexion</span>
-            </button>
-          </mat-menu>
-        </div>
-      </div>
-    </div>
-  </header>
 
   <!-- Hero Section -->
   <section class="hero">
@@ -140,7 +99,7 @@
             </div>
           </mat-card-content>
           <mat-card-actions>
-            <button mat-button class="apply-button" (click)="onApply(job.id); $event.stopPropagation()">
+            <button *ngIf="isCandidat" mat-button class="apply-button" (click)="onApply(job.id); $event.stopPropagation()">
               <mat-icon>send</mat-icon>
               Postuler
             </button>

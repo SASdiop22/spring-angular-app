@@ -1,8 +1,8 @@
-import { Component,  OnInit } from "@angular/core"
-import  { Router } from "@angular/router"
-import  { JobOfferService } from "../../services/job-offer.service"
-import  { JobOffer } from "../../models/JobOffer"
-import  { AuthService } from "../../services/auth.service"
+import { Component, OnInit } from "@angular/core"
+import { Router } from "@angular/router"
+import { JobOfferService } from "../../services/job-offer.service"
+import { JobOffer } from "../../models/JobOffer"
+import { AuthService } from "../../services/auth.service"
 
 @Component({
   selector: "app-home",
@@ -14,6 +14,9 @@ export class HomeComponent implements OnInit {
   loading = true
   searchKeyword = ""
   searchLocation = ""
+  isRH = false
+  isCandidat = false
+  userRole = "VISITOR"
 
   constructor(
     private jobOfferService: JobOfferService,
@@ -22,7 +25,14 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.updateUserRole()
     this.loadJobOffers()
+  }
+
+  updateUserRole(): void {
+    this.userRole = this.authService.getUserRole()
+    this.isRH = this.authService.isRH()
+    this.isCandidat = this.authService.isCandidat()
   }
 
   loadJobOffers(): void {
@@ -63,20 +73,10 @@ export class HomeComponent implements OnInit {
 
   onApply(jobId: number): void {
     if (this.authService.authenticated()) {
-      // Rediriger vers la page de candidature
-      this.router.navigate(["/job-offers", jobId, "apply"])
+      this.router.navigate(["/job-offers", jobId])
     } else {
-      // Rediriger vers la page de connexion
       this.router.navigate(["/login"], { queryParams: { returnUrl: `/job-offers/${jobId}` } })
     }
-  }
-
-  goToLogin(): void {
-    this.router.navigate(["/login"])
-  }
-
-  goToRegister(): void {
-    this.router.navigate(["/register"])
   }
 
   goToJobOffers(): void {
@@ -88,8 +88,8 @@ export class HomeComponent implements OnInit {
   }
 
   logout(): void {
-    sessionStorage.removeItem("ACCESS_TOKEN")
-    this.router.navigate(["/login"])
+    this.authService.logout()
+    this.router.navigate(["/"])
   }
 
   getTimeSincePublished(publishedAt: string | undefined): string {
@@ -107,3 +107,4 @@ export class HomeComponent implements OnInit {
     return `Il y a ${Math.floor(diffDays / 30)} mois`
   }
 }
+

@@ -1,11 +1,4 @@
 <div class="job-offers-container">
-  <!-- Header -->
-  <header class="page-header">
-    <div class="container">
-      <h1>Toutes les offres d'emploi</h1>
-      <p>{{ filteredOffers.length }} offre(s) disponible(s)</p>
-    </div>
-  </header>
 
   <div class="container main-content">
     <!-- Sidebar avec filtres -->
@@ -18,9 +11,9 @@
       <!-- Recherche par mot-clé -->
       <div class="filter-group">
         <label>Mot-clé</label>
-        <input 
-          type="text" 
-          [(ngModel)]="searchKeyword" 
+        <input
+          type="text"
+          [(ngModel)]="searchKeyword"
           (keyup.enter)="searchByKeyword()"
           placeholder="Rechercher..."
           class="filter-input">
@@ -49,16 +42,16 @@
       <div class="filter-group">
         <label>Salaire (€)</label>
         <div class="salary-inputs">
-          <input 
-            type="number" 
-            [(ngModel)]="minSalary" 
+          <input
+            type="number"
+            [(ngModel)]="minSalary"
             (change)="applyFilters()"
             placeholder="Min"
             class="filter-input">
           <span>-</span>
-          <input 
-            type="number" 
-            [(ngModel)]="maxSalary" 
+          <input
+            type="number"
+            [(ngModel)]="maxSalary"
             (change)="applyFilters()"
             placeholder="Max"
             class="filter-input">
@@ -107,9 +100,9 @@
             <h3>{{ offer.title }}</h3>
             <span class="contract-badge">{{ offer.contractType }}</span>
           </div>
-          
+
           <p class="offer-description">{{ offer.description }}</p>
-          
+
           <div class="offer-details">
             <div class="detail-item">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -118,7 +111,7 @@
               </svg>
               <span>{{ offer.location }}</span>
             </div>
-            
+
             <div class="detail-item" *ngIf="offer.salary">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -126,7 +119,7 @@
               </svg>
               <span>{{ offer.salary | number:'1.0-0' }}€</span>
             </div>
-            
+
             <div class="detail-item" *ngIf="offer.remoteDays !== null">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
@@ -136,9 +129,23 @@
               <span>{{ offer.remoteDays }} jour(s) télétravail</span>
             </div>
           </div>
-          
+
           <div class="offer-footer">
-            <button class="view-btn">Voir l'offre</button>
+            <button class="view-btn" (click)="viewDetails(offer.id)">Voir l'offre</button>
+            <!-- Bouton Candidater visible uniquement pour les candidats -->
+            <button
+              *ngIf="isCandidat"
+              class="apply-btn"
+              (click)="viewDetails(offer.id)">
+              Candidater
+            </button>
+            <!-- Bouton Modifier visible uniquement pour les RH -->
+            <button
+              *ngIf="isRH"
+              class="edit-btn"
+              (click)="editOffer(offer.id)">
+              Modifier
+            </button>
           </div>
         </div>
       </div>

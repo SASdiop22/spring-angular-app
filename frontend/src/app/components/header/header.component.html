@@ -4,17 +4,37 @@
     <div class="header-logo">
       <button (click)="goHome()" class="logo-btn" title="Accueil">
         <mat-icon>work</mat-icon>
-        <span>JobMatch</span>
+        <span>TalentHub</span>
       </button>
     </div>
 
     <!-- Navigation -->
     <nav class="header-nav">
+      <!-- Lien Offres d'emploi (visible pour tous) -->
       <button mat-button (click)="goToJobOffers()" class="nav-item">
         <mat-icon>business_center</mat-icon>
         Offres d'emploi
       </button>
 
+      <!-- Lien Candidats (visible pour RH) -->
+      <button mat-button *ngIf="isRH" (click)="goToCandidates()" class="nav-item">
+        <mat-icon>people</mat-icon>
+        Candidats
+      </button>
+
+      <!-- Lien Tableau de bord (visible pour authentifiés) -->
+      <button mat-button *ngIf="isAuthenticated" (click)="goToDashboard()" class="nav-item">
+        <mat-icon>dashboard</mat-icon>
+        Tableau de bord
+      </button>
+
+      <!-- Lien Ajouter une offre (visible pour RH) -->
+      <button mat-button *ngIf="isRH" (click)="goToAddJobOffer()" class="nav-item add-offer-btn">
+        <mat-icon>add_circle</mat-icon>
+        Ajouter une offre
+      </button>
+
+      <!-- Menu utilisateur connecté -->
       <button
         *ngIf="isAuthenticated"
         mat-button
@@ -36,6 +56,7 @@
         </button>
       </mat-menu>
 
+      <!-- Bouton Connexion (visible pour utilisateurs non authentifiés) -->
       <button *ngIf="!isAuthenticated" mat-raised-button color="primary" (click)="router.navigate(['/login'])">
         Connexion
       </button>

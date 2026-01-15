@@ -1,0 +1,176 @@
+<div class="add-job-offer-container">
+  <div class="container">
+    <div class="add-offer-header">
+      <button class="back-btn" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Retour
+      </button>
+      <h1>{{ isEditMode ? "Modifier l'offre d'emploi" : "Créer une nouvelle offre d'emploi" }}</h1>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="success-message">
+      <mat-icon>check_circle</mat-icon>
+      <p>{{ successMessage }}</p>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="error-message">
+      <mat-icon>error</mat-icon>
+      <p>{{ errorMessage }}</p>
+    </div>
+
+    <form [formGroup]="jobOfferForm" (ngSubmit)="submitForm()" class="job-form">
+      <div class="form-section">
+        <h2>Informations de base</h2>
+
+        <!-- Titre -->
+        <mat-form-field appearance="outline" class="full-width"
+          [class.error-field]="jobOfferForm.get('title')?.invalid && jobOfferForm.get('title')?.touched">
+          <mat-label>Titre du poste *</mat-label>
+          <input matInput formControlName="title" placeholder="ex: Développeur Angular">
+          <mat-error *ngIf="jobOfferForm.get('title')?.hasError('required')">
+            Le titre est requis
+          </mat-error>
+          <mat-error *ngIf="jobOfferForm.get('title')?.hasError('minlength')">
+            Le titre doit contenir au moins 3 caractères
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Nom de l'entreprise -->
+        <mat-form-field appearance="outline" class="full-width"
+          [class.error-field]="jobOfferForm.get('companyName')?.invalid && jobOfferForm.get('companyName')?.touched">
+          <mat-label>Nom de l'entreprise *</mat-label>
+          <input matInput formControlName="companyName" placeholder="ex: TechCorp">
+          <mat-error *ngIf="jobOfferForm.get('companyName')?.hasError('required')">
+            Le nom de l'entreprise est requis
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Localisation -->
+        <mat-form-field appearance="outline" class="full-width"
+          [class.error-field]="jobOfferForm.get('location')?.invalid && jobOfferForm.get('location')?.touched">
+          <mat-label>Localisation *</mat-label>
+          <input matInput formControlName="location" placeholder="ex: Paris, France">
+          <mat-error *ngIf="jobOfferForm.get('location')?.hasError('required')">
+            La localisation est requise
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Type de contrat -->
+        <mat-form-field appearance="outline" class="full-width"
+          [class.error-field]="jobOfferForm.get('contractType')?.invalid && jobOfferForm.get('contractType')?.touched">
+          <mat-label>Type de contrat *</mat-label>
+          <mat-select formControlName="contractType">
+            <mat-option *ngFor="let type of contractTypes" [value]="type">
+              {{ type }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="jobOfferForm.get('contractType')?.hasError('required')">
+            Le type de contrat est requis
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-section">
+        <h2>Rémunération</h2>
+
+        <div class="salary-row">
+          <!-- Salaire minimum -->
+          <mat-form-field appearance="outline"
+            [class.error-field]="jobOfferForm.get('minSalary')?.invalid && jobOfferForm.get('minSalary')?.touched">
+            <mat-label>Salaire minimum (€) *</mat-label>
+            <input matInput type="number" formControlName="minSalary" placeholder="0">
+            <mat-error *ngIf="jobOfferForm.get('minSalary')?.hasError('required')">
+              Requis
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Salaire maximum -->
+          <mat-form-field appearance="outline"
+            [class.error-field]="jobOfferForm.get('maxSalary')?.invalid && jobOfferForm.get('maxSalary')?.touched">
+            <mat-label>Salaire maximum (€) *</mat-label>
+            <input matInput type="number" formControlName="maxSalary" placeholder="0">
+            <mat-error *ngIf="jobOfferForm.get('maxSalary')?.hasError('required')">
+              Requis
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Conditions de travail</h2>
+
+        <!-- Jours de télétravail -->
+        <mat-form-field appearance="outline" class="full-width"
+          [class.error-field]="jobOfferForm.get('remoteDays')?.invalid && jobOfferForm.get('remoteDays')?.touched">
+          <mat-label>Jours de télétravail par semaine *</mat-label>
+          <input matInput type="number" formControlName="remoteDays" min="0" max="5">
+          <mat-hint>0 = Sur site, 5 = 100% télétravail</mat-hint>
+          <mat-error *ngIf="jobOfferForm.get('remoteDays')?.hasError('required')">
+            Ce champ est requis
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-section">
+        <h2>Description et compétences</h2>
+
+        <!-- Description -->
+        <mat-form-field appearance="outline" class="full-width"
+          [class.error-field]="jobOfferForm.get('description')?.invalid && jobOfferForm.get('description')?.touched">
+          <mat-label>Description du poste *</mat-label>
+          <textarea matInput formControlName="description" placeholder="Décrivez les responsabilités et le contexte du poste..."
+            rows="6"></textarea>
+          <mat-error *ngIf="jobOfferForm.get('description')?.hasError('required')">
+            La description est requise
+          </mat-error>
+          <mat-error *ngIf="jobOfferForm.get('description')?.hasError('minlength')">
+            La description doit contenir au moins 10 caractères
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Description entreprise -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description de l'entreprise</mat-label>
+          <textarea matInput formControlName="companyDescription"
+            placeholder="Présentez votre entreprise..." rows="4"></textarea>
+        </mat-form-field>
+
+        <!-- Compétences requises -->
+        <mat-form-field appearance="outline" class="full-width"
+          [class.error-field]="jobOfferForm.get('requiredSkills')?.invalid && jobOfferForm.get('requiredSkills')?.touched">
+          <mat-label>Compétences requises * (séparées par des virgules)</mat-label>
+          <input matInput formControlName="requiredSkills"
+            placeholder="ex: Angular, TypeScript, Spring Boot, MySQL">
+          <mat-hint>Séparez les compétences par des virgules</mat-hint>
+          <mat-error *ngIf="jobOfferForm.get('requiredSkills')?.hasError('required')">
+            Les compétences sont requises
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button mat-raised-button type="button" (click)="resetForm()" class="secondary-btn">
+          <mat-icon>refresh</mat-icon>
+          Réinitialiser
+        </button>
+
+        <!-- Bouton de suppression (seulement en mode édition) -->
+        <button *ngIf="isEditMode" mat-raised-button type="button" (click)="deleteOffer()"
+          class="delete-btn" [disabled]="deleteLoading">
+          <mat-icon>delete</mat-icon>
+          {{ deleteLoading ? "Suppression..." : "Supprimer" }}
+        </button>
+
+        <button mat-raised-button type="submit" color="primary" [disabled]="loading">
+          <mat-icon *ngIf="!loading">send</mat-icon>
+          <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+          {{ loading ? (isEditMode ? "Mise à jour en cours..." : "Création en cours...") : (isEditMode ? "Mettre à jour l'offre" : "Créer l'offre") }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

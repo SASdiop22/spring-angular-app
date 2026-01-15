@@ -1,18 +1,27 @@
-import { Component, OnInit } from "@angular/core"
+import { Component, OnInit, OnDestroy } from "@angular/core"
 import { Router } from "@angular/router"
 import type { JobOffer } from "../../models/JobOffer"
 import { JobOfferService } from "../../services/job-offer.service"
+import { AuthService } from "../../services/auth.service"
+import { RoleService } from "../../services/role.service"
+import { Subscription } from "rxjs"
 
 @Component({
   selector: "app-job-offers-list",
   templateUrl: "./job-offers-list.component.html",
   styleUrls: ["./job-offers-list.component.scss"],
 })
-export class JobOffersListComponent implements OnInit {
+export class JobOffersListComponent implements OnInit, OnDestroy {
   jobOffers: JobOffer[] = []
   filteredOffers: JobOffer[] = []
   loading = true
   error: string | null = null
+
+  // Rôles
+  isRH = false
+  isCandidat = false
+  isVisitor = false
+  private roleSubscription: Subscription | null = null
 
   // Filtres
   searchKeyword = ""
@@ -29,10 +38,29 @@ export class JobOffersListComponent implements OnInit {
   constructor(
     private jobOfferService: JobOfferService,
     private router: Router,
+    private authService: AuthService,
+    private roleService: RoleService
   ) {}
 
   ngOnInit(): void {
+    this.updateRoleStatus()
+    // S'abonner aux changements de rôle
+    this.roleSubscription = this.roleService.role$.subscribe(() => {
+      this.updateRoleStatus()
+    })
     this.loadJobOffers()
+  }
+
+  ngOnDestroy(): void {
+    if (this.roleSubscription) {
+      this.roleSubscription.unsubscribe()
+    }
+  }
+
+  updateRoleStatus(): void {
+    this.isRH = this.authService.isRH()
+    this.isCandidat = this.authService.isCandidat()
+    this.isVisitor = !this.authService.authenticated()
   }
 
   loadJobOffers(): void {
@@ -126,5 +154,9 @@ export class JobOffersListComponent implements OnInit {
 
   viewDetails(offerId: number): void {
     this.router.navigate(["/job-offers", offerId])
+  }
+
+  editOffer(offerId: number): void {
+    this.router.navigate(["/job-offers", offerId, "edit"])
   }
 }
