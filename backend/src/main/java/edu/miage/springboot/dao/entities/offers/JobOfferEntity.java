@@ -19,9 +19,10 @@ import java.util.List;
 @Table(name = "job_offers")
 public class JobOfferEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
+    @Column(nullable = false)
     private String title;
     @Column(length = 2000)
     private String description;
@@ -34,18 +35,30 @@ public class JobOfferEntity {
 
     @Enumerated(EnumType.STRING)
     private JobStatusEnum status = JobStatusEnum.DRAFT;
-
-    // L'employé (Demandeur) qui a créé le besoin
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creator_id", nullable = false)
-    private EmployeEntity creator;
-
     // Compétences clés (Tags : Java, Agile, etc.) - Spécification 2.A
     @ElementCollection
     @CollectionTable(name = "job_skills", joinColumns = @JoinColumn(name = "job_id"))
     @Column(name = "skill")
     private List<String> skillsRequired = new ArrayList<>();
+    //L'employé (Demandeur) qui a créé le besoin
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id", nullable = false)
+    private EmployeEntity creator;
 
+    /*//Pour programmer le rendez-vous
+    @Column(name = "meeting_date")
+    private java.time.LocalDateTime meetingDate;
+
+    //La personne qui va interviewer le candidat
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "interviewer_id")
+    private EmployeEntity interviewer;
+
+    //Le feedback apres l'entretien'
+    @Column(name = "technical_feedback", columnDefinition = "TEXT")
+    private String technicalFeedback;*/
+
+    @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime publishedAt;
 

@@ -14,7 +14,7 @@ Content-Type: application/json
 
 ###
 
-# @name loginRh
+# @name loginRH
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
@@ -23,6 +23,27 @@ Content-Type: application/json
   "password": "password123"
 }
 > {% client.global.set("rh_token", response.body.accessToken); %}
+
+###
+
+
+# @name loginDemandeur
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "dylan.demandeur",
+  "password": "password123"
+}
+> {% client.global.set("demandeur_token", response.body.accessToken); %}
+
+###
+
+# @name idDemandeur
+GET http://localhost:8080/api/employes/me
+Authorization: Bearer {{demandeur_token}}
+
+> {% client.global.set("id_demandeur", response.body.id); %}
 
 
 ### =========================================================================
@@ -39,7 +60,7 @@ Content-Type: application/json
   "title": "Architecte Solutions Cloud",
   "description": "Expertise Azure et Kubernetes requise.",
   "department": "IT Cloud",
-  "creatorId": 2,
+  "creatorId": {{id_demandeur}},
   "skillsRequired": ["Azure", "Kubernetes", "Terraform"]
 }
 

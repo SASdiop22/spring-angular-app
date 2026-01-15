@@ -21,18 +21,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserServiceImpl {
 
-
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private UserRoleRepository userRoleRepository;
-
-    @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private EmployeRepository employeRepository;
     
     public void checkUserExists(String username) {
         Optional<UserEntity> userOpt = userRepository.findByUsername(username);
@@ -71,82 +62,6 @@ public class UserServiceImpl {
             .toList();
     }
 
-    @Transactional
-    public void setDemandeurDePosteStatus(Long userId, boolean status) {
-        UserEntity user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        EmployeEntity employe = user.getEmployeProfile();
-        
-        if (employe == null) {
-            throw new RuntimeException("Cet utilisateur n'a pas de profil employé");
-        }
-        employe.setDemandeurDePoste(status);
-        if (status) {
-            userRoleRepository.findByName("ROLE_EMPLOYE")
-                .ifPresent(role -> user.setupAsDemandeurDePoste(role));
-        }else{
-            userRoleRepository.findByName("ROLE_EMPLOYE")
-                .ifPresent(role -> user.downgradeFromPrivilege(role));
-        }
-        userRepository.save(user);
-    }
 
-    @Transactional
-    public void setAdminStatus(Long userId, boolean status) {
-        UserEntity user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        EmployeEntity employe = user.getEmployeProfile();
-        
-        if (employe == null) {
-            throw new RuntimeException("Cet utilisateur n'a pas de profil employé");
-        }
-        employe.setAdminPrivilege(status);
-        if (status) {
-            userRoleRepository.findByName("ROLE_ADMIN")
-                .ifPresent(role -> user.setupAsAdmin(role));
-        }else{
-            userRoleRepository.findByName("ROLE_ADMIN")
-                .ifPresent(role -> user.downgradeFromPrivilege(role));
-        }
-        userRepository.save(user);
-    }
 
-    @Transactional
-    public void setRhStatus(Long userId, boolean isRh) {
-        UserEntity user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-
-        EmployeEntity employe = user.getEmployeProfile();
-                if (employe == null) {
-            throw new RuntimeException("Cet utilisateur n'a pas de profil employé");
-        }
-        employe.setRhPrivilege(isRh);
-
-        if (isRh) {
-            userRoleRepository.findByName("ROLE_RH")
-                .ifPresent(role -> user.setupAsRhPrivilege(role));
-        }else{
-            userRoleRepository.findByName("ROLE_RH")
-                .ifPresent(role -> user.downgradeFromPrivilege(role));
-        }
-        userRepository.save(user);
-    }
-
-    @Transactional
-    public UserDTO assignReferent(Long candidatId, Long employeId) {
-        // 1. On récupère l'USER du candidat (ex: Sophie, ID 6)
-        UserEntity candidat = userRepository.findById(candidatId)
-                .orElseThrow(() -> new EntityNotFoundException("Candidat non trouvé"));
-
-        // 2. On récupère le PROFIL EMPLOYE du référent (ex: Alice, ID 1)
-        // Note : On utilise findByUserId car Alice a l'ID User 1
-        EmployeEntity referent = employeRepository.findByUserId(employeId)
-                .orElseThrow(() -> new EntityNotFoundException("Profil Employé référent non trouvé"));
-
-        // 3. Liaison
-        candidat.setReferentEmploye(referent);
-
-        // 4. Sauvegarde et conversion finale
-        return userMapper.toDto(userRepository.save(candidat));
-    }
 }

@@ -113,3 +113,23 @@ Authorization: Bearer {{token_rh}}
 # Attendu : 403 Forbidden
 DELETE http://localhost:8080/api/joboffers/1
 Authorization: Bearer {{token_employe}}
+
+### ÉCHEC : Jean tente de voir la candidature de Paul (ID 5 par exemple)
+GET http://localhost:8080/api/applications/5
+Authorization: Bearer {{token_jean}}
+
+> {%
+    client.test("Sécurité : Un candidat ne peut pas voir la candidature d'autrui", function() {
+        client.assert(response.status === 403 || response.status === 404);
+    });
+%}
+
+### ÉCHEC : Un candidat tente de lister les employés
+GET http://localhost:8080/api/employes
+Authorization: Bearer {{token_candidat}}
+
+> {%
+    client.test("Sécurité : Accès aux employés interdit aux candidats", function() {
+        client.assert(response.status === 403);
+    });
+%}

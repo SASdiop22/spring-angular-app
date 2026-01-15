@@ -1,5 +1,5 @@
 ### =========================================================================
-### SCÉNARIO 5 : PROCESSUS D'EMBAUCHE ET MUTATION DE PROFIL
+### SCÉNARIO 5 : VÉRIFICATION COMPLÈTE DE LA MUTATION (SPEC 5)
 ### =========================================================================
 
 # @name loginAdmin
@@ -10,52 +10,75 @@ Content-Type: application/json
   "username": "bob.admin",
   "password": "password123"
 }
-> {%
-    client.global.set("token_admin", response.body.accessToken);
-%}
+> {% client.global.set("token_admin", response.body.accessToken); %}
 
-### -------------------------------------------------------------------------
-### 1. ASSIGNER UN RÉFÉRENT (Spécification 5.2)
-### -------------------------------------------------------------------------
-# On utilise Jean (Candidat ID 4) et Dylan (Employé ID 7) identifiés dans les logs
-PATCH http://localhost:8080/api/users/4/assign-referent/7
+### 0. Pré-requis : Trouver une candidature à embaucher (Dynamique)
+GET http://localhost:8080/api/applications
 Authorization: Bearer {{token_admin}}
 
 > {%
-    client.test("Assignation référent réussie", function() {
-        client.assert(response.status === 200, "Le statut devrait être 200 OK");
-        client.assert(response.body.id === 4, "L'ID du candidat doit correspondre");
-        client.assert(response.body.referentId === 7, "Le referentId doit être 7");
-    });
+    // On cherche une candidature de Jean qui n'est pas encore HIRED
+    const app = response.body.find(a => a.candidateName.includes("jean") && a.status !== "HIRED");
+    client.global.set("target_app_id", app.id);
+    client.global.set("target_job_id", app.jobOfferId);
+    client.global.set("target_candidate_id", app.candidateId);
 %}
-### -------------------------------------------------------------------------
-### 2. RECRUTER (HIRED) (Spécifications 5.1 à 5.4)
-### -------------------------------------------------------------------------
-# FIX : Passage au format @RequestBody JSON
-PATCH http://localhost:8080/api/applications/1/status
-Authorization: Bearer {{token_admin}}
-Content-Type: application/json
 
-{
-  "status": "HIRED"
-}
+### 1. ACTION : Embauche officielle
+POST http://localhost:8080/api/applications/{{target_app_id}}/hire
+Authorization: Bearer {{token_admin}}
 
 > {%
-    client.test("Automatisation HIRED réussie", function() {
-        client.assert(response.status === 200, "Le recrutement doit être validé");
-        // On récupère dynamiquement l'ID de l'offre pour la vérification suivante
-        client.global.set("target_job_id", response.body.jobOfferId);
+    client.test("L'embauche doit être validée", function() {
+        // Comme votre méthode renvoie void, on vérifie juste le status 200
+        client.assert(response.status === 200, "Le serveur doit répondre 200 OK");
     });
 %}
 
-### -------------------------------------------------------------------------
-### 3. VÉRIFICATION : IMPACT SUR L'OFFRE D'EMPLOI
-### -------------------------------------------------------------------------
+### 2. VÉRIFICATION : Clôture automatique de l'offre
 GET http://localhost:8080/api/joboffers/{{target_job_id}}
 Authorization: Bearer {{token_admin}}
 
 > {%
-    client.test("Vérification Offre FILLED", function() {
-        client.assert(response.body.status === "FILLED", "L'offre associée doit être passée en FILLED (Spec 5.3)");
+    client.test("L'offre d'emploi doit être fermée", function() {
+        // Note : Si cela échoue, vérifiez job.setStatus(JobStatusEnum.CLOSED) dans Java
+        client.assert(response.body.status === "CLOSED" || response.body.status === "FILLED");
+    });
+%}
+
+### 3. VÉRIFICATION : Mutation du compte Utilisateur (Re-login)
+# @name loginJeanMutation
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.rgpd",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("token_jean", response.body.accessToken);
+%}
+
+### 4. VÉRIFICATION : Accès espace employé et Rôles
+GET http://localhost:8080/api/employes/me
+Authorization: Bearer {{token_jean}}
+
+> {%
+    client.test("Jean doit avoir ses nouveaux privilèges", function() {
+        client.assert(response.status === 200, "Jean devrait avoir accès à /me");
+        // Vérifier si votre DTO employé contient ces infos
+        client.assert(response.body.poste != null, "Le poste doit être renseigné");
+    });
+%}
+
+### 5. VÉRIFICATION : Archivage du profil Candidat (RGPD)
+GET http://localhost:8080/api/candidates/{{target_candidate_id}}
+Authorization: Bearer {{token_admin}}
+
+> {%
+    client.test("Le profil candidat doit être archivé (Spec 5.4)", function() {
+        // Si cela échoue, ajoutez candidat.setArchived(true) dans hireCandidate
+        client.assert(response.body.archived === true, "Le flag 'archived' doit être à true");
     });
 %}

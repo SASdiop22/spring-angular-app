@@ -1,182 +1,236 @@
 package edu.miage.springboot.services.impl.offers;
 
-import edu.miage.springboot.dao.entities.AiAnalysisResultEntity;
-import edu.miage.springboot.dao.entities.offers.*;
-import edu.miage.springboot.dao.entities.users.*;
-import edu.miage.springboot.dao.repositories.AiAnalysisResultRepository;
-import edu.miage.springboot.dao.repositories.offers.*;
-import edu.miage.springboot.dao.repositories.users.*;
-import edu.miage.springboot.services.impl.users.UserServiceImpl;
+import edu.miage.springboot.dao.entities.offers.ApplicationEntity;
+import edu.miage.springboot.dao.entities.offers.ApplicationStatusEnum;
+import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
+import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
+import edu.miage.springboot.dao.entities.users.CandidatEntity;
+import edu.miage.springboot.dao.entities.users.EmployeEntity;
+import edu.miage.springboot.dao.entities.users.UserEntity;
+import edu.miage.springboot.dao.entities.users.UserTypeEnum;
+import edu.miage.springboot.dao.repositories.offers.ApplicationRepository;
+import edu.miage.springboot.dao.repositories.offers.JobOfferRepository;
+import edu.miage.springboot.dao.repositories.users.CandidatRepository;
+import edu.miage.springboot.dao.repositories.users.EmployeRepository;
+import edu.miage.springboot.dao.repositories.users.UserRepository;
+import edu.miage.springboot.dao.repositories.users.UserRoleRepository;
+import edu.miage.springboot.services.impl.offers.matching.MatchingServiceImpl;
 import edu.miage.springboot.services.interfaces.ApplicationService;
-import edu.miage.springboot.services.interfaces.AiMatchingService; // Version B
 import edu.miage.springboot.utils.mappers.ApplicationMapper;
 import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
-import edu.miage.springboot.web.dtos.ai.MatchingResultDTO; // Version B
-import edu.miage.springboot.web.dtos.offers.ApplicationStatusUpdateDTO;
-import edu.miage.springboot.web.dtos.users.UserDTO;
-import jakarta.servlet.http.HttpServletResponse;
-import org.antlr.v4.runtime.misc.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
 
-    @Autowired private ApplicationRepository applicationRepository;
-    @Autowired private JobOfferRepository jobOfferRepository;
-    @Autowired private CandidatRepository candidatRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private EmployeRepository employeRepository;
-    @Autowired private UserRoleRepository userRoleRepository;
-    @Autowired private ApplicationMapper applicationMapper;
     @Autowired
-    private AiAnalysisResultRepository aiAnalysisResultRepository;
-    @Autowired private UserServiceImpl userService;
+    private ApplicationRepository applicationRepository;
+    @Autowired
+    private JobOfferRepository jobOfferRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private ApplicationMapper applicationMapper;
 
-    // 🔹 AJOUT IA (Version B)
-    @Autowired private AiMatchingService aiMatchingService;
+    @Autowired
+    private CandidatRepository candidatRepository;
+
+    @Autowired
+    private EmployeRepository employeRepository;
+
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+    @Autowired
+    private MatchingServiceImpl matchingService;
+
+    @Override
+    @Transactional
+    public ApplicationDTO updateStatus(Long applicationId, ApplicationStatusEnum status, String reason) {
+        ApplicationEntity app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
+
+        // Spec 4.B : Gestion du motif de rejet
+        if (status == ApplicationStatusEnum.REJECTED) {
+            if (reason == null || reason.isBlank()) {
+                throw new IllegalArgumentException("Un motif de rejet est obligatoire pour refuser une candidature.");
+            }
+            app.setRejectionReason(reason);
+            sendRejectionEmail(app.getCandidate().getUser().getEmail(), reason);
+        }
+
+        // Sécurité : Vérifier si un entretien est planifié pour les statuts avancés
+        if (isStatusRequiringMeeting(status) && app.getMeetingDate() == null) {
+            throw new IllegalStateException("Impossible de passer à ce statut sans avoir planifié d'entretien.");
+        }
+
+        app.setCurrentStatus(status);
+        return applicationMapper.toDto(applicationRepository.save(app));
+    }
+
+    @Override
+    @Transactional
+    public void hireCandidate(Long applicationId) {
+        ApplicationEntity app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
+
+        if (app.getCurrentStatus() == ApplicationStatusEnum.HIRED) {
+            throw new IllegalStateException("Ce candidat a déjà été embauché.");
+        }
+
+        // --- 1. Gestion de l'archivage du Candidat (Indispensable pour vos tests) ---
+        CandidatEntity candidat = app.getCandidate();
+        candidat.setArchived(true);
+        candidatRepository.save(candidat);
+
+        UserEntity user = candidat.getUser();
+
+        // --- 2. Création du profil Employé (Spec 5) ---
+        EmployeEntity newEmployee = new EmployeEntity();
+        newEmployee.setUser(user);
+        newEmployee.setPoste(app.getJob().getTitle());
+
+        // Sécurité si le département de l'offre est nul (évite la DataIntegrityViolation)
+        String dept = app.getJob().getDepartment() != null ?
+                app.getJob().getDepartment() : app.getJob().getCreator().getDepartement();
+        newEmployee.setDepartement(dept);
+
+        // Assignation du Référent/Manager (Spec 5)
+        newEmployee.setReferent(app.getJob().getCreator());
+
+        // --- 3. Mise à jour de l'utilisateur (Type et Rôles) ---
+        user.setUserType(UserTypeEnum.EMPLOYE);
+
+        // On nettoie les anciens rôles pour ne mettre que le rôle EMPLOYÉ (plus propre pour la sécurité)
+        user.getRoles().clear();
+        userRoleRepository.findByName("ROLE_EMPLOYE")
+                .ifPresent(role -> user.getRoles().add(role));
+
+        // --- 4. Mise à jour des statuts (Candidature et Offre) ---
+        app.setCurrentStatus(ApplicationStatusEnum.HIRED);
+
+        JobOfferEntity job = app.getJob();
+        job.setStatus(JobStatusEnum.CLOSED);
+
+        // --- 5. Sauvegardes ---
+        employeRepository.save(newEmployee);
+        userRepository.save(user);
+        applicationRepository.save(app);
+        jobOfferRepository.save(job);
+    }
+
 
     @Override
     @Transactional
     public ApplicationDTO apply(Long jobOfferId, Long candidateId, String cvUrl, String coverLetter) {
+        // 1. Vérifications d'existence
+        JobOfferEntity job = jobOfferRepository.findById(jobOfferId)
+                .orElseThrow(() -> new RuntimeException("Offre d'emploi introuvable"));
+
+        CandidatEntity candidate = candidatRepository.findById(candidateId)
+                .orElseThrow(() -> new RuntimeException("Profil candidat introuvable"));
+
+        // 2. Vérifier si le candidat n'a pas déjà postulé (Évite les doublons)
         if (applicationRepository.existsByJobIdAndCandidateId(jobOfferId, candidateId)) {
             throw new IllegalStateException("Vous avez déjà postulé à cette offre.");
         }
 
-        JobOfferEntity job = jobOfferRepository.findById(jobOfferId)
-                .orElseThrow(() -> new RuntimeException("Offre non trouvée"));
-        CandidatEntity candidate = candidatRepository.findById(candidateId)
-                .orElseThrow(() -> new RuntimeException("Candidat non trouvé"));
-
-        // Spécification 3.A : Vérification RGPD (Utilisation de la méthode entity)
-        if (!candidate.isRgpdCompliant()) {
-            throw new RuntimeException("Consentement RGPD expiré. Veuillez renouveler votre profil.");
-        }
-
+        // 3. Création de la candidature
         ApplicationEntity app = new ApplicationEntity();
         app.setJob(job);
         app.setCandidate(candidate);
         app.setCvUrl(cvUrl);
         app.setCoverLetter(coverLetter);
         app.setCurrentStatus(ApplicationStatusEnum.RECEIVED);
+        app.setCreatedAt(LocalDateTime.now());
 
-        // 🔹 INTEGRATION IA MATCHING (Version B)
-        try {
-            // On construit un texte simple pour l'analyse
-            String textToAnalyze = "CANDIDATE LETTER: " + coverLetter;
-            MatchingResultDTO aiResult = aiMatchingService.matchCvWithJob(textToAnalyze, job.getDescription());
-
-            // On stocke le score
-            app.setMatchingScore(aiResult.getMatchingScore());
-
-            // Appel au service IA injecté
-
-            AiAnalysisResultEntity detail = new AiAnalysisResultEntity();
-            detail.setApplicationId(app.getId());
-            detail.setJobOfferId(job.getId());
-            detail.setMatchingScore(aiResult.getMatchingScore());
-            detail.setStrengths(String.join(", ", aiResult.getStrengths()));
-            detail.setMissingSkills(String.join(", ", aiResult.getMissingSkills()));
-            detail.setRecommendation(aiResult.getRecommendation());
-
-
-            aiAnalysisResultRepository.save(detail);
-
-            // Mise à jour de l'entité avec le score retourné par Llama3
-            app.setMatchingScore(aiResult.getMatchingScore());
-
-            // Optionnel : Vous pourriez loguer la recommandation de l'IA ici
-            System.out.println("IA Recommendation: " + aiResult.getRecommendation());
-
-        } catch (Exception e) {
-            // En cas d'échec de l'IA (ex: Ollama hors ligne), on met un score par défaut
-            // pour ne pas bloquer la candidature technique
-            app.setMatchingScore(0);
-            System.err.println("IA Matching failed: " + e.getMessage());
-        }
+        // 4. Calcul automatique du score de matching (Spécification 4.A)
+        // Ici, on peut simuler ou appeler une logique de comparaison de mots-clés
+        app.setMatchingScore(matchingService.calculateMatchScore(job, candidate));
 
         return applicationMapper.toDto(applicationRepository.save(app));
     }
 
-    @Override
+
+
+    // Dans ApplicationServiceImpl.java
     @Transactional
-    public ApplicationDTO updateStatus(Long id, ApplicationStatusUpdateDTO updateDto) {
+    @Override
+    public ApplicationDTO updateStatus(Long id, ApplicationStatusEnum status) {
+
         ApplicationEntity app = applicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
 
-        ApplicationStatusEnum newStatus = updateDto.getStatus();
-
-        // --- SPÉCIFICATION 4.4 : Motif de rejet obligatoire ---
-        if (newStatus == ApplicationStatusEnum.REJECTED) {
-            if (updateDto.getReason() == null || updateDto.getReason().trim().isEmpty()) {
-                throw new IllegalArgumentException("Le motif de rejet est obligatoire.");
-            }
-            app.setRejectionReason(updateDto.getReason());
+        if (status == ApplicationStatusEnum.HIRED && app.getCandidate().isArchived()) {
+            throw new RuntimeException("Ce candidat a déjà été recruté et son profil est archivé.");
         }
 
-        // --- SPÉCIFICATION 4.2 : Données logistiques obligatoires ---
-        if (isStatusRequiringMeeting(newStatus)) {
-            if (updateDto.getMeetingDate() == null || updateDto.getMeetingLocation() == null) {
-                throw new IllegalArgumentException("La date, l'heure et le lieu sont obligatoires pour fixer un entretien.");
-            }
-            app.setMeetingDate(updateDto.getMeetingDate());
-            app.setMeetingLocation(updateDto.getMeetingLocation());
-            // Ici, vous pourriez déclencher l'envoi d'email automatique avec ces détails
+        app.setCurrentStatus(status);
+
+        if (status == ApplicationStatusEnum.HIRED) {
+            finalizeHiring(app);
         }
 
-        app.setCurrentStatus(newStatus);
+        return applicationMapper.toDto(applicationRepository.save(app));
+    }
+    private void finalizeHiring(ApplicationEntity app) {
+        UserEntity user = app.getCandidate().getUser();
 
-        // --- SPÉCIFICATION 5 : Processus d'embauche (HIRED) ---
-        if (newStatus == ApplicationStatusEnum.HIRED) {
-            JobOfferEntity job = app.getJob();
-            UserEntity recruit = app.getCandidate().getUser();
+        // 1. Changement de rôle
+        user.setUserType(UserTypeEnum.EMPLOYE);
 
-            // 1. Établissement du lien hiérarchique (Correction majeure) [cite: 5, 7]
-            if (job.getCreator() != null) {
-                recruit.setReferentEmploye(job.getCreator()); // Fixe le referent_employe_id en base
-            }
-
-            // 2. Mutation du profil
-            recruit.setUserType(UserTypeEnum.EMPLOYE);
-            userRoleRepository.findByName("ROLE_EMPLOYE").ifPresent(role -> {
-                recruit.getRoles().clear();
-                recruit.getRoles().add(role);
-            });
-
-            // 3. Mise à jour de l'offre
-            job.setStatus(JobStatusEnum.FILLED);
-            jobOfferRepository.save(job);
-
-            // 4. Création du profil Employé [cite: 1, 7]
-            EmployeEntity newProfile = new EmployeEntity();
-            newProfile.setUser(recruit);
-            newProfile.setPoste(job.getTitle());
-            newProfile.setDepartement(job.getDepartment());
-            employeRepository.save(newProfile);
-
-            // 5. Archivage du candidat
-            CandidatEntity candidatProfile = app.getCandidate();
-            candidatProfile.setArchived(true);
-            candidatRepository.save(candidatProfile);
-
-            // 6. Sauvegarde forcée de l'utilisateur pour que le Mapper voit le referentId
-            userRepository.saveAndFlush(recruit);
+        // 2. Création du profil employé s'il n'existe pas
+        EmployeEntity newEmployee = user.getEmployeProfile();
+        if (newEmployee == null) {
+            newEmployee = new EmployeEntity();
+            newEmployee.setUser(user);
         }
 
-        // Sauvegarde et retour du DTO rafraîchi
-        ApplicationEntity savedApp = applicationRepository.saveAndFlush(app);
-        return applicationMapper.toDto(savedApp);
+        JobOfferEntity job = app.getJob();
+        job.setStatus(JobStatusEnum.FILLED);
+        jobOfferRepository.save(job);
+        newEmployee.setPoste(job.getTitle());
+        newEmployee.setDepartement(job.getDepartment());
+
+        // 3. LIEN HIÉRARCHIQUE : Le manager est le créateur de l'offre
+        // On récupère l'employé (demandeur) qui a créé le poste
+        EmployeEntity manager = app.getJob().getCreator();
+        newEmployee.setReferent(manager);
+
+        CandidatEntity candidatProfile = app.getCandidate();
+        candidatProfile.setArchived(true);
+
+
+        candidatRepository.save(candidatProfile);
+        employeRepository.save(newEmployee);
+        userRepository.save(user);
     }
 
     @Override
     public ApplicationDTO findById(Long id) {
-        return applicationRepository.findById(id)
-                .map(applicationMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("Candidature introuvable avec l'id : " + id));
+        return applicationMapper.toDto(applicationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Candidature introuvable")));
+    }
+
+    @Transactional
+    @Override
+    public ApplicationDTO scheduleInterview(Long applicationId, LocalDateTime date, Long interviewerId, String location) {
+        ApplicationEntity app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
+
+        EmployeEntity interviewer = employeRepository.findById(interviewerId)
+                .orElseThrow(() -> new RuntimeException("Interviewer introuvable"));
+
+        // Mise à jour des infos
+        app.setMeetingDate(date);
+        app.setInterviewer(interviewer);
+        app.setMeetingLocation(location);
+        app.setCurrentStatus(ApplicationStatusEnum.INTERVIEW_PENDING);
+
+        return applicationMapper.toDto(applicationRepository.save(app));
     }
 
     @Override
@@ -200,4 +254,5 @@ public class ApplicationServiceImpl implements ApplicationService {
                 status == ApplicationStatusEnum.TECHNICAL_TEST_PENDING ||
                 status == ApplicationStatusEnum.OFFER_PENDING;
     }
+
 }

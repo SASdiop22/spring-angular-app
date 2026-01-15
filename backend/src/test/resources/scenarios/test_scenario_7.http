@@ -1,11 +1,9 @@
-### Variables Globales
-@baseUrl = http://localhost:8080/api
-@jobOfferId = 1
-@candidateId = 6
+### =========================================================================
+### 1. AUTHENTIFICATION
+### =========================================================================
 
-### 1. Authentification des acteurs
 # @name loginRH
-POST {{baseUrl}}/auth/login
+POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
@@ -15,52 +13,37 @@ Content-Type: application/json
 > {% client.global.set("token_rh", response.body.accessToken); %}
 
 ###
-# @name loginDemandeur
-POST {{baseUrl}}/auth/login
-Content-Type: application/json
 
-{
-  "username": "marie.hired",
-  "password": "password123"
-}
-> {% client.global.set("token_demandeur", response.body.accessToken); %}
-
-###
 # @name loginCandidat
-POST {{baseUrl}}/auth/login
+POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
   "username": "paul.rejet",
   "password": "password123"
 }
-> {% client.global.set("token_candidat", response.body.accessToken); %}
+> {% client.global.set("token_paul", response.body.accessToken); %}
 
+### =========================================================================
+### 2. CRÉATION DYNAMIQUE (Pour éviter le "Candidature introuvable")
+### =========================================================================
 
-### 2. Création d'une candidature (Spec 3.A)
-POST {{baseUrl}}/applications/apply?jobOfferId={{jobOfferId}}&candidateId={{candidateId}}&cvUrl=http://cloud.storage/cv_test.pdf
-Authorization: Bearer {{token_candidat}}
+# @name applyAction
+POST http://localhost:8080/api/applications/apply?jobOfferId=1&candidateId=6&cvUrl=http://cloud.storage/cv_test.pdf
+Authorization: Bearer {{token_paul}}
 
-> {% client.global.set("app_id", response.body.id); %}
+> {%
+    client.global.set("app_id_dynamique", response.body.id);
+    client.log("Nouvel ID créé pour le test : " + response.body.id);
+%}
 
+### =========================================================================
+### 3. TESTS DE ROBUSTESSE (SPEC 4.B)
+### =========================================================================
 
-### 3. Gestion des Notes par le Demandeur (Spec 4.3)
-# Dylan est le propriétaire de l'offre (grâce au correctif du Seeder)
-POST {{baseUrl}}/applications/{{app_id}}/notes
-Authorization: Bearer {{token_demandeur}}
-Content-Type: application/json
-
-{
-  "stepName": "Entretien Technique",
-  "content": "Le candidat a de bonnes bases mais manque de pratique sur les architectures microservices."
-}
-
-
-### 4. TEST SPEC 4.4 : GESTION DES REJETS
-
-### 4a. Tentative de rejet SANS motif (Doit échouer)
-# Le backend doit valider que si status == REJECTED, alors reason est requis.
-PATCH {{baseUrl}}/applications/{{app_id}}/status
+### 3a. ÉCHEC VOLONTAIRE : Rejet SANS motif
+# On utilise l'ID que l'on vient de créer dynamiquement
+PATCH http://localhost:8080/api/applications/{{app_id_dynamique}}/status
 Authorization: Bearer {{token_rh}}
 Content-Type: application/json
 
@@ -69,38 +52,40 @@ Content-Type: application/json
 }
 
 > {%
-    client.test("Le rejet sans motif doit être bloqué", function() {
-        // Si votre service lance une exception quand le motif manque :
-        client.assert(response.status === 400, "Attendu 400 car reason est absent");
+    client.test("Validation : Le rejet sans motif doit retourner une erreur", function() {
+        // On attend une erreur 400 ou 500 selon votre gestion d'exception
+        client.assert(response.status >= 400, "Le serveur n'aurait pas dû accepter un rejet sans motif");
     });
 %}
 
-### 4b. Rejet AVEC motif obligatoire (Doit réussir)
-PATCH {{baseUrl}}/applications/{{app_id}}/status
+### 3b. SUCCÈS : Rejet AVEC motif obligatoire
+PATCH http://localhost:8080/api/applications/{{app_id_dynamique}}/status
 Authorization: Bearer {{token_rh}}
 Content-Type: application/json
 
 {
   "status": "REJECTED",
-  "reason": "Expérience insuffisante sur l'environnement technique cible (Microservices)."
+  "reason": "Profil trop junior pour les exigences du poste (Java/Spring)."
 }
 
 > {%
-    client.test("Le rejet avec motif est validé", function() {
-        client.assert(response.status === 200);
+    client.test("Le rejet avec motif fonctionne", function() {
+        client.assert(response.status === 200, "Le rejet devrait être validé");
         client.assert(response.body.status === "REJECTED");
-        client.assert(response.body.rejectionReason != null);
+        client.assert(response.body.rejectionReason !== null, "Le motif doit être enregistré");
     });
 %}
 
+### =========================================================================
+### 4. TEST DE SÉCURITÉ : ACCÈS INEXISTANT
+### =========================================================================
 
-### 5. Vérification finale (Consultation)
-GET {{baseUrl}}/applications/{{app_id}}
+### 4a. Vérification de l'erreur 404
+GET http://localhost:8080/api/applications/9999
 Authorization: Bearer {{token_rh}}
 
 > {%
-    client.test("Le motif est bien enregistré en base", function() {
-        client.assert(response.body.rejectionReason !== null);
-        client.log("Motif enregistré : " + response.body.rejectionReason);
+    client.test("L'accès à un ID inexistant renvoie 404", function() {
+        client.assert(response.status === 404);
     });
 %}

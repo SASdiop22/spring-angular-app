@@ -18,6 +18,7 @@ import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
     @Autowired
@@ -54,11 +55,10 @@ public class AuthController {
         UserEntity newUser = new UserEntity();
         newUser.setUsername(registerRequest.getUsername());
 
-        // ENCODAGE DU MOT DE PASSE
+        // ENCODAGE DU MOT DE PASSE (CRUCIAL)
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
-        // ASSIGNATION DU RÔLE PAR DÉFAUT (ROLE_CANDIDAT)
-        // J'ai conservé ROLE_CANDIDAT (avec un T) pour correspondre à vos entités et tests récents
+        // ASSIGNATION DU RÔLE PAR DÉFAUT (ROLE_CANDIDATE)
         UserRoleEntity candidateRole = userRoleRepository.findByName("ROLE_CANDIDAT")
                 .orElseThrow(() -> new RuntimeException("Rôle par défaut introuvable. Avez-vous lancé le Seeder ?"));
 

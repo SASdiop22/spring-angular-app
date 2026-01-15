@@ -32,6 +32,19 @@ Content-Type: application/json
 
 ###
 
+# @name loginEmploye
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "paul.rejet",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("token_paul", response.body.accessToken);
+%}
+
 ### A. Création d'un Draft (Spec 2.A)
 # @name createDraft
 POST http://localhost:8080/api/joboffers
@@ -52,6 +65,16 @@ Content-Type: application/json
         client.global.set("new_offer_id", response.body.id);
     });
 %}
+### B. ÉCHEC : Un candidat tente de publier l'offre (Sécurité)
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=60000&remoteDays=2
+Authorization: Bearer {{token_paul}}
+
+> {%
+    client.test("Sécurité : Un candidat ne peut pas publier", function() {
+        client.assert(response.status === 403);
+    });
+%}
+
 
 ### D. SUCCÈS : Le RH enrichit et publie l'offre
 # Attention : le paramètre URL est 'salary' mais le DTO renvoie 'salaryRange'
@@ -65,5 +88,16 @@ Authorization: Bearer {{token_rh}}
 
         // Vérification avec le champ correct du DTO (salaryRange)
         client.assert(response.body.salaryRange === 55000.0, "Le salaire n'a pas été correctement enregistré");
+    });
+%}
+
+### C. CONSULTATION : L'offre est visible publiquement une fois publiée
+GET http://localhost:8080/api/joboffers/{{new_offer_id}}
+Authorization: Bearer {{token_paul}}
+
+> {%
+    client.test("L'offre publiée est consultable", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "OPEN");
     });
 %}

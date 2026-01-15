@@ -99,24 +99,26 @@ Authorization: Bearer {{token_candidat}}
     });
 %}
 
-### D. RH passe la candidature en entretien (Spec 4.B & 4.2)
-# FIX : Envoi des données logistiques obligatoires
-PATCH http://localhost:8080/api/applications/{{app_id}}/status
-Authorization: Bearer {{token_rh}}
-Content-Type: application/json
 
-{
-  "status": "INTERVIEW_PENDING",
-  "meetingDate": "2026-02-15T10:30:00",
-  "meetingLocation": "Siège social - Salle 402 (ou lien Teams)"
-}
+### Planification de l'entretien (Débloque le verrou meetingDate)
+PATCH http://localhost:8080/api/applications/{{app_id}}/schedule-interview?interviewerId=1&location=Bureau_Paris&date=2026-02-15T14:30:00
+Authorization: Bearer {{token_rh}}
 
 > {%
-    client.test("Statut INTERVIEW confirmé avec logistique", function() {
-        client.assert(response.status === 200, "Le serveur devrait accepter la requête avec date et lieu");
+    client.test("Entretien planifié", function() {
+        client.assert(response.status === 200);
         client.assert(response.body.status === "INTERVIEW_PENDING");
-        client.assert(response.body.meetingDate != null, "La date de RDV doit être présente dans la réponse");
-        client.log("Entretien fixé le : " + response.body.meetingDate);
+        client.assert(response.body.meetingDate != null);
+    });
+%}
+
+### ENSUITE : Vous pouvez procéder à l'embauche
+POST http://localhost:8080/api/applications/{{app_id}}/hire
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Embauche réussie", function() {
+        client.assert(response.status === 200);
     });
 %}
 
@@ -124,19 +126,13 @@ Content-Type: application/json
 ### ETAPE 3 : Embauche et Onboarding (Spec 5)
 ### -------------------------------------------------------------------------
 
-### E. RH valide l'embauche (HIRED)
-PATCH http://localhost:8080/api/applications/3/status
+### E. RH valide l'embauche via l'endpoint dédié (Spec 5)
+POST http://localhost:8080/api/applications/3/hire
 Authorization: Bearer {{token_rh}}
-Content-Type: application/json
-
-{
-  "status": "HIRED"
-}
 
 > {%
-    client.test("Embauche effectuée", function() {
+    client.test("Embauche effectuée et transformation utilisateur", function() {
         client.assert(response.status === 200);
-        client.assert(response.body.status === "HIRED");
     });
 %}
 
@@ -148,9 +144,10 @@ Authorization: Bearer {{token_rh}}
 
 > {%
     client.test("Offre clôturée automatiquement", function() {
-        client.assert(response.body.status === "FILLED", "L'offre devrait être FILLED après l'embauche");
+        client.assert(response.body.status === "CLOSED", "L'offre devrait être FILLED après l'embauche");
     });
 %}
+
 
 ### H. Vérification de l'archivage du profil candidat
 GET http://localhost:8080/api/candidates/{{jean_candidat_id}}

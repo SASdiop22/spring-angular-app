@@ -1,8 +1,11 @@
-package edu.miage.springboot.services.impl.ai;
+package edu.miage.springboot.services.impl.offers.matching;
 
 import java.time.Duration;
 import java.util.Map;
 
+import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
+import edu.miage.springboot.dao.entities.users.CandidatEntity;
+import edu.miage.springboot.services.interfaces.MatchingService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,7 +18,7 @@ import edu.miage.springboot.web.dtos.ai.MatchingResultDTO;
 import edu.miage.springboot.web.dtos.ai.OllamaResponseDTO;
 
 @Service
-public class AiMatchingServiceImpl implements AiMatchingService {
+public class AiMatchingServiceImpl implements MatchingService, AiMatchingService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -79,5 +82,16 @@ public class AiMatchingServiceImpl implements AiMatchingService {
                 e
             );
         }
+    }
+
+    @Override
+    public Integer calculateMatchScore(JobOfferEntity offer, CandidatEntity candidate) {
+        // Adaptation : On transforme les entités en texte pour l'IA
+        String jobDesc = offer.getDescription() + " Skills: " + String.join(", ", offer.getSkillsRequired());
+        String cvText = "Skills: " + String.join(", ", candidate.getSkills());
+
+        // Appel de votre méthode existante
+        MatchingResultDTO result = matchCvWithJob(cvText, jobDesc);
+        return result.getMatchingScore();
     }
 }
