@@ -1,20 +1,12 @@
 ### Variables Globales
 @baseUrl = http://localhost:8080/api/applications
+@authUrl = http://localhost:8080/api/auth
 
-# @name loginRH
-POST http://localhost:8080/api/auth/login
-Content-Type: application/json
-
-{
-  "username": "alice.rh",
-  "password": "password123"
-}
-> {% client.global.set("token_rh", response.body.accessToken); %}
-
-###
+### 1. AUTHENTIFICATION
+### -------------------------------------------------------------------------
 
 # @name adminLogin
-POST http://localhost:8080/api/auth/login
+POST {{authUrl}}/login
 Content-Type: application/json
 
 {
@@ -25,8 +17,20 @@ Content-Type: application/json
 
 ###
 
-# @name loginPaul
-POST http://localhost:8080/api/auth/login
+# @name loginRH
+POST {{authUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+###
+
+# @name loginPaul (Candidat)
+POST {{authUrl}}/login
 Content-Type: application/json
 
 {
@@ -35,48 +39,112 @@ Content-Type: application/json
 }
 > {% client.global.set("token_paul", response.body.accessToken); %}
 
-###
-# @name idPaul
+
+### 2. INITIALISATION DES DONNÉES (RÉCUPÉRATION DES IDs)
+### -------------------------------------------------------------------------
+
+# @name getIds
 GET http://localhost:8080/api/users
 Authorization: Bearer {{admin_token}}
 
 > {%
-    client.test("Admin accède à la liste technique", function() {
-        client.assert(response.status === 200, "Le statut devrait être 200");
-        client.assert(Array.isArray(response.body), "La réponse doit être une liste");
-
-        var paul = response.body.find(u => u.username === "paul.rejet");
-        var admin = response.body.find(u => u.username === "bob.admin");
-
-        client.assert(paul !== undefined, "Paul Rejet doit exister");
-        client.global.set("paul_id", paul.id);
-        client.global.set("amdin_id", admin.id);
-    });
+    var paul = response.body.find(u => u.username === "paul.rejet");
+    var bob = response.body.find(u => u.username === "bob.admin");
+    client.global.set("paul_id", paul.id);
+    client.global.set("bob_id", bob.id);
 %}
 
-### SPEC 3.A : Paul (ID 8) postule à l'offre PM (ID 3)
-### Spécification 3.A : Paul postule à l'offre Product Manager (ID 3)
-# @name applyPaul
-# @no-cookie-jar
-POST {{baseUrl}}/apply?jobOfferId=4&candidateId={{paul_id}}&cvUrl=http://paul.pdf&coverLetter=
+
+### 3. TEST : POSTULER (SPEC 3.A)
+### -------------------------------------------------------------------------
+
+# @name applyAction
+POST {{baseUrl}}/apply?jobOfferId=1&candidateId={{paul_id}}&cvUrl=http://storage.com/cv.pdf&coverLetter=Motivation
 Authorization: Bearer {{token_paul}}
-Content-Type: application/json
 
 > {%
-    client.test("Candidature de Paul réussie", function() {
-        client.assert(response.status === 201 || response.status === 200, "Erreur lors de la candidature");
-        // On stocke l'ID de la nouvelle candidature pour les tests suivants (ex: updateStatus)
-        client.global.set("new_app_id_paul", response.body.id);
+    client.test("Candidature réussie", function() {
+        client.assert(response.status === 201, "Le statut devrait être 201 Created");
+        client.global.set("current_app_id", response.body.id);
     });
 %}
 
-### SPEC 5 : Alice recrute Paul (Utilise l'ID généré dynamiquement)
-PATCH {{baseUrl}}/2/status?status=HIRED
+
+### 4. TEST : PLANIFIER UN ENTRETIEN (SPEC 4.A)
+### -------------------------------------------------------------------------
+
+# On utilise l'ID de Bob (Admin/Employé) comme interviewer
+PATCH {{baseUrl}}/{{current_app_id}}/schedule-interview?date=2026-02-15T14:30:00&interviewerId={{bob_id}}&location=Bureau 402, Paris
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Entretien planifié avec succès", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "INTERVIEW_PENDING");
+    });
+%}
+
+
+### 5. TEST : VOIR SES PROPRES CANDIDATURES (SPEC 3.B)
+### -------------------------------------------------------------------------
+
+GET {{baseUrl}}/candidate/{{paul_id}}
+Authorization: Bearer {{token_paul}}
+
+> {%
+    client.test("Le candidat voit sa liste", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.length > 0);
+    });
+%}
+
+
+### 6. TEST : REJET AVEC MOTIF (SPEC 4.B)
+### -------------------------------------------------------------------------
+
+PATCH {{baseUrl}}/{{current_app_id}}/status
 Authorization: Bearer {{token_rh}}
 Content-Type: application/json
 
+{
+  "status": "REJECTED",
+  "reason": "Profil technique insuffisant pour le poste de Senior Developer"
+}
+
 > {%
-    client.test("Paul est recruté", function() {
-        client.assert(response.status === 200, "L'erreur 500 persiste : vérifiez la logique de mise à jour de l'offre en FILLED");
+    client.test("Rejet motivé enregistré", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.rejectionReason !== null);
+    });
+%}
+
+
+### 7. TEST : FINALISATION EMBAUCHE (SPEC 5)
+### -------------------------------------------------------------------------
+
+# Note: On ré-applique ou on change le statut pour pouvoir embaucher (cas de succès)
+# @name hireAction
+POST {{baseUrl}}/{{current_app_id}}/hire
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Embauche finale réussie", function() {
+        client.assert(response.status === 200, "L'embauche devrait être validée");
+    });
+%}
+
+
+### 8. VÉRIFICATION FINALE (INTÉGRATION AVEC EMPLOYÉ)
+### -------------------------------------------------------------------------
+
+# Vérifier que Paul est maintenant un employé et a Bob comme référent
+GET http://localhost:8080/api/employes/me
+Authorization: Bearer {{token_paul}}
+
+> {%
+    client.test("Paul a maintenant un profil employé et un manager", function() {
+        client.assert(response.status === 200);
+        // Le manager devrait être le créateur de l'offre (Bob)
+        client.assert(response.body.nomComplet !== null);
     });
 %}

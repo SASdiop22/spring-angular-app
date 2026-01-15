@@ -19,4 +19,8 @@ public class EmployeDTO {
     private boolean demandeurDePoste;
     private boolean rhPrivilege;
     private boolean adminPrivilege;
+
+    // --- Champs pour le Référent ---
+    private Long referentId;
+    private String referentNomComplet;
 }

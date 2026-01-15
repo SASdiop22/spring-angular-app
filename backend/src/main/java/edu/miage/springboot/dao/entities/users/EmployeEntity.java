@@ -22,6 +22,7 @@ public class EmployeEntity {
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private UserEntity user;
 
     @Column(nullable = false)
@@ -43,11 +44,25 @@ public class EmployeEntity {
     @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL)
     private List<JobOfferEntity> jobsDemandes = new ArrayList<>();
 
+    /**
+     * Le manager direct (Référent)
+     * Relation auto-référencée : un employé a UN référent
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "referent_id")
+    private EmployeEntity referent;
+
     // Relation finale une fois le candidat embauché (Spécification 5 - Succès)
     // Liste des candidats que cet employé "encadre" ou a recruté
     @OneToMany(mappedBy = "referentEmploye")
     private List<UserEntity> recruesLiees = new ArrayList<>();
 
+    /**
+     * AJOUT MANQUANT : La liste des subordonnés hiérarchiques.
+     * C'est cette liste qui est utilisée par employeService.getRecruits(id).
+     */
+    @OneToMany(mappedBy = "referent")
+    private List<EmployeEntity> subordinates = new ArrayList<>();
     /**
      * Helper pour lier l'utilisateur et l'employé
      */

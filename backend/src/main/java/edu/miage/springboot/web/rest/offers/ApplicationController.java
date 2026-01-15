@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +55,40 @@ public class ApplicationController {
         }
     }
 
+    /**
+     * Spécification 4.B : Mise à jour du statut avec motif optionnel.
+    */
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApplicationDTO> updateStatus(
+            @PathVariable Long id,
+            @RequestBody ApplicationStatusUpdateDTO dto) {
+        return ResponseEntity.ok(applicationService.updateStatus(id, dto.getStatus(), dto.getReason()));
+    }
+
+    /**
+     * Spécification 5 : Finalisation de l'embauche.
+     */
+    @PostMapping("/{id}/hire")
+    @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN')")
+    public ResponseEntity<Void> hireCandidate(@PathVariable Long id) {
+        applicationService.hireCandidate(id);
+        return ResponseEntity.ok().build();
+    }
+    /**
+     * Spécification 4.A : Planifier un entretien.
+     */
+    @PatchMapping("/{id}/schedule-interview")
+    @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN')")
+    public ResponseEntity<ApplicationDTO> scheduleInterview(
+            @PathVariable Long id,
+            @RequestParam LocalDateTime date,
+            @RequestParam Long interviewerId,
+            @RequestParam String location) {
+        return ResponseEntity.ok(applicationService.scheduleInterview(id, date, interviewerId));
+    }
+
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN') or (hasAuthority('ROLE_CANDIDAT') and @securityService.isApplicationOwner(#id))")
     public ResponseEntity<ApplicationDTO> getApplicationById(@PathVariable Long id) {
@@ -84,27 +119,4 @@ public class ApplicationController {
         return applicationService.findByCandidateId(candidateId);
     }
 
-    /**
-     * Spécification 4.A & 5 : Le RH change le statut.
-     * Si le statut devient 'HIRED', l'offre doit passer en 'FILLED' (géré dans le service).
-     */
-    @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN')")
-    public ResponseEntity<ApplicationDTO> apply(
-            @RequestParam Long jobOfferId,
-            @RequestParam Long candidateId,
-            @RequestParam String cvUrl,
-            @RequestBody Map<String, String> body) { // Utilisation du RequestBody
-
-        try {
-            String coverLetter = body.get("coverLetter");
-            return new ResponseEntity<>(
-                    applicationService.apply(jobOfferId, candidateId, cvUrl, coverLetter),
-                    HttpStatus.CREATED
-            );
-        } catch (IllegalArgumentException e) {
-            // Renvoie une 400 Bad Request avec le message d'erreur de la spec
-            return ResponseEntity.badRequest().header("X-Error-Message", e.getMessage()).build();
-        }
-    }
 }
