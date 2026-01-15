@@ -1,0 +1,115 @@
+### =========================================================================
+### 4. TESTS DE SÉCURITÉ (SÉPARATION DES POUVOIRS)
+### =========================================================================
+# @name loginAdmin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+> {% client.global.set("token_admin", response.body.accessToken); %}
+
+###
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+###
+
+# @name loginCandidat
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.rgpd",
+  "password": "password123"
+}
+> {% client.global.set("token_candidat", response.body.accessToken); %}
+
+###
+# @name loginDemandeur
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "dylan.demandeur",
+  "password": "password123"
+}
+
+> {% client.global.set("token_employe", response.body.accessToken); %}
+
+###
+
+### -------------------------------------------------------------------------
+### A. VIOLATION DES PRIVILÈGES RH (Accès aux listes sensibles)
+### -------------------------------------------------------------------------
+
+### 1. ÉCHEC : Un candidat tente de voir la liste globale des candidatures
+# Attendu : 403 Forbidden
+GET http://localhost:8080/api/applications
+Authorization: Bearer {{token_candidat}}
+
+### 2. ÉCHEC : Un employé sans privilège tente de voir le personnel RH
+# Attendu : 403 Forbidden
+GET http://localhost:8080/api/employes/rh
+Authorization: Bearer {{token_employe}}
+
+### -------------------------------------------------------------------------
+### B. PROTECTION DES DONNÉES CANDIDATS (Propriété des données)
+### -------------------------------------------------------------------------
+
+### 1. ÉCHEC : Jean (Candidat) tente de voir le profil de Marie (ID: 2)
+# Test du SecurityService.isOwner(#id)
+# Attendu : 403 Forbidden
+GET http://localhost:8080/api/candidates/2
+Authorization: Bearer {{token_candidat}}
+
+### 2. ÉCHEC : Jean tente de renouveler le consentement RGPD d'un autre
+# Attendu : 403 Forbidden
+PATCH http://localhost:8080/api/candidates/2/renew-consent
+Authorization: Bearer {{token_candidat}}
+
+### -------------------------------------------------------------------------
+### C. INTÉGRITÉ DU PROCESSUS DE RECRUTEMENT
+### -------------------------------------------------------------------------
+
+### 1. ÉCHEC : Le manager (Cathy) tente de s'auto-recruter (valider le statut)
+### 1. ÉCHEC : Le manager tente de valider un statut (Spec 4.A)
+# Seul le RH ou l'Admin peut modifier un statut.
+# On envoie un JSON valide pour être sûr que le rejet est dû au ROLE et non au format.
+PATCH http://localhost:8080/api/applications/1/status
+Authorization: Bearer {{token_employe}}
+Content-Type: application/json
+
+{
+  "status": "HIRED"
+}
+
+### 2. ÉCHEC : Un candidat tente de publier une offre d'emploi
+# Attendu : 403 Forbidden
+PATCH http://localhost:8080/api/joboffers/1/publish?salary=50000&remoteDays=2
+Authorization: Bearer {{token_candidat}}
+
+### -------------------------------------------------------------------------
+### D. ACTIONS ADMINISTRATIVES CRITIQUES
+### -------------------------------------------------------------------------
+
+### 1. ÉCHEC : La RH (Alice) tente d'accéder à la liste complète des Users
+# Souvent réservé au ROLE_ADMIN uniquement.
+# Attendu : 403 Forbidden
+GET http://localhost:8080/api/users
+Authorization: Bearer {{token_rh}}
+
+### 2. ÉCHEC : Suppression d'une offre par un employé lambda
+# Attendu : 403 Forbidden
+DELETE http://localhost:8080/api/joboffers/1
+Authorization: Bearer {{token_employe}}

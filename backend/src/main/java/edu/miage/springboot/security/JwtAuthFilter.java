@@ -1,6 +1,6 @@
 package edu.miage.springboot.security;
 
-import edu.miage.springboot.services.impl.AuthUserDetailsService;
+import edu.miage.springboot.services.impl.security.AuthUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,10 +23,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     AuthUserDetailsService authUserDetailsService;
-
+   
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    	 
+    
+    	
+    	
+    	
+    	String path = request.getRequestURI();
 
+         // 🔓 Endpoints publics (pas de JWT)
+         if (path.startsWith("/api/auth")
+                 || path.startsWith("/api/test")
+                 || path.startsWith("/api/ai")) {
+
+             filterChain.doFilter(request, response);
+             return;
+         }
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;

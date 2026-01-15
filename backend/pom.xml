@@ -28,7 +28,11 @@
         <type>jar</type>
         <!-- we add optional to work with the backend package without building the frontend -->
         <optional>true</optional>
-    </dependency>
+    </dependency> 
+    <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -40,7 +44,16 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.3.0</version>
         </dependency>
-
+<!-- WebClient (appel API Ollama) -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context-support</artifactId>
@@ -49,10 +62,19 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
+
+<!-- Extraction de texte depuis PDF / DOCX (CV) -->
+<dependency>
+    <groupId>org.apache.tika</groupId>
+    <artifactId>tika-core</artifactId>
+    <version>2.9.0</version>
+</dependency>
+
+<dependency>
+    <groupId>org.apache.tika</groupId>
+    <artifactId>tika-parsers-standard-package</artifactId>
+    <version>2.9.0</version>
+</dependency>
 
         <dependency>
             <groupId>com.h2database</groupId>
@@ -102,7 +124,13 @@
 
 
     <build>
-		<finalName>spring-angular-app</finalName>
+		<finalName>spring-angular-app</finalName> 
+		<resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <filtering>false</filtering>
+        </resource>
+    </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -126,6 +154,11 @@
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.30</version>
+                        </path>
+                        <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
                             <version>1.5.5.Final</version>
@@ -140,7 +173,7 @@
                 <executions>
                     <execution>
                         <id>merge</id>
-                        <phase>initialize</phase>
+                        <phase>generate-resources</phase> 
                         <goals>
                             <goal>unpack</goal>
                         </goals>

@@ -1,0 +1,163 @@
+### =========================================================================
+### 3. PROCESSUS DE RECRUTEMENT ET ONBOARDING (Spécification 4 & 5)
+### =========================================================================
+
+### -------------------------------------------------------------------------
+### PRE-REQUIS : Authentification des acteurs
+### -------------------------------------------------------------------------
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {%
+    client.test("Login RH réussi", () => client.assert(response.status === 200));
+    client.global.set("token_rh", response.body.accessToken);
+%}
+
+###
+
+# @name loginCandidat
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.rgpd",
+  "password": "password123"
+}
+> {%
+    client.test("Login Candidat réussi", () => client.assert(response.status === 200));
+    client.global.set("token_candidat", response.body.accessToken);
+%}
+
+###
+
+# @name loginAdmin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+> {%
+    client.test("Login Admin réussi", () => client.assert(response.status === 200));
+    client.global.set("token_admin", response.body.accessToken);
+%}
+
+### -------------------------------------------------------------------------
+### ETAPE 1 : Identification dynamique des données des seeders
+### -------------------------------------------------------------------------
+
+### A. Identification de l'offre Cloud Architect (Spec 4.B)
+# @name getCloudOffer
+GET http://localhost:8080/api/joboffers
+Authorization: Bearer {{token_rh}}
+
+> {%
+    const offer = response.body.find(o => o.title.includes("Dev Java S1"));
+    client.test("Offre Cloud identifiée", function() {
+        client.assert(offer !== undefined, "L'offre Cloud Architect doit exister");
+        client.global.set("target_job_id", offer.id);
+        // Le créateur de l'offre (ID 7 dans les seeders) sera le futur manager
+        client.global.set("manager_id", offer.creatorId);
+        client.log("ID du manager trouvé : " + offer.creatorId);
+    });
+%}
+
+### B. Identification du profil de Jean
+# @name getJeanProfile
+GET http://localhost:8080/api/candidates/me
+Authorization: Bearer {{token_candidat}}
+
+> {%
+    client.test("Profil Jean récupéré", function() {
+        client.assert(response.status === 200);
+        client.global.set("jean_candidat_id", response.body.id);
+        client.global.set("jean_user_id", response.body.userId || 4);
+    });
+%}
+
+### -------------------------------------------------------------------------
+### ETAPE 2 : Flux de candidature et Entretien (Spec 4)
+### -------------------------------------------------------------------------
+
+### C. Jean postule (Spec 3.A)
+# @name applyAction
+POST http://localhost:8080/api/applications/apply?jobOfferId={{target_job_id}}&candidateId={{jean_candidat_id}}&cvUrl=http://cloud.com/cv-jean.pdf
+Authorization: Bearer {{token_candidat}}
+
+> {%
+    client.test("Candidature soumise", function() {
+        // 201 si nouvelle, 400 si déjà postulé (mais on veut tester le flux)
+        client.assert(response.status === 201 || response.status === 400);
+        if (response.status === 201) client.global.set("app_id", response.body.id);
+    });
+%}
+
+### D. RH passe la candidature en entretien (Spec 4.B & 4.2)
+# FIX : Envoi des données logistiques obligatoires
+PATCH http://localhost:8080/api/applications/{{app_id}}/status
+Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "status": "INTERVIEW_PENDING",
+  "meetingDate": "2026-02-15T10:30:00",
+  "meetingLocation": "Siège social - Salle 402 (ou lien Teams)"
+}
+
+> {%
+    client.test("Statut INTERVIEW confirmé avec logistique", function() {
+        client.assert(response.status === 200, "Le serveur devrait accepter la requête avec date et lieu");
+        client.assert(response.body.status === "INTERVIEW_PENDING");
+        client.assert(response.body.meetingDate != null, "La date de RDV doit être présente dans la réponse");
+        client.log("Entretien fixé le : " + response.body.meetingDate);
+    });
+%}
+
+### -------------------------------------------------------------------------
+### ETAPE 3 : Embauche et Onboarding (Spec 5)
+### -------------------------------------------------------------------------
+
+### E. RH valide l'embauche (HIRED)
+PATCH http://localhost:8080/api/applications/3/status
+Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "status": "HIRED"
+}
+
+> {%
+    client.test("Embauche effectuée", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "HIRED");
+    });
+%}
+
+
+
+### F. Vérification de la clôture de l'offre (Spec 5)
+GET http://localhost:8080/api/joboffers/{{target_job_id}}
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Offre clôturée automatiquement", function() {
+        client.assert(response.body.status === "FILLED", "L'offre devrait être FILLED après l'embauche");
+    });
+%}
+
+### H. Vérification de l'archivage du profil candidat
+GET http://localhost:8080/api/candidates/{{jean_candidat_id}}
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Profil candidat archivé", function() {
+        client.assert(response.body.archived === true, "Le profil candidat doit être archivé (Spec 5)");
+    });
+%}

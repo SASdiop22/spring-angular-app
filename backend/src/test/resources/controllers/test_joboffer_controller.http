@@ -1,0 +1,129 @@
+### =========================================================================
+### 1. AUTHENTIFICATION
+### =========================================================================
+
+# @name loginAdmin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+> {% client.global.set("admin_token", response.body.accessToken); %}
+
+###
+
+# @name loginRh
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("rh_token", response.body.accessToken); %}
+
+
+### =========================================================================
+### 2. CYCLE DE VIE DE L'OFFRE (LOGIQUE MÉTIER)
+### =========================================================================
+
+### A. Création d'une offre (Statut DRAFT par défaut)
+# @name createOffer
+POST http://localhost:8080/api/joboffers
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "title": "Architecte Solutions Cloud",
+  "description": "Expertise Azure et Kubernetes requise.",
+  "department": "IT Cloud",
+  "creatorId": 2,
+  "skillsRequired": ["Azure", "Kubernetes", "Terraform"]
+}
+
+> {%
+    client.test("Offre créée en DRAFT", function() {
+        client.assert(response.status === 201, "Le statut devrait être 201 Created");
+        client.assert(response.body.status === "DRAFT", "L'offre doit être en DRAFT par défaut");
+        client.global.set("new_offer_id", response.body.id);
+    });
+%}
+
+### B. Passage en PENDING (Validation demandée)
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/status?status=PENDING
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Offre envoyée pour validation", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "PENDING");
+    });
+%}
+
+### C. Publication de l'offre (Ouverture au public par RH)
+# @name publishOffer
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=85000&remoteDays=2
+Authorization: Bearer {{rh_token}}
+
+> {%
+    client.test("Offre publiée avec succès", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "OPEN", "Le statut doit être OPEN");
+        client.assert(response.body.salaryRange === 85000, "Le salaire n'a pas été mis à jour");
+        client.assert(response.body.publishedAt !== null, "La date de publication doit être renseignée");
+    });
+%}
+
+
+### =========================================================================
+### 3. CONSULTATION ET RECHERCHE
+### =========================================================================
+
+### D. Consultation de toutes les offres publiques (OPEN uniquement)
+GET http://localhost:8080/api/joboffers
+
+> {%
+    client.test("Liste publique accessible sans token", function() {
+        client.assert(response.status === 200);
+        // On vérifie que toutes les offres renvoyées sont bien OPEN
+        response.body.forEach(function(offer) {
+            client.assert(offer.status === "OPEN", "La liste publique ne doit contenir que des offres OPEN");
+        });
+    });
+%}
+
+### E. Recherche par mot-clé
+GET http://localhost:8080/api/joboffers/search?keyword=Architecte
+
+> {%
+    client.test("Recherche fonctionnelle", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.length > 0, "L'offre créée en A devrait apparaître");
+    });
+%}
+
+
+### =========================================================================
+### 4. ADMINISTRATION (PRIVILÈGE)
+### =========================================================================
+
+### F. Consultation Back-Office (Toutes les offres)
+GET http://localhost:8080/api/joboffers/privilege
+Authorization: Bearer {{rh_token}}
+
+> {%
+    client.test("Accès Back-Office autorisé pour RH", function() {
+        client.assert(response.status === 200);
+    });
+%}
+
+### G. Sécurité : Un utilisateur non authentifié ne voit pas le Back-Office
+GET http://localhost:8080/api/joboffers/privilege
+
+> {%
+    client.test("Accès refusé sans token", function() {
+        client.assert(response.status === 401 || response.status === 403);
+    });
+%}

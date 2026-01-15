@@ -1,0 +1,69 @@
+### =========================================================================
+### 1. CYCLE DE VIE DE L'OFFRE (Spécification 2)
+### =========================================================================
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("token_rh", response.body.accessToken);
+%}
+
+###
+
+# @name loginEmploye
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cathy.employe",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("token_employe", response.body.accessToken);
+%}
+
+###
+
+### A. Création d'un Draft (Spec 2.A)
+# @name createDraft
+POST http://localhost:8080/api/joboffers
+Authorization: Bearer {{token_employe}}
+Content-Type: application/json
+
+{
+  "title": "Ingénieur DevOps",
+  "description": "Gestion infrastructure Kubernetes.",
+  "department": "IT",
+  "skillsRequired": ["Docker", "K8s"],
+  "creatorId": 3
+}
+
+> {%
+    client.test("Draft créé", function() {
+        client.assert(response.status === 201 || response.status === 200);
+        client.global.set("new_offer_id", response.body.id);
+    });
+%}
+
+### D. SUCCÈS : Le RH enrichit et publie l'offre
+# Attention : le paramètre URL est 'salary' mais le DTO renvoie 'salaryRange'
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=55000.0&remoteDays=2
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("RH : Publication et vérification des champs", function() {
+        client.assert(response.status === 200, "Le serveur a renvoyé une erreur 500. Vérifiez si l'ID " + client.global.get("new_offer_id") + " existe.");
+        client.assert(response.body.status === "OPEN", "L'offre doit passer en statut OPEN");
+
+        // Vérification avec le champ correct du DTO (salaryRange)
+        client.assert(response.body.salaryRange === 55000.0, "Le salaire n'a pas été correctement enregistré");
+    });
+%}

@@ -1,0 +1,61 @@
+### =========================================================================
+### SCÉNARIO 5 : PROCESSUS D'EMBAUCHE ET MUTATION DE PROFIL
+### =========================================================================
+
+# @name loginAdmin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+> {%
+    client.global.set("token_admin", response.body.accessToken);
+%}
+
+### -------------------------------------------------------------------------
+### 1. ASSIGNER UN RÉFÉRENT (Spécification 5.2)
+### -------------------------------------------------------------------------
+# On utilise Jean (Candidat ID 4) et Dylan (Employé ID 7) identifiés dans les logs
+PATCH http://localhost:8080/api/users/4/assign-referent/7
+Authorization: Bearer {{token_admin}}
+
+> {%
+    client.test("Assignation référent réussie", function() {
+        client.assert(response.status === 200, "Le statut devrait être 200 OK");
+        client.assert(response.body.id === 4, "L'ID du candidat doit correspondre");
+        client.assert(response.body.referentId === 7, "Le referentId doit être 7");
+    });
+%}
+### -------------------------------------------------------------------------
+### 2. RECRUTER (HIRED) (Spécifications 5.1 à 5.4)
+### -------------------------------------------------------------------------
+# FIX : Passage au format @RequestBody JSON
+PATCH http://localhost:8080/api/applications/1/status
+Authorization: Bearer {{token_admin}}
+Content-Type: application/json
+
+{
+  "status": "HIRED"
+}
+
+> {%
+    client.test("Automatisation HIRED réussie", function() {
+        client.assert(response.status === 200, "Le recrutement doit être validé");
+        // On récupère dynamiquement l'ID de l'offre pour la vérification suivante
+        client.global.set("target_job_id", response.body.jobOfferId);
+    });
+%}
+
+### -------------------------------------------------------------------------
+### 3. VÉRIFICATION : IMPACT SUR L'OFFRE D'EMPLOI
+### -------------------------------------------------------------------------
+GET http://localhost:8080/api/joboffers/{{target_job_id}}
+Authorization: Bearer {{token_admin}}
+
+> {%
+    client.test("Vérification Offre FILLED", function() {
+        client.assert(response.body.status === "FILLED", "L'offre associée doit être passée en FILLED (Spec 5.3)");
+    });
+%}
