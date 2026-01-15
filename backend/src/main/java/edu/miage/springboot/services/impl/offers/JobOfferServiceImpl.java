@@ -11,13 +11,16 @@ import edu.miage.springboot.dao.repositories.users.UserRepository;
 import edu.miage.springboot.services.interfaces.JobOfferService;
 import edu.miage.springboot.utils.mappers.JobOfferMapper;
 import edu.miage.springboot.web.dtos.offers.JobOfferDTO;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class JobOfferServiceImpl implements JobOfferService {
@@ -113,10 +116,10 @@ public class JobOfferServiceImpl implements JobOfferService {
     @Override
     @Transactional
     public JobOfferDTO createJobOffer(JobOfferDTO jobOfferDTO) {
-        // 1. Récupérer l'utilisateur connecté via le Token JWT (Sécurité)
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserEntity currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur connecté introuvable."));
+        // 1. Récupérer le nom d'utilisateur depuis le Token JWT
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
         // 2. Vérifier que c'est un Employé
         if (currentUser.getEmployeProfile() == null) {
@@ -152,12 +155,17 @@ public class JobOfferServiceImpl implements JobOfferService {
                 .orElseThrow(() -> new RuntimeException("Offre introuvable"));
 
         // Vérifiez que les paramètres ne sont pas nulls avant l'appel métier
-        if (salary == null || remoteDays == null) {
-            throw new IllegalArgumentException("Le salaire et le télétravail sont obligatoires pour publier.");
+        if (salary == null || salary <= 0 || remoteDays == null || remoteDays < 0 || remoteDays > 5) {
+            throw new IllegalArgumentException("Données RH invalides (Salaire/Télétravail)");
         }
 
-        // Utilise la méthode métier interne de l'entité
+        // On s'assure que l'offre est prête à être publiée
+        if (entity.getStatus() != JobStatusEnum.PENDING && entity.getStatus() != JobStatusEnum.DRAFT) {
+            throw new IllegalStateException("L'offre ne peut pas être publiée dans son état actuel : " + entity.getStatus());
+        }
+
         entity.validateAndPublish(salary, remoteDays);
+        entity.setPublishedAt(LocalDateTime.now()); // On trace la date de publication réelle
 
         return jobOfferMapper.entityToDto(jobOfferRepository.save(entity));
     }
@@ -186,8 +194,25 @@ public class JobOfferServiceImpl implements JobOfferService {
 
     @Override
     public List<JobOfferDTO> searchJobOffers(String keyword) {
-        List<JobOfferEntity> entities = jobOfferRepository
-                .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+        // 1. Récupérer les autorités de l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean isPrivileged = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_RH") || a.getAuthority().equals("ROLE_ADMIN"));
+
+        List<JobOfferEntity> entities;
+
+        if (isPrivileged) {
+            // Un RH/Admin voit tout ce qui match le mot-clé
+            entities = jobOfferRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+        } else {
+            // Un candidat/visiteur ne voit que les offres 'OPEN'
+            entities = jobOfferRepository.findByStatusAndTitleContainingIgnoreCaseOrStatusAndDescriptionContainingIgnoreCase(
+                    JobStatusEnum.OPEN, keyword,
+                    JobStatusEnum.OPEN, keyword
+            );
+        }
+
         return jobOfferMapper.entitiesToDtos(entities);
     }
 }

@@ -14,6 +14,11 @@ public interface JobOfferRepository extends JpaRepository<JobOfferEntity, Long> 
     List<JobOfferEntity> findByLocationContainingIgnoreCase(String location);
 
     List<JobOfferEntity> findByStatus(JobStatusEnum jobStatusEnum);
+
+    List<JobOfferEntity> findByStatusAndTitleContainingIgnoreCaseOrStatusAndDescriptionContainingIgnoreCase(
+            JobStatusEnum status1, String title,
+            JobStatusEnum status2, String description
+    );
 }
 
 

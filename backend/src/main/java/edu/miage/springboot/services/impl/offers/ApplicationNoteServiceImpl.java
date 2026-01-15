@@ -6,6 +6,7 @@ import edu.miage.springboot.dao.entities.users.UserEntity;
 import edu.miage.springboot.dao.repositories.offers.ApplicationNoteRepository;
 import edu.miage.springboot.dao.repositories.offers.ApplicationRepository;
 import edu.miage.springboot.dao.repositories.users.UserRepository;
+import edu.miage.springboot.utils.mappers.ApplicationNoteMapper;
 import edu.miage.springboot.web.dtos.offers.ApplicationNoteDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,12 +23,10 @@ public class ApplicationNoteServiceImpl{
     @Autowired private ApplicationNoteRepository noteRepository;
     @Autowired private ApplicationRepository applicationRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private ApplicationNoteMapper noteMapper;
 
     public List<ApplicationNoteDTO> getNotesByApplication(Long applicationId) {
-        return noteRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId)
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return noteMapper.toDtos(noteRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId));
     }
 
     @Transactional
@@ -47,19 +46,7 @@ public class ApplicationNoteServiceImpl{
         note.setContent(dto.getContent());
         note.setCreatedAt(LocalDateTime.now());
 
-        return convertToDto(noteRepository.save(note));
+        return noteMapper.toDto(noteRepository.save(note));
     }
 
-    // Méthode de mapping interne (Peut être remplacée par MapStruct)
-    private ApplicationNoteDTO convertToDto(ApplicationNoteEntity entity) {
-        ApplicationNoteDTO dto = new ApplicationNoteDTO();
-        dto.setId(entity.getId());
-        dto.setApplicationId(entity.getApplication().getId());
-        dto.setContent(entity.getContent());
-        dto.setStepName(entity.getStepName());
-        dto.setCreatedAt(entity.getCreatedAt());
-        // On récupère le nom complet de l'auteur pour l'affichage
-        dto.setAuthorName(entity.getAuthor().getPrenom() + " " + entity.getAuthor().getNom());
-        return dto;
-    }
 }

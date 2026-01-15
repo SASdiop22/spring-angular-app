@@ -12,15 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 public class ApplicationStatusUpdateDTO {
-    @NotNull
     private ApplicationStatusEnum status;
-
-    // Spec 4.4 : Motif de rejet
     private String reason;
-
-    // Spec 4.2 : Données logistiques
-    private LocalDateTime meetingDate;
-    private String meetingLocation;
-
-    // Getters / Setters
+    // getters/setters
 }

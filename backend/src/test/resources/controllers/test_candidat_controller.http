@@ -89,7 +89,7 @@ Content-Type: application/json
 ### 3. RGPD : RENOUVELLEMENT DU CONSENTEMENT (Spécification 2)
 ### =========================================================================
 
-### D. Renouveler le consentement
+### D.1. Renouveler le consentement
 # Jean a un consentement de plus de 2 ans dans le seeder.
 # @name getJeanMe
 GET http://localhost:8080/api/candidates/me
@@ -98,6 +98,16 @@ Authorization: Bearer {{token_jean}}
 > {% client.global.set("jean_id", response.body.id); %}
 
 ###
+
+### D.2. Droit à l'oubli (Suppression)
+DELETE http://localhost:8080/api/candidates/{{jean_id}}
+Authorization: Bearer {{token_jean}}
+
+> {%
+    client.test("Suppression (Droit à l'oubli) réussie", function() {
+        client.assert(response.status === 204);
+    });
+%}
 
 ### =========================================================================
 ### 4. ACCÈS RH & ADMIN (Consultation globale)

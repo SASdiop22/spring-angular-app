@@ -19,6 +19,7 @@ public class ApplicationDTO {
     private String jobOfferTitle;
     private String cvUrl;
     private String coverLetter;
+    private Integer matchingScore;
 
     // --- Nouveaux champs pour les spécifications 4.B et 5 ---
     private LocalDateTime meetingDate;    // Pour les entretiens et tests

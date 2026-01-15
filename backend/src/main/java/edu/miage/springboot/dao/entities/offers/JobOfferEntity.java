@@ -19,9 +19,10 @@ import java.util.List;
 @Table(name = "job_offers")
 public class JobOfferEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
+    @Column(nullable = false)
     private String title;
     @Column(length = 2000)
     private String description;
@@ -44,7 +45,7 @@ public class JobOfferEntity {
     @JoinColumn(name = "creator_id", nullable = false)
     private EmployeEntity creator;
 
-    //Pour programmer le rendez-vous
+    /*//Pour programmer le rendez-vous
     @Column(name = "meeting_date")
     private java.time.LocalDateTime meetingDate;
 
@@ -55,8 +56,9 @@ public class JobOfferEntity {
 
     //Le feedback apres l'entretien'
     @Column(name = "technical_feedback", columnDefinition = "TEXT")
-    private String technicalFeedback;
+    private String technicalFeedback;*/
 
+    @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime publishedAt;
 

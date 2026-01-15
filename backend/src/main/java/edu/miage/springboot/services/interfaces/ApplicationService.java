@@ -17,8 +17,13 @@ public interface ApplicationService {
     // Pour que le recruteur puisse voir toutes les candidatures
     List<ApplicationDTO> findAll();
 
+    public void hireCandidate(Long applicationId);
     List<ApplicationDTO> findByCandidateId(Long candidateId);
 
+    public ApplicationDTO updateStatus(Long applicationId, ApplicationStatusEnum status, String reason);
+
+    // Dans ApplicationServiceImpl.java
+    @Transactional
     ApplicationDTO updateStatus(Long id, ApplicationStatusEnum status);
 
     ApplicationDTO findById(Long id);

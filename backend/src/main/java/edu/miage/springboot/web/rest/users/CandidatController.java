@@ -28,7 +28,7 @@ public class CandidatController {
      * Uniquement pour RH (rhPrivilege) ou Administrateurs.
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('RH', 'ADMIN')")
+    @PreAuthorize("@securityService.hasPrivilegedRole()")
     public ResponseEntity<List<CandidatDTO>> getAllCandidates() {
         return ResponseEntity.ok(candidatService.findAll());
     }
@@ -48,7 +48,7 @@ public class CandidatController {
      * Le candidat ne peut voir que son profil (#id == principal.id).
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('RH', 'ADMIN') or (hasRole('CANDIDAT') and @securityService.isOwner(#id))")
+    @PreAuthorize("@securityService.hasPrivilegedRole() or (hasRole('CANDIDAT') and @securityService.isOwner(#id))")
     public ResponseEntity<CandidatDTO> getCandidateById(@PathVariable Long id) {
         return ResponseEntity.ok(candidatService.findById(id));
     }
@@ -57,7 +57,7 @@ public class CandidatController {
      * Mise à jour du profil.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('CANDIDAT') and @securityService.isOwner(#id))")
+    @PreAuthorize("@securityService.hasPrivilegedRole() or (hasRole('CANDIDAT') and @securityService.isOwner(#id))")
     public ResponseEntity<CandidatDTO> updateProfile(@PathVariable Long id, @RequestBody CandidatDTO dto) {
         return ResponseEntity.ok(candidatService.updateProfile(id, dto));
     }

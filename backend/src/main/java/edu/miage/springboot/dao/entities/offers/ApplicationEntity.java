@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.postgresql.core.QueryExecutor;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,11 +65,12 @@ public class ApplicationEntity {
     private String rejectionReason;
 
     @Column(name = "recruitment_notes", columnDefinition = "TEXT")
-    @OneToMany(mappedBy = "application")
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL)
     private List<ApplicationNoteEntity> recruitmentNotes = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
 }

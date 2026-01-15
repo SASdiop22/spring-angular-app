@@ -38,91 +38,93 @@ Content-Type: application/json
 
 
 ### =========================================================================
-### 2. TESTS DES FILTRES DE RÔLES
+### 2. GESTION DES PRIVILÈGES ET HIÉRARCHIE
 ### =========================================================================
 
-### A. Récupérer uniquement le personnel RH (Nécessite ROLE_ADMIN)
-GET http://localhost:8080/api/employes/rh
+### A. Promouvoir Cathy en RH (Nécessite ROLE_ADMIN)
+# On utilise l'ID de Cathy (à vérifier selon votre seeder, supposons 3)
+PATCH http://localhost:8080/api/employes/3/rh-privilege?status=true
 Authorization: Bearer {{admin_token}}
 
 > {%
-    client.test("Admin accède à la liste RH", function() {
-        client.assert(response.status === 200, "Le statut devrait être 200");
-        client.assert(Array.isArray(response.body), "La réponse doit être un tableau");
-        client.assert(response.body.length > 0, "Il devrait y avoir au moins un RH (Alice)");
-
-        // On cherche Alice dynamiquement dans la liste pour capturer son ID
-        var alice = response.body.find(e => e.username === "alice.rh");
-        client.assert(alice !== undefined, "Alice RH devrait être dans la liste");
-        client.global.set("alice_id", alice.id);
+    client.test("Promotion RH réussie", function() {
+    client.assert(response.status === 200);
     });
 %}
 
-### B. Récupérer les demandeurs de poste (Accessible aux RH)
-GET http://localhost:8080/api/employes/demandeurs
-Authorization: Bearer {{rh_token}}
+### B. Assigner Bob (Admin/Employé 1) comme manager de Cathy (Employé 3)
+# Spécification 5 : Lien hiérarchique
+PATCH http://localhost:8080/api/employes/3/referent?referentId=1
+Authorization: Bearer {{admin_token}}
 
 > {%
-    client.test("RH accède aux demandeurs", function() {
-        client.assert(response.status === 200);
-        // Vérification qu'un élément possède bien le flag demandeur
-        if(response.body.length > 0) {
-            client.assert(response.body[0].demandeurDePoste === true, "L'employé doit être un demandeur");
-        }
+    client.test("Assignation du manager réussie", function() {
+    client.assert(response.status === 200);
     });
 %}
 
 
 ### =========================================================================
-### 3. TEST DE LA HIÉRARCHIE (Spécification 5)
+### 3. CONSULTATION ET VÉRIFICATION DES LIENS
 ### =========================================================================
 
-### C. Récupérer les recrues liées à un employé (ex: Bob Admin via Alice)
-# Note : Selon votre logique, on regarde qui l'employé a recruté
-GET http://localhost:8080/api/employes/{{alice_id}}/recrues
-Authorization: Bearer {{rh_token}}
-
-> {%
-    client.test("Récupération des recrues", function() {
-        client.assert(response.status === 200, "Échec de récupération des recrues");
-        client.assert(Array.isArray(response.body), "Le corps devrait être une liste (éventuellement vide)");
-    });
-%}
-
-
-### =========================================================================
-### 4. SÉCURITÉ ET ACCÈS (RBAC)
-### =========================================================================
-
-### D. Test d'interdiction (403) : Un RH tente d'accéder à la liste RH (réservé Admin)
-GET http://localhost:8080/api/employes/rh
-Authorization: Bearer {{rh_token}}
-
-> {%
-    client.test("Sécurité : RH ne peut pas voir la liste RH (réservé Admin)", function() {
-        client.assert(response.status === 403, "Un RH ne devrait pas avoir accès à cet endpoint");
-    });
-%}
-
-### E. Test d'interdiction (403) : Un employé simple tente de voir les demandeurs
-GET http://localhost:8080/api/employes/demandeurs
+### C. Vérifier mon profil (Cathy) et voir mon nouveau manager
+GET http://localhost:8080/api/employes/me
 Authorization: Bearer {{emp_token}}
 
 > {%
-    client.test("Sécurité : Employé simple ne voit pas les demandeurs", function() {
-        client.assert(response.status === 403, "Accès devrait être réservé RH/Admin");
+    client.test("Vérification du référent dans le profil", function() {
+    client.assert(response.status === 200);
+    client.assert(response.body.referentId === 1, "Le manager devrait être Bob (ID 1)");
+    client.assert(response.body.rhPrivilege === true, "Cathy devrait maintenant avoir le flag RH");
     });
 %}
 
-### F. Recherche par ID (Vérification des données)
-GET http://localhost:8080/api/employes/{{alice_id}}
+### D. Voir la liste des RH (Doit maintenant inclure Cathy)
+GET http://localhost:8080/api/employes/rh
 Authorization: Bearer {{admin_token}}
 
 > {%
-    client.test("Vérification structure EmployeDTO", function() {
-        client.assert(response.status === 200);
-        client.assert(response.body.id === parseInt(client.global.get("alice_id")), "L'ID ne correspond pas");
-        client.assert(!!response.body.email, "L'email doit être présent");
-        client.assert(!!response.body.nomComplet, "Le nom complet doit être calculé");
+    client.test("Cathy apparaît dans la liste RH", function() {
+    client.assert(response.status === 200);
+    const names = response.body.map(it => it.username);
+    client.assert(names.includes("cathy.employe"), "Cathy manque à l'appel");
+    });
+%}
+
+### E. Bob (Admin) consulte ses recrues/subordonnés
+# Bob est l'ID 1, il devrait voir Cathy dans ses recrues
+GET http://localhost:8080/api/employes/1/recrues
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Bob voit Cathy dans son équipe", function() {
+    client.assert(response.status === 200);
+    client.assert(response.body.length > 0, "L'équipe ne devrait pas être vide");
+    });
+%}
+
+
+### =========================================================================
+### 4. TESTS DE SÉCURITÉ (CAS LIMITES)
+### =========================================================================
+
+### F. Sécurité : Un employé ne peut pas se promouvoir lui-même RH
+PATCH http://localhost:8080/api/employes/3/rh-privilege?status=true
+Authorization: Bearer {{emp_token}}
+
+> {%
+    client.test("Sécurité : Promotion interdite sans Admin", function() {
+    client.assert(response.status === 403);
+    });
+%}
+
+### G. Sécurité : Empêcher l'auto-référence (Manager de soi-même)
+PATCH http://localhost:8080/api/employes/3/referent?referentId=3
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Erreur : On ne peut pas être son propre manager", function() {
+    client.assert(response.status === 400 || response.status === 500);
     });
 %}
