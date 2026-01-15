@@ -2,36 +2,143 @@
 ### 2. GESTION DES CANDIDATURES ET RGPD (Spécification 3)
 ### =========================================================================
 
+### -------------------------------------------------------------------------
+### PRE-REQUIS : Connexion du RH pour identifier l'offre
+### -------------------------------------------------------------------------
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+
+> {%
+    client.test("Login RH réussi", function() {
+        client.assert(response.status === 200, "Le RH doit pouvoir se connecter");
+    });
+    client.global.set("token_rh", response.body.accessToken);
+%}
+
+### 1. Récupération dynamique de l'offre (Data Analyst S2)
+# @name getOpenJob
+GET http://localhost:8080/api/joboffers
+Authorization: Bearer {{token_rh}}
+
+> {%
+    const offer = response.body.find(o => o.title.includes("Dev Java S1"));
+    client.test("Existence offre", function() {
+        client.assert(offer != undefined, "L'offre contenant 'S1' doit être présente dans les seeders");
+    });
+    if(offer) {
+        client.global.set("new_offer_id", offer.id);
+        client.log("ID de l'offre trouvé : " + offer.id);
+    }
+%}
+
+### -------------------------------------------------------------------------
+### ACTIONS DU CANDIDAT (jean.rgpd)
+### -------------------------------------------------------------------------
+
 # @name loginCandidat
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "jean.candidat",
+  "username": "jean.rgpd",
   "password": "password123"
 }
-> {% client.global.set("token_candidat", response.body.accessToken); %}
 
+> {%
+    client.test("Login Candidat réussi", function() {
+        client.assert(response.status === 200, "Le candidat jean.rgpd doit pouvoir se connecter");
+    });
+    client.global.set("token_candidat", response.body.accessToken);
+%}
 
-
-### A. Récupération de l'ID Candidat (pour le script)
+### A. Récupération de son propre profil (Spec 3.B)
 # @name getMyProfile
 GET http://localhost:8080/api/candidates/me
 Authorization: Bearer {{token_candidat}}
 
-> {% client.global.set("candidat_id", response.body.id); %}
+> {%
+    client.test("Profil accessible", function() {
+        client.assert(response.status === 200);
+        client.global.set("candidat_id", response.body.id);
+    });
+%}
 
-### B. Un candidat postule (Spec 3.A)
-POST http://localhost:8080/api/applications/apply?jobOfferId={{new_offer_id}}&candidateId={{candidat_id}}&cvUrl=http://cloud.com/cv.pdf
+### B. Jean postule à l'offre
+# @name applyJob
+POST http://localhost:8080/api/applications/apply?jobOfferId={{new_offer_id}}&candidateId={{candidat_id}}&cvUrl=http://jean.pdf&coverLetter=
 Authorization: Bearer {{token_candidat}}
+Content-Type: application/json
 
-> {% client.global.set("app_id", response.body.id); %}
+> {%
+    client.test("Candidature créée", function() {
+        client.assert(response.status === 201 || response.status === 200, "Erreur lors de la candidature");
+        // On récupère l'ID réel généré par la base de données
+        client.global.set("app_id", response.body.id);
+    });
+%}
 
-### C. Sécurité RGPD : Renouvellement (Spec 3.A)
-# Le candidat rafraîchit son consentement
+### C. Sécurité RGPD : Renouvellement du consentement (Spec 3.A)
+# @name renewConsent
 PATCH http://localhost:8080/api/candidates/{{candidat_id}}/renew-consent
 Authorization: Bearer {{token_candidat}}
 
-### D. Suivi (Dashboard Candidat - Spec 3.B)
-GET http://localhost:8080/api/applications/candidate/{{candidat_id}}
+> {%
+    client.test("RGPD : Consentement renouvelé", function() {
+        client.assert(response.status === 204 || response.status === 200);
+    });
+%}
+
+### D. Vérification de la conformité
+GET http://localhost:8080/api/candidates/{{candidat_id}}
 Authorization: Bearer {{token_candidat}}
+
+> {%
+    client.test("Vérification flag RGPD", function() {
+        client.assert(response.body.rgpdCompliant === true, "Le candidat doit être compliant après renouvellement");
+    });
+%}
+
+### -------------------------------------------------------------------------
+### ACTIONS RH : Consultation finale
+### -------------------------------------------------------------------------
+
+### E. Alice RH voit la nouvelle candidature
+GET http://localhost:8080/api/applications
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("RH voit la candidature", function() {
+        const appId = parseInt(client.global.get("app_id"));
+        const app = response.body.find(a => a.id === 1);
+        client.assert(app != null, "La candidature ID " + appId + " doit être visible");
+    });
+%}
+
+### F. Validation du contenu reçu par le RH
+GET http://localhost:8080/api/applications/1
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Détails candidature corrects", function() {
+        client.assert(response.status === 200, "La candidature devrait exister");
+    });
+%}
+
+### G. Action métier : Le RH traite la candidature
+PATCH http://localhost:8080/api/applications/{{app_id}}/status?status=SHORTLISTED
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Changement de statut réussi", function() {
+         client.assert(response.status === 200);
+        client.assert(response.body.status === "SHORTLISTED");
+    });
+%}
+

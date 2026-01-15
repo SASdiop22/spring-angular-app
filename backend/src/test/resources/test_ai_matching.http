@@ -1,0 +1,27 @@
+### Variables Globales
+@baseUrl = http://localhost:8080/api
+@jobOfferId = 1
+@candidateId = 6
+
+# @name loginCandidat
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "paul.rejet",
+  "password": "password123"
+}
+> {% client.global.set("token_candidat", response.body.accessToken); %}
+
+### Test du Matchmaking IA lors d'une candidature
+POST http://localhost:8080/api/applications/apply?jobOfferId=1&candidateId=5&cvUrl=http://storage.com/cv.pdf
+Authorization: Bearer {{token_candidat}}
+Content-Type: application/json
+
+{
+  "coverLetter": "Je suis expert en Java Spring Boot et microservices avec 5 ans d'expérience."
+}
+
+### Attendu :
+# 1. Statut 201 Created
+# 2. Le champ 'matchingScore' dans le JSON de réponse doit être le score calculé par l'IA (ex: 85)

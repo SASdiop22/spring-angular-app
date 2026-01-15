@@ -28,7 +28,7 @@ public interface CandidatRepository extends JpaRepository<CandidatEntity, Long> 
     /**
      * Recherche par nom ou prénom (Utile pour le back-office RH)
      */
-    List<CandidatEntity> findByLastNameContainingIgnoreCaseOrFirstNameContainingIgnoreCase(String lastName, String firstName);
+    //List<CandidatEntity> findByLastNameContainingIgnoreCaseOrFirstNameContainingIgnoreCase(String lastName, String firstName);
 
     /**
      * Vérifie si un candidat est conforme au RGPD avant de lui permettre de postuler.

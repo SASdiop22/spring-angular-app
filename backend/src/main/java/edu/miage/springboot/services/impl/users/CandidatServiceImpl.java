@@ -40,8 +40,8 @@ public class CandidatServiceImpl implements CandidatService {
                 .orElseThrow(() -> new RuntimeException("Candidat introuvable"));
 
         // Mise à jour des informations de contact
-        entity.setFirstName(dto.getFirstName());
-        entity.setLastName(dto.getLastName());
+        //entity.setFirstName(dto.getFirstName());
+        //entity.setLastName(dto.getLastName());
         entity.setTelephone(dto.getTelephone());
         entity.setVille(dto.getVille());
 

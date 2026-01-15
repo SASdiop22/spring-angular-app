@@ -37,6 +37,7 @@ public class EmployeController {
     }
 
     @GetMapping("/demandeurs")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAnyAuthority('ROLE_RH')")
     public List<EmployeDTO> getDemandeurs() {
         return employeRepository.findAll().stream()
                 .filter(EmployeEntity::isDemandeurDePoste)

@@ -4,6 +4,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import edu.miage.springboot.dao.entities.users.UserTypeEnum;
+import edu.miage.springboot.dao.repositories.users.EmployeRepository;
+import edu.miage.springboot.utils.mappers.UserMapper;
+import edu.miage.springboot.web.dtos.users.UserDTO;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.miage.springboot.dao.entities.users.EmployeEntity;
@@ -22,6 +27,12 @@ public class UserServiceImpl {
 
     @Autowired
     private UserRoleRepository userRoleRepository;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private EmployeRepository employeRepository;
     
     public void checkUserExists(String username) {
         Optional<UserEntity> userOpt = userRepository.findByUsername(username);
@@ -119,5 +130,23 @@ public class UserServiceImpl {
                 .ifPresent(role -> user.downgradeFromPrivilege(role));
         }
         userRepository.save(user);
+    }
+
+    @Transactional
+    public UserDTO assignReferent(Long candidatId, Long employeId) {
+        // 1. On récupère l'USER du candidat (ex: Sophie, ID 6)
+        UserEntity candidat = userRepository.findById(candidatId)
+                .orElseThrow(() -> new EntityNotFoundException("Candidat non trouvé"));
+
+        // 2. On récupère le PROFIL EMPLOYE du référent (ex: Alice, ID 1)
+        // Note : On utilise findByUserId car Alice a l'ID User 1
+        EmployeEntity referent = employeRepository.findByUserId(employeId)
+                .orElseThrow(() -> new EntityNotFoundException("Profil Employé référent non trouvé"));
+
+        // 3. Liaison
+        candidat.setReferentEmploye(referent);
+
+        // 4. Sauvegarde et conversion finale
+        return userMapper.toDto(userRepository.save(candidat));
     }
 }

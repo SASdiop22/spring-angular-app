@@ -1,0 +1,118 @@
+### Variables Globales basées sur vos logs réels
+@baseUrl = http://localhost:8080/api
+@candidateId = 5
+@jobOfferId = 2
+# Sophie (ID 6) postule pour le poste de Product Manager (ID 3)
+
+### 1. Authentification des différents acteurs
+# @name loginRH
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+###
+# @name loginDemandeur
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "dylan.demandeur",
+  "password": "password123"
+}
+> {% client.global.set("token_demandeur", response.body.accessToken); %}
+
+###
+# @name loginCandidat
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "sophie.onboard",
+  "password": "password123"
+}
+> {% client.global.set("token_candidat", response.body.accessToken); %}
+
+
+### 2. Candidature initiale (Spec 3.A)
+POST {{baseUrl}}/applications/apply?jobOfferId={{jobOfferId}}&candidateId={{candidateId}}&cvUrl=https://storage.provider.com/cvs/sophie_cv.pdf
+Authorization: Bearer {{token_candidat}}
+
+> {%
+    client.global.set("new_app_id", response.body.id);
+    client.log("Nouvelle candidature créée ID: " + response.body.id);
+%}
+
+
+### 3. Le RH change le statut pour "Entretien" (Spec 4.B & 4.2)
+PATCH {{baseUrl}}/applications/{{new_app_id}}/status
+Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "status": "INTERVIEW_PENDING",
+  "meetingDate": "2026-01-20T14:00:00",
+  "meetingLocation": "Bureau de Dylan / Teams"
+}
+
+
+### 4. AJOUT DE NOTES (Spec 4.3 - Journal de recrutement)
+
+### 4a. Le RH ajoute une note après le premier contact
+POST {{baseUrl}}/applications/{{new_app_id}}/notes
+Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "stepName": "Qualification RH",
+  "content": "Profil très dynamique. Sophie a une excellente vision produit."
+}
+
+### 4b. Le Demandeur (Manager) ajoute une note après l'entretien technique
+POST {{baseUrl}}/applications/{{new_app_id}}/notes
+Authorization: Bearer {{token_demandeur}}
+Content-Type: application/json
+
+{
+  "stepName": "Entretien Métier",
+  "content": "Maîtrise parfaite des méthodologies Agile. Avis favorable pour l'embauche."
+}
+
+
+### 5. CONSULTATION DU JOURNAL (Spec 4.3)
+
+### 5a. Le Demandeur consulte l'historique complet
+GET {{baseUrl}}/applications/{{new_app_id}}/notes
+Authorization: Bearer {{token_demandeur}}
+
+> {%
+    client.test("Journal accessible au demandeur", function() {
+        client.assert(response.status === 200, "Le demandeur devrait voir les notes");
+        client.assert(response.body.length >= 2, "Le journal doit contenir au moins 2 notes");
+        client.log("Note 1 par: " + response.body[0].authorName);
+    });
+%}
+
+### 5b. TEST DE CONFIDENTIALITÉ : Le candidat ne doit PAS voir les notes
+GET {{baseUrl}}/applications/{{new_app_id}}/notes
+Authorization: Bearer {{token_candidat}}
+
+> {%
+    client.test("Confidentialité respectée", function() {
+        client.assert(response.status === 403, "Un candidat ne doit pas accéder aux notes internes");
+    });
+%}
+
+
+### 6. Clôture du processus : Embauche (Spec 5)
+PATCH {{baseUrl}}/applications/{{new_app_id}}/status
+Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "status": "HIRED"
+}

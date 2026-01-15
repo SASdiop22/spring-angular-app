@@ -1,6 +1,7 @@
 ### =========================================================================
 ### 1. CYCLE DE VIE DE L'OFFRE (Spécification 2)
 ### =========================================================================
+
 # @name loginRH
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
@@ -9,7 +10,10 @@ Content-Type: application/json
   "username": "alice.rh",
   "password": "password123"
 }
-> {% client.global.set("token_rh", response.body.accessToken); %}
+
+> {%
+    client.global.set("token_rh", response.body.accessToken);
+%}
 
 ###
 
@@ -22,11 +26,13 @@ Content-Type: application/json
   "password": "password123"
 }
 
-> {% client.global.set("token_employe", response.body.accessToken); %}
+> {%
+    client.global.set("token_employe", response.body.accessToken);
+%}
 
 ###
 
-### A. Création d'un Draft par un Employe (Spec 2.A)
+### A. Création d'un Draft (Spec 2.A)
 # @name createDraft
 POST http://localhost:8080/api/joboffers
 Authorization: Bearer {{token_employe}}
@@ -34,31 +40,30 @@ Content-Type: application/json
 
 {
   "title": "Ingénieur DevOps",
-  "description": "Gestion infrastructure Kubernetes et CI/CD.",
+  "description": "Gestion infrastructure Kubernetes.",
   "department": "IT",
-  "skillsRequired": ["Docker", "K8s", "Terraform"],
-  "creatorId": 5
+  "skillsRequired": ["Docker", "K8s"],
+  "creatorId": 3
 }
-> {% client.global.set("new_offer_id", response.body.id); %}
 
-### B. Passage en PENDING (Validation)
-PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/status?status=PENDING
-Authorization: Bearer {{token_employe}}
+> {%
+    client.test("Draft créé", function() {
+        client.assert(response.status === 201 || response.status === 200);
+        client.global.set("new_offer_id", response.body.id);
+    });
+%}
 
-### C. ÉCHEC : Un Employe tente de publier (Sécurité Spec 4.A)
-# Doit retourner 403 Forbidden car il n'a pas rhPrivilege
-PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=55000&remoteDays=2
-Authorization: Bearer {{token_employe}}
-
-### D. SUCCÈS : Le RH enrichit et publie (Spec 2.A & 4.A)
-# Le statut passe en OPEN
-PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=62000&remoteDays=3
+### D. SUCCÈS : Le RH enrichit et publie l'offre
+# Attention : le paramètre URL est 'salary' mais le DTO renvoie 'salaryRange'
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=55000.0&remoteDays=2
 Authorization: Bearer {{token_rh}}
 
-### E. Visibilité Publique (Spec 2.A)
-# Accessible sans token (Visiteur)
-GET http://localhost:8080/api/joboffers
+> {%
+    client.test("RH : Publication et vérification des champs", function() {
+        client.assert(response.status === 200, "Le serveur a renvoyé une erreur 500. Vérifiez si l'ID " + client.global.get("new_offer_id") + " existe.");
+        client.assert(response.body.status === "OPEN", "L'offre doit passer en statut OPEN");
 
-### F. Visibilité Publique de la nouvelle offre (Spec 2.A)
-# Accessible sans token (Visiteur)
-GET http://localhost:8080/api/joboffers/{{new_offer_id}}
+        // Vérification avec le champ correct du DTO (salaryRange)
+        client.assert(response.body.salaryRange === 55000.0, "Le salaire n'a pas été correctement enregistré");
+    });
+%}

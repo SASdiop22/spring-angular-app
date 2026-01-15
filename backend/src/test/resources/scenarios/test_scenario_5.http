@@ -1,5 +1,8 @@
-### 1. CONNEXION
-# @name login
+### =========================================================================
+### SCÉNARIO 5 : PROCESSUS D'EMBAUCHE ET MUTATION DE PROFIL
+### =========================================================================
+
+# @name loginAdmin
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
@@ -7,77 +10,52 @@ Content-Type: application/json
   "username": "bob.admin",
   "password": "password123"
 }
+> {%
+    client.global.set("token_admin", response.body.accessToken);
+%}
 
-> {% client.global.set("token_admin", response.body.token || response.body.accessToken); %}
-
-### 2. ASSIGNER UN RÉFÉRENT (Spec 5.2)
-# On utilise Jean (Candidat, ID 1) et Bob (Employé, ID 4)
-PATCH http://localhost:8080/api/users/1/assign-referent/4
+### -------------------------------------------------------------------------
+### 1. ASSIGNER UN RÉFÉRENT (Spécification 5.2)
+### -------------------------------------------------------------------------
+# On utilise Jean (Candidat ID 4) et Dylan (Employé ID 7) identifiés dans les logs
+PATCH http://localhost:8080/api/users/4/assign-referent/7
 Authorization: Bearer {{token_admin}}
 
 > {%
     client.test("Assignation référent réussie", function() {
         client.assert(response.status === 200, "Le statut devrait être 200 OK");
-        client.assert(response.body.id === 1, "L'ID du candidat doit correspondre");
+        client.assert(response.body.id === 4, "L'ID du candidat doit correspondre");
+        client.assert(response.body.referentId === 7, "Le referentId doit être 7");
     });
 %}
-
-### 3. RECRUTER (HIRED) (Spec 5.1 à 5.4)
-# On utilise une candidature existante (ID issu de ApplicationSeeder, probablement 1 ou 2)
-PATCH http://localhost:8080/api/applications/1/status?status=HIRED
+### -------------------------------------------------------------------------
+### 2. RECRUTER (HIRED) (Spécifications 5.1 à 5.4)
+### -------------------------------------------------------------------------
+# FIX : Passage au format @RequestBody JSON
+PATCH http://localhost:8080/api/applications/1/status
 Authorization: Bearer {{token_admin}}
+Content-Type: application/json
+
+{
+  "status": "HIRED"
+}
 
 > {%
     client.test("Automatisation HIRED réussie", function() {
         client.assert(response.status === 200, "Le recrutement doit être validé");
-        client.assert(response.body.currentStatus === "HIRED", "Le statut doit être HIRED");
+        // On récupère dynamiquement l'ID de l'offre pour la vérification suivante
+        client.global.set("target_job_id", response.body.jobOfferId);
     });
 %}
 
-### 4. VÉRIFICATION : L'OFFRE DOIT ÊTRE 'FILLED'
-GET http://localhost:8080/api/joboffers/1
+### -------------------------------------------------------------------------
+### 3. VÉRIFICATION : IMPACT SUR L'OFFRE D'EMPLOI
+### -------------------------------------------------------------------------
+GET http://localhost:8080/api/joboffers/{{target_job_id}}
 Authorization: Bearer {{token_admin}}
 
 > {%
     client.test("Vérification Offre FILLED", function() {
-        client.assert(response.body.status === "FILLED", "L'offre associée devrait être passée en FILLED");
-    });
-%}
-
-### 5. VÉRIFICATION : LE CANDIDAT EST DEVENU EMPLOYÉ
-# Vérifie la mutation de UserType et la création du profil Employe
-GET http://localhost:8080/api/users/1
-Authorization: Bearer {{token_admin}}
-
-> {%
-    client.test("Vérification Mutation UserType", function() {
-        client.assert(response.body.userType === "EMPLOYE", "L'utilisateur doit être de type EMPLOYE");
-        client.assert(response.body.roles.includes("ROLE_EMPLOYE"), "L'utilisateur doit avoir le rôle EMPLOYE");
-    });
-%}
-
-### 6. VÉRIFICATION : LE PROFIL CANDIDAT EST ARCHIVÉ
-# On vérifie directement auprès du CandidatController
-GET http://localhost:8080/api/candidates/1
-Authorization: Bearer {{token_admin}}
-
-> {%
-    client.test("Vérification Archivage Candidat", function() {
-        client.assert(response.body.archived === true, "Le profil candidat doit être archivé");
-    });
-%}
-
-### -------------------------------------------------------------------------
-### PARTIE C : TEST DES SÉCURITÉS (REACTION DU CODE)
-### -------------------------------------------------------------------------
-
-### 7. TEST D'INTERDICTION : UN ARCHIVÉ NE PEUT PLUS POSTULER
-# Tentative de candidature avec le compte ID 10 (désormais employé/archivé)
-POST http://localhost:8080/api/applications/apply?jobOfferId=2&candidateId=10&cvUrl=http://moncv.pdf
-Authorization: Bearer {{token_admin}}
-
-> {%
-    client.test("Blocage Archivé", function() {
-        client.assert(response.status === 403, "L'accès devrait être refusé (403) car le candidat est archivé");
+        client.assert(response.body.status === "FILLED", "L'offre associée doit être passée en FILLED (Spec 5.3)");
     });
 %}

@@ -43,8 +43,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Autowired
     private UserRoleRepository userRoleRepository;
-    @Autowired
-    private MatchingService matchingService;
+
     @Override
     @Transactional
     public ApplicationDTO apply(Long jobOfferId, Long candidateId, String cvUrl, String coverLetter) {
@@ -162,6 +161,18 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public List<ApplicationDTO> findByCandidateId(Long candidateId) {
         return applicationMapper.toDtos(applicationRepository.findByCandidateId(candidateId));
+    }
+
+    private void sendRejectionEmail(String email, String reason) {
+        System.out.println("E-MAIL AUTO : " + email + " rejeté pour : " + reason);
+    }
+
+
+
+    private boolean isStatusRequiringMeeting(ApplicationStatusEnum status) {
+        return status == ApplicationStatusEnum.INTERVIEW_PENDING ||
+                status == ApplicationStatusEnum.TECHNICAL_TEST_PENDING ||
+                status == ApplicationStatusEnum.OFFER_PENDING;
     }
 
 }

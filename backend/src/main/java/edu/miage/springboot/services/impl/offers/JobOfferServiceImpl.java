@@ -3,16 +3,12 @@ package edu.miage.springboot.services.impl.offers;
 import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
 import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
-import edu.miage.springboot.dao.entities.users.UserEntity;
-import edu.miage.springboot.dao.entities.users.UserTypeEnum;
 import edu.miage.springboot.dao.repositories.users.EmployeRepository;
 import edu.miage.springboot.dao.repositories.offers.JobOfferRepository;
-import edu.miage.springboot.dao.repositories.users.UserRepository;
 import edu.miage.springboot.services.interfaces.JobOfferService;
 import edu.miage.springboot.utils.mappers.JobOfferMapper;
 import edu.miage.springboot.web.dtos.offers.JobOfferDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +55,7 @@ public class JobOfferServiceImpl implements JobOfferService {
                 .orElseThrow(() -> new RuntimeException("Offre introuvable"));
 
         // Sécurité métier : On ne publie que ce qui est en attente (PENDING) ou en brouillon (DRAFT)
-        if (entity.getStatus() == JobStatusEnum.CLOSED || entity.getStatus() == JobStatusEnum.FILLED) {
+        if (entity.getStatus() != JobStatusEnum.PENDING && entity.getStatus() != JobStatusEnum.DRAFT) {
             throw new IllegalStateException("Impossible de publier une offre clôturée ou pourvue.");
         }
 
@@ -151,6 +147,11 @@ public class JobOfferServiceImpl implements JobOfferService {
         JobOfferEntity entity = jobOfferRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Offre introuvable"));
 
+        // Vérifiez que les paramètres ne sont pas nulls avant l'appel métier
+        if (salary == null || remoteDays == null) {
+            throw new IllegalArgumentException("Le salaire et le télétravail sont obligatoires pour publier.");
+        }
+
         // Utilise la méthode métier interne de l'entité
         entity.validateAndPublish(salary, remoteDays);
 
@@ -173,7 +174,6 @@ public class JobOfferServiceImpl implements JobOfferService {
 
         return jobOfferMapper.entityToDto(jobOfferRepository.save(existing));
     }
-
 
     @Override
     public void deleteJobOffer(Long id) {

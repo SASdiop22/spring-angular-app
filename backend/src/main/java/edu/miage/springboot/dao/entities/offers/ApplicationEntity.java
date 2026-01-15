@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "applications")
@@ -40,6 +42,9 @@ public class ApplicationEntity {
     @Column(name = "meeting_date")
     private LocalDateTime meetingDate;
 
+    @Column(name = "meeting_location")
+    private String meetingLocation;
+
     @Column(name = "matching_score")
     private Integer matchingScore;
 
@@ -53,6 +58,13 @@ public class ApplicationEntity {
     // Le retour technique suite à l'entretien
     @Column(name = "technical_feedback", columnDefinition = "TEXT")
     private String technicalFeedback;
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    @Column(name = "recruitment_notes", columnDefinition = "TEXT")
+    @OneToMany(mappedBy = "application")
+    private List<ApplicationNoteEntity> recruitmentNotes = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

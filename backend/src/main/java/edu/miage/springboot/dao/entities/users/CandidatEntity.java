@@ -25,11 +25,11 @@ public class CandidatEntity {
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
-    @Column(nullable = false)
+    /**@Column(nullable = false)
     private String firstName;
 
     @Column(nullable = false)
-    private String lastName;
+    private String lastName;*/
 
     private String telephone;
 
@@ -67,6 +67,4 @@ public class CandidatEntity {
         }
     }
 
-    public void setArchived(boolean b) {
-    }
 }

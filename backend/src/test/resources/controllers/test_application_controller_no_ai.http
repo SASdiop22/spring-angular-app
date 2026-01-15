@@ -1,0 +1,82 @@
+### Variables Globales
+@baseUrl = http://localhost:8080/api/applications
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
+###
+
+# @name adminLogin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob.admin",
+  "password": "password123"
+}
+> {% client.global.set("admin_token", response.body.accessToken); %}
+
+###
+
+# @name loginPaul
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "paul.rejet",
+  "password": "password123"
+}
+> {% client.global.set("token_paul", response.body.accessToken); %}
+
+###
+# @name idPaul
+GET http://localhost:8080/api/users
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Admin accède à la liste technique", function() {
+        client.assert(response.status === 200, "Le statut devrait être 200");
+        client.assert(Array.isArray(response.body), "La réponse doit être une liste");
+
+        var paul = response.body.find(u => u.username === "paul.rejet");
+        var admin = response.body.find(u => u.username === "bob.admin");
+
+        client.assert(paul !== undefined, "Paul Rejet doit exister");
+        client.global.set("paul_id", paul.id);
+        client.global.set("amdin_id", admin.id);
+    });
+%}
+
+### SPEC 3.A : Paul (ID 8) postule à l'offre PM (ID 3)
+### Spécification 3.A : Paul postule à l'offre Product Manager (ID 3)
+# @name applyPaul
+# @no-cookie-jar
+POST {{baseUrl}}/apply?jobOfferId=4&candidateId={{paul_id}}&cvUrl=http://paul.pdf&coverLetter=
+Authorization: Bearer {{token_paul}}
+Content-Type: application/json
+
+> {%
+    client.test("Candidature de Paul réussie", function() {
+        client.assert(response.status === 201 || response.status === 200, "Erreur lors de la candidature");
+        // On stocke l'ID de la nouvelle candidature pour les tests suivants (ex: updateStatus)
+        client.global.set("new_app_id_paul", response.body.id);
+    });
+%}
+
+### SPEC 5 : Alice recrute Paul (Utilise l'ID généré dynamiquement)
+PATCH {{baseUrl}}/2/status?status=HIRED
+Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+> {%
+    client.test("Paul est recruté", function() {
+        client.assert(response.status === 200, "L'erreur 500 persiste : vérifiez la logique de mise à jour de l'offre en FILLED");
+    });
+%}

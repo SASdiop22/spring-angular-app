@@ -15,11 +15,12 @@ public class CandidatDTO {
     private String username;
 
     // Champs venant de CandidatEntity
-    private String firstName;
-    private String lastName;
+    //private String firstName;
+    //private String lastName;
     private String telephone;
     private String ville;
     private LocalDateTime consentDate;
+    private boolean archived;
 
     // Champ calculé pour faciliter le travail du Front-end
     private boolean rgpdCompliant;
