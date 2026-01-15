@@ -63,8 +63,7 @@ public class ApplicationEntity {
 
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;
-
-    @Column(name = "recruitment_notes", columnDefinition = "TEXT")
+    
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL)
     private List<ApplicationNoteEntity> recruitmentNotes = new ArrayList<>();
 
