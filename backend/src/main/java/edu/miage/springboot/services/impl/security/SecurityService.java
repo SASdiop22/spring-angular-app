@@ -32,8 +32,22 @@ public class SecurityService {
     }
 
     // Ajoute cette méthode ou renomme l'existante
-    public boolean isApplicationOwner(Long candidateId) {
-        return isOwner(candidateId); // Appelle la logique de vérification de propriété
+    public boolean isApplicationOwner(Long applicationId) {
+        if (applicationId == null) return false;
+        String username = getConnectedUsername();
+
+        return applicationRepository.findById(applicationId)
+                .map(app -> app.getCandidate().getUser().getUsername().equals(username))
+                .orElse(false);
+    }
+
+    public boolean isJobOfferOwnerFromApplication(Long applicationId) {
+        // 1. Chercher l'application
+        // 2. Vérifier si l'utilisateur connecté est le creator de l'offre (job.getCreator())
+        // Exemple logique :
+        return applicationRepository.findById(applicationId)
+                .map(app -> app.getJob().getCreator().getUser().getUsername().equals(getConnectedUsername()))
+                .orElse(false);
     }
 
     /**

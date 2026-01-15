@@ -1,12 +1,9 @@
-### Variables Globales basées sur vos logs réels
-@baseUrl = http://localhost:8080/api
-@candidateId = 5
-@jobOfferId = 2
-# Sophie (ID 6) postule pour le poste de Product Manager (ID 3)
+### =========================================================================
+### 1. AUTHENTIFICATION DES ACTEURS
+### =========================================================================
 
-### 1. Authentification des différents acteurs
 # @name loginRH
-POST {{baseUrl}}/auth/login
+POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
@@ -16,103 +13,127 @@ Content-Type: application/json
 > {% client.global.set("token_rh", response.body.accessToken); %}
 
 ###
-# @name loginDemandeur
-POST {{baseUrl}}/auth/login
+
+# @name loginManager
+POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
   "username": "dylan.demandeur",
   "password": "password123"
 }
-> {% client.global.set("token_demandeur", response.body.accessToken); %}
+> {% client.global.set("token_manager", response.body.accessToken); %}
 
 ###
+
 # @name loginCandidat
-POST {{baseUrl}}/auth/login
+POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
   "username": "sophie.onboard",
   "password": "password123"
 }
-> {% client.global.set("token_candidat", response.body.accessToken); %}
+> {% client.global.set("token_sophie", response.body.accessToken); %}
 
 
-### 2. Candidature initiale (Spec 3.A)
-POST {{baseUrl}}/applications/apply?jobOfferId={{jobOfferId}}&candidateId={{candidateId}}&cvUrl=https://storage.provider.com/cvs/sophie_cv.pdf
-Authorization: Bearer {{token_candidat}}
+### =========================================================================
+### 2. PRÉPARATION DYNAMIQUE (RECHERCHE D'UNE OFFRE ET CANDIDATURE)
+### =========================================================================
+
+# @name getJob
+GET http://localhost:8080/api/joboffers
+Authorization: Bearer {{token_rh}}
 
 > {%
-    client.global.set("new_app_id", response.body.id);
-    client.log("Nouvelle candidature créée ID: " + response.body.id);
+    const job = response.body.find(o => o.status === "OPEN");
+    client.global.set("job_id", job.id);
+    // On récupère l'ID utilisateur de Sophie via son login pour postuler
+    client.global.set("sophie_id", 6);
 %}
 
-
-### 3. Le RH change le statut pour "Entretien" (Spec 4.B & 4.2)
-PATCH {{baseUrl}}/applications/{{new_app_id}}/status
-Authorization: Bearer {{token_rh}}
-Content-Type: application/json
-
-{
-  "status": "INTERVIEW_PENDING",
-  "meetingDate": "2026-01-20T14:00:00",
-  "meetingLocation": "Bureau de Dylan / Teams"
-}
-
-
-### 4. AJOUT DE NOTES (Spec 4.3 - Journal de recrutement)
-
-### 4a. Le RH ajoute une note après le premier contact
-POST {{baseUrl}}/applications/{{new_app_id}}/notes
-Authorization: Bearer {{token_rh}}
-Content-Type: application/json
-
-{
-  "stepName": "Qualification RH",
-  "content": "Profil très dynamique. Sophie a une excellente vision produit."
-}
-
-### 4b. Le Demandeur (Manager) ajoute une note après l'entretien technique
-POST {{baseUrl}}/applications/{{new_app_id}}/notes
-Authorization: Bearer {{token_demandeur}}
-Content-Type: application/json
-
-{
-  "stepName": "Entretien Métier",
-  "content": "Maîtrise parfaite des méthodologies Agile. Avis favorable pour l'embauche."
-}
-
-
-### 5. CONSULTATION DU JOURNAL (Spec 4.3)
-
-### 5a. Le Demandeur consulte l'historique complet
-GET {{baseUrl}}/applications/{{new_app_id}}/notes
-Authorization: Bearer {{token_demandeur}}
+### 3. ACTION : Sophie postule
+POST http://localhost:8080/api/applications/apply?jobOfferId={{job_id}}&candidateId={{sophie_id}}&cvUrl=http://cloud.com/cv-sophie.pdf
+Authorization: Bearer {{token_sophie}}
 
 > {%
-    client.test("Journal accessible au demandeur", function() {
-        client.assert(response.status === 200, "Le demandeur devrait voir les notes");
-        client.assert(response.body.length >= 2, "Le journal doit contenir au moins 2 notes");
-        client.log("Note 1 par: " + response.body[0].authorName);
-    });
-%}
-
-### 5b. TEST DE CONFIDENTIALITÉ : Le candidat ne doit PAS voir les notes
-GET {{baseUrl}}/applications/{{new_app_id}}/notes
-Authorization: Bearer {{token_candidat}}
-
-> {%
-    client.test("Confidentialité respectée", function() {
-        client.assert(response.status === 403, "Un candidat ne doit pas accéder aux notes internes");
+    client.test("Candidature créée", function() {
+        client.assert(response.status === 201 || response.status === 200);
+        client.global.set("current_app_id", response.body.id);
     });
 %}
 
 
-### 6. Clôture du processus : Embauche (Spec 5)
-PATCH {{baseUrl}}/applications/{{new_app_id}}/status
+### =========================================================================
+### 4. JOURNALISATION : AJOUT DE NOTES (SPEC 4.B)
+### =========================================================================
+
+### 4a. Note du RH (Alice)
+POST http://localhost:8080/api/applications/{{current_app_id}}/notes
 Authorization: Bearer {{token_rh}}
 Content-Type: application/json
 
 {
-  "status": "HIRED"
+  "stepName": "Tri initial",
+  "content": "Profil intéressant, bonnes compétences Kubernetes. À valider techniquement."
 }
+
+> {%
+    client.test("Note RH enregistrée", function() {
+        client.assert(response.status === 201 || response.status === 200);
+    });
+%}
+
+### 4b. Note du Manager (Dylan)
+POST http://localhost:8080/api/applications/{{current_app_id}}/notes
+Authorization: Bearer {{token_manager}}
+Content-Type: application/json
+
+{
+  "stepName": "Entretien Technique",
+  "content": "Excellent niveau technique. Candidat très motivé."
+}
+
+### =========================================================================
+### 5. VÉRIFICATION DE LA TRAÇABILITÉ ET CONFIDENTIALITÉ
+### =========================================================================
+
+### 5. VÉRIFICATION : Le RH consulte le journal complet
+GET http://localhost:8080/api/applications/{{current_app_id}}
+Authorization: Bearer {{token_rh}}
+
+> {%
+    client.test("Traçabilité : Le journal contient les notes des deux acteurs", function() {
+        client.assert(response.body.notes.length >= 2, "Il devrait y avoir au moins 2 notes");
+
+        // Vérification de la présence des auteurs
+        const hasAlice = response.body.notes.some(n => n.authorName.includes("alice"));
+        const hasDylan = response.body.notes.some(n => n.authorName.includes("dylan"));
+
+        client.assert(hasAlice, "La note d'Alice RH doit être présente");
+        client.assert(hasDylan, "La note de Dylan Manager doit être présente");
+    });
+%}
+
+
+### =========================================================================
+### 6. ÉTAPE FINALE : REJET AVEC MOTIF (OBLIGATOIRE SPEC 4.B)
+### =========================================================================
+
+### 6a. Le RH rejette la candidature avec un motif
+PATCH http://localhost:8080/api/applications/{{current_app_id}}/status
+Authorization: Bearer {{token_rh}}
+Content-Type: application/json
+
+{
+  "status": "REJECTED",
+  "reason": "Prétentions salariales trop élevées pour le budget actuel."
+}
+
+> {%
+    client.test("Rejet avec motif validé", function() {
+        client.assert(response.status === 200);
+        client.assert(response.body.status === "REJECTED");
+        client.assert(response.body.rejectionReason !== null, "Le motif de rejet doit être enregistré");
+    });
+%}

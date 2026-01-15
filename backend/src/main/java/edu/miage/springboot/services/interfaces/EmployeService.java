@@ -3,6 +3,7 @@ package edu.miage.springboot.services.interfaces;
 import edu.miage.springboot.web.dtos.users.CandidatDTO;
 import edu.miage.springboot.web.dtos.users.EmployeDTO;
 import edu.miage.springboot.web.dtos.users.UserDTO;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -19,6 +20,8 @@ public interface EmployeService {
     EmployeDTO findByUsername(String username);
 
     public void setManagerReferent(Long employeId, Long managerId);
+
+    List<EmployeDTO> findAll();
 
     // Évolution future (Spec 2.A)
     // List<JobOfferDTO> getJobOffersCreatedBy(Long employeId);

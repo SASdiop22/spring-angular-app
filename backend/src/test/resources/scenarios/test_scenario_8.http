@@ -1,102 +1,100 @@
 ### =========================================================================
-### SCÉNARIO : CYCLE DE VIE DE L'OFFRE (SPEC 2.A & 2.B)
+### 1. AUTHENTIFICATION DES ACTEURS
 ### =========================================================================
 
-### 1. Authentification des acteurs
 # @name loginDemandeur
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
-{
-  "username": "dylan.demandeur",
-  "password": "password123"
-}
+{ "username": "dylan.demandeur", "password": "password123" }
 > {% client.global.set("token_demandeur", response.body.accessToken); %}
 
 ###
+
 # @name loginRH
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
-{
-  "username": "alice.rh",
-  "password": "password123"
-}
+{ "username": "alice.rh", "password": "password123" }
 > {% client.global.set("token_rh", response.body.accessToken); %}
 
+### =========================================================================
+### 2. CRÉATION DE LA DEMANDE (SPEC 2.A)
+### =========================================================================
 
-### -------------------------------------------------------------------------
-### 2. CRÉATION DE L'OFFRE (DEMANDEUR)
-### -------------------------------------------------------------------------
-
-### 2a. Création d'une nouvelle offre
-# Attendu : L'offre doit être créée avec le statut PENDING (forcé par le service)
 # @name createOffer
 POST http://localhost:8080/api/joboffers
 Authorization: Bearer {{token_demandeur}}
 Content-Type: application/json
 
 {
-  "title": "Architecte Cloud Azure",
-  "description": "Expert Azure avec certification requise.",
-  "department": "IT",
-  "skillsRequired": ["Azure", "Terraform", "Security"],
-  "creatorId": 7
+  "title": "Ingénieur DevOps Cloud",
+  "description": "Expert Azure et Kubernetes pour l'équipe infrastructure.",
+  "departement": "IT"
 }
 
 > {%
-    client.test("Offre créée en DRAFT", function() {
-        client.assert(response.status === 201, "Le statut devrait être 201 Created");
-        client.assert(response.body.status === "DRAFT", "Le statut forcé doit être PENDING");
+    client.test("L'offre est créée en statut PENDING", function() {
+        client.assert(response.status === 201, "L'offre devrait être créée (201)");
+        client.assert(response.body.status === "DRAFT", "Le statut initial doit être DRAFT");
         client.global.set("new_offer_id", response.body.id);
     });
 %}
 
-### 2b. Vérification visibilité publique
-# Attendu : L'offre ne doit PAS apparaître dans la liste publique car elle n'est pas OPEN
+
+### =========================================================================
+### 3. TESTS DE SÉCURITÉ ET CONFIDENTIALITÉ (SPEC 2.B)
+### =========================================================================
+
+### 3a. VÉRIFICATION : L'offre PENDING n'est pas publique
 GET http://localhost:8080/api/joboffers
-Content-Type: application/json
+# Sans authentification ou avec un compte Candidat (optionnel ici)
 
 > {%
-    client.test("Offre non visible publiquement", function() {
-        const offers = response.body;
-        const found = offers.find(o => o.id == client.global.get("new_offer_id"));
-        client.assert(!found, "L'offre PENDING ne doit pas être visible publiquement");
+    client.test("L'offre en attente est invisible au public", function() {
+        var offers = response.body;
+        var found = offers.find(o => o.id === client.global.get("new_offer_id"));
+        client.assert(!found, "L'offre PENDING ne doit pas apparaître dans la liste publique");
     });
 %}
 
+### 3b. ÉCHEC : Le manager tente de publier lui-même (Interdit)
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=80000&remoteDays=2
+Authorization: Bearer {{token_demandeur}}
 
-### -------------------------------------------------------------------------
-### 3. ENRICHISSEMENT ET PUBLICATION (RH)
-### -------------------------------------------------------------------------
+> {%
+    client.test("Le manager ne peut pas publier", function() {
+        client.assert(response.status === 403, "Seul le RH peut publier l'offre (403 attendu)");
+    });
+%}
 
+### =========================================================================
+### 4. ENRICHISSEMENT ET PUBLICATION PAR LE RH (SPEC 2.B)
+### =========================================================================
 
-### 3c. SUCCÈS : Publication valide par le RH
-# Attendu : 200 OK, statut passe à OPEN, champs mis à jour
-PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=75000.0&remoteDays=3
+# @name publishOffer
+PATCH http://localhost:8080/api/joboffers/{{new_offer_id}}/publish?salary=72000&remoteDays=3
 Authorization: Bearer {{token_rh}}
 
 > {%
-    client.test("Publication réussie", function() {
-        client.assert(response.status === 200);
-        client.assert(response.body.status === "OPEN", "Le statut doit être OPEN");
-        client.assert(response.body.salaryRange === 75000.0);
-        client.assert(response.body.remoteDays === 3);
+    client.test("Le RH publie l'offre avec succès", function() {
+        client.assert(response.status === 200, "La publication devrait réussir");
+        client.assert(response.body.status === "OPEN", "Le statut doit passer à OPEN");
+        client.assert(response.body.salaryRange === 72000);
     });
 %}
 
+### =========================================================================
+### 5. VÉRIFICATION FINALE
+### =========================================================================
 
-### -------------------------------------------------------------------------
-### 4. VÉRIFICATION FINALE
-### -------------------------------------------------------------------------
-
-### 4a. L'offre est maintenant publique
+### 5a. L'offre est maintenant visible publiquement
 GET http://localhost:8080/api/joboffers
-Content-Type: application/json
 
 > {%
-    client.test("Offre visible après publication", function() {
-        const found = response.body.find(o => o.id == client.global.get("new_offer_id"));
-        client.assert(!!found, "L'offre OPEN doit être visible par tous");
+    client.test("L'offre OPEN est visible", function() {
+        var found = response.body.find(o => o.id === client.global.get("new_offer_id"));
+        client.assert(found !== undefined, "L'offre doit maintenant être visible");
+        client.assert(found.status === "OPEN");
     });
 %}

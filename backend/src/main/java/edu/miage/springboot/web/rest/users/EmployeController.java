@@ -31,6 +31,12 @@ public class EmployeController {
     @Autowired
     private EmployeService employeService;
 
+    @GetMapping
+    @PreAuthorize("@securityService.isEmployeAnyKind()")
+    public List<EmployeDTO> getAll() {
+        return employeService.findAll();
+    }
+
     @GetMapping("/rh")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public List<EmployeDTO> getRHPersonnel() {

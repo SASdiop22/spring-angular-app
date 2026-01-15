@@ -86,7 +86,7 @@ public class ApplicationController {
             @RequestParam LocalDateTime date,
             @RequestParam Long interviewerId,
             @RequestParam String location) {
-        return ResponseEntity.ok(applicationService.scheduleInterview(id, date, interviewerId));
+        return ResponseEntity.ok(applicationService.scheduleInterview(id, date, interviewerId, location));
     }
 
 

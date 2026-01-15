@@ -81,50 +81,45 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new IllegalStateException("Ce candidat a déjà été embauché.");
         }
 
-        UserEntity user = app.getCandidate().getUser();
+        // --- 1. Gestion de l'archivage du Candidat (Indispensable pour vos tests) ---
+        CandidatEntity candidat = app.getCandidate();
+        candidat.setArchived(true);
+        candidatRepository.save(candidat);
 
-        // 1. Création du profil Employé (Spec 5)
+        UserEntity user = candidat.getUser();
+
+        // --- 2. Création du profil Employé (Spec 5) ---
         EmployeEntity newEmployee = new EmployeEntity();
         newEmployee.setUser(user);
         newEmployee.setPoste(app.getJob().getTitle());
-        newEmployee.setDepartement(app.getJob().getDepartment());
 
-        // 2. Assignation du Référent/Manager (Spec 5)
-        // Par défaut, le créateur de l'offre (le demandeur) devient son manager
+        // Sécurité si le département de l'offre est nul (évite la DataIntegrityViolation)
+        String dept = app.getJob().getDepartment() != null ?
+                app.getJob().getDepartment() : app.getJob().getCreator().getDepartement();
+        newEmployee.setDepartement(dept);
+
+        // Assignation du Référent/Manager (Spec 5)
         newEmployee.setReferent(app.getJob().getCreator());
 
-        // 3. Mise à jour de l'utilisateur (Type et Rôles)
+        // --- 3. Mise à jour de l'utilisateur (Type et Rôles) ---
         user.setUserType(UserTypeEnum.EMPLOYE);
+
+        // On nettoie les anciens rôles pour ne mettre que le rôle EMPLOYÉ (plus propre pour la sécurité)
+        user.getRoles().clear();
         userRoleRepository.findByName("ROLE_EMPLOYE")
                 .ifPresent(role -> user.getRoles().add(role));
 
-        // 4. Mise à jour des statuts (Candidature et Offre)
+        // --- 4. Mise à jour des statuts (Candidature et Offre) ---
         app.setCurrentStatus(ApplicationStatusEnum.HIRED);
 
-        // Si l'offre ne concernait qu'un poste, on peut la fermer
         JobOfferEntity job = app.getJob();
         job.setStatus(JobStatusEnum.CLOSED);
 
+        // --- 5. Sauvegardes ---
         employeRepository.save(newEmployee);
         userRepository.save(user);
         applicationRepository.save(app);
         jobOfferRepository.save(job);
-    }
-
-    @Transactional
-    public ApplicationDTO scheduleInterview(Long applicationId, LocalDateTime date, Long interviewerId, String location) {
-        ApplicationEntity app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
-
-        EmployeEntity interviewer = employeRepository.findById(interviewerId)
-                .orElseThrow(() -> new RuntimeException("Interviewer introuvable"));
-
-        app.setMeetingDate(date);
-        app.setInterviewer(interviewer);
-        app.setMeetingLocation(location);
-        app.setCurrentStatus(ApplicationStatusEnum.INTERVIEW_PENDING);
-
-        return applicationMapper.toDto(applicationRepository.save(app));
     }
 
 
@@ -222,7 +217,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Transactional
     @Override
-    public ApplicationDTO scheduleInterview(Long applicationId, LocalDateTime date, Long interviewerId) {
+    public ApplicationDTO scheduleInterview(Long applicationId, LocalDateTime date, Long interviewerId, String location) {
         ApplicationEntity app = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Candidature introuvable"));
 
@@ -232,6 +227,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         // Mise à jour des infos
         app.setMeetingDate(date);
         app.setInterviewer(interviewer);
+        app.setMeetingLocation(location);
         app.setCurrentStatus(ApplicationStatusEnum.INTERVIEW_PENDING);
 
         return applicationMapper.toDto(applicationRepository.save(app));

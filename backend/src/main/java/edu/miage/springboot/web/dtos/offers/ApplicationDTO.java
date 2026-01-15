@@ -23,6 +23,7 @@ public class ApplicationDTO {
 
     // --- Nouveaux champs pour les spécifications 4.B et 5 ---
     private LocalDateTime meetingDate;    // Pour les entretiens et tests
+    private String meetingLocation;
     private String rejectionReason;        // Pour le motif de rejet (Spec 4.B)
     private List<ApplicationNoteDTO> notes;    // Pour le suivi interne
     private LocalDateTime createdAt;

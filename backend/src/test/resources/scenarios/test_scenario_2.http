@@ -132,13 +132,27 @@ Authorization: Bearer {{token_rh}}
 %}
 
 ### G. Action métier : Le RH traite la candidature
-PATCH http://localhost:8080/api/applications/{{app_id}}/status?status=SHORTLISTED
+PATCH http://localhost:8080/api/applications/{{app_id}}/status
 Authorization: Bearer {{token_rh}}
+Content-Type: application/json
 
+{
+  "status": "SHORTLISTED"
+}
 > {%
     client.test("Changement de statut réussi", function() {
          client.assert(response.status === 200);
         client.assert(response.body.status === "SHORTLISTED");
+    });
+%}
+
+### H. Test de confidentialité : Jean ne voit pas les candidatures globales
+GET http://localhost:8080/api/applications
+Authorization: Bearer {{token_candidat}}
+
+> {%
+    client.test("Sécurité : Le candidat n'a pas accès à la liste globale", function() {
+        client.assert(response.status === 403);
     });
 %}
 

@@ -12,7 +12,7 @@ public interface ApplicationService {
     public ApplicationDTO apply(Long jobOfferId, Long candidateId, String cvUrl, String coverLetter);
 
     @Transactional
-    ApplicationDTO scheduleInterview(Long applicationId, LocalDateTime date, Long interviewerId);
+    public ApplicationDTO scheduleInterview(Long applicationId, LocalDateTime date, Long interviewerId, String location);
 
     // Pour que le recruteur puisse voir toutes les candidatures
     List<ApplicationDTO> findAll();

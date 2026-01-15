@@ -117,6 +117,14 @@ public class EmployeServiceImpl implements EmployeService {
     }
 
     @Override
+    public List<EmployeDTO> findAll() {
+        return employeMapper.toDtos(
+                employeRepository.findAll().stream()
+                        .toList()
+        );
+    }
+
+    @Override
     public EmployeDTO findByUsername(String username) {
         EmployeEntity employe = employeRepository.findByUserUsername(username)
                 .orElseThrow(() -> new RuntimeException("Candidat introuvable avec l'id : " + username));

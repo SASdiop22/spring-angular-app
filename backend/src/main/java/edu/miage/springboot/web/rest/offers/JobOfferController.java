@@ -28,7 +28,7 @@ public class JobOfferController {
      * Spécification 2.A : Seules les offres OPEN sont accessibles publiquement.
      */
     @GetMapping
-    public List<JobOfferDTO> getAllPublished() {
+    public List<JobOfferDTO> getAllOpen() {
         return jobOfferService.findAllOpen();
     }
 
@@ -36,7 +36,7 @@ public class JobOfferController {
     public ResponseEntity<JobOfferDTO> getById(@PathVariable Long id) {
         JobOfferDTO offer = jobOfferService.findById(id);
         // Sécurité métier : interdire l'accès public aux brouillons
-        if (offer.getStatus() != JobStatusEnum.OPEN && !securityService.hasPrivilegedRole() ||  !securityService.isJobOfferOwner(id)) {
+        if (offer.getStatus() != JobStatusEnum.OPEN && (!securityService.hasPrivilegedRole() ||  !securityService.isJobOfferOwner(id))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(offer);
