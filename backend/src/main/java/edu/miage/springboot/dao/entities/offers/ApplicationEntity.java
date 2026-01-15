@@ -1,6 +1,7 @@
 package edu.miage.springboot.dao.entities.offers;
 
 import edu.miage.springboot.dao.entities.users.CandidatEntity;
+import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.users.UserEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -44,6 +45,14 @@ public class ApplicationEntity {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+    // L'employé chargé de faire passer l'entretien
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "interviewer_id")
+    private EmployeEntity interviewer;
+
+    // Le retour technique suite à l'entretien
+    @Column(name = "technical_feedback", columnDefinition = "TEXT")
+    private String technicalFeedback;
 
     @PrePersist
     protected void onCreate() {

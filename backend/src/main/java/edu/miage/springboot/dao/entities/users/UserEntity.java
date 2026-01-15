@@ -70,6 +70,12 @@ public class UserEntity {
     @Column(name = "user_type")
     private UserTypeEnum userType;
 
+    // Tags de compétences du candidat (ex: "Java", "Angular")
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "user_skills", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "skill")
+    private java.util.List<String> skills = new java.util.ArrayList<>();
+
     //Synchronisation bidirectionnelle de la relation avec EmployeEntity
     public void setReferentEmploye(EmployeEntity employe) {
     if (this.referentEmploye != null) {

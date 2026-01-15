@@ -138,4 +138,5 @@ public class ApplicationServiceImpl implements ApplicationService {
     public List<ApplicationDTO> findByCandidateId(Long candidateId) {
         return applicationMapper.toDtos(applicationRepository.findByCandidateId(candidateId));
     }
+
 }
