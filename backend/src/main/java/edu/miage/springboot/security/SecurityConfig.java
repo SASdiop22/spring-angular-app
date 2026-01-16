@@ -66,11 +66,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         // Autoriser explicitement les RH/ADMIN sur les actions de gestion
-                        //.requestMatchers(HttpMethod.POST, "/api/applications/*/hire").hasAnyAuthority("ROLE_ADMIN", "ROLE_RH")
-                        //.requestMatchers(HttpMethod.PATCH, "/api/applications/*/status").hasAnyAuthority("ROLE_ADMIN", "ROLE_RH")
-                        // Puis les règles plus larges
-                        //.requestMatchers("/api/applications/**").authenticated()*/
-                        .anyRequest().permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/applications/*/hire").hasAnyAuthority("ROLE_ADMIN", "ROLE_RH")
+                        .requestMatchers(HttpMethod.PATCH, "/api/applications/*/status").hasAnyAuthority("ROLE_ADMIN", "ROLE_RH")
+                         //Puis les règles plus larges
+                        .requestMatchers("/api/applications/**").authenticated()
+                        .anyRequest().authenticated()
                 )
 
                 .authenticationProvider(authenticationProvider())
