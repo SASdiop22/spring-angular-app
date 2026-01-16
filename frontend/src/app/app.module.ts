@@ -30,6 +30,7 @@ import { HeaderComponent } from "./components/header/header.component"
 import { JobCandidatesComponent } from "./pages/job-candidates/job-candidates.component"
 import { UserProfileComponent } from "./pages/user-profile/user-profile.component"
 import { UserApplicationsComponent } from "./pages/user-applications/user-applications.component"
+import { AdminDashboardComponent } from "./pages/admin-dashboard/admin-dashboard.component"
 
 @NgModule({
   declarations: [
@@ -47,6 +48,7 @@ import { UserApplicationsComponent } from "./pages/user-applications/user-applic
     JobCandidatesComponent,
     UserProfileComponent,
     UserApplicationsComponent,
+    AdminDashboardComponent,
   ],
   imports: [
     CommonModule,

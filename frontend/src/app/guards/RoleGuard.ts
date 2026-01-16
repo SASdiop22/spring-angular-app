@@ -25,6 +25,28 @@ export const RHGuard: CanActivateFn = (
   return router.createUrlTree(['/']);
 };
 
+export const AdminGuard: CanActivateFn = (
+):
+  Observable<boolean | UrlTree>
+  | Promise<boolean | UrlTree>
+  | boolean
+  | UrlTree => {
+
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.authenticated()) {
+    return router.createUrlTree(['/login']);
+  }
+
+  if (authService.isAdmin()) {
+    return true;
+  }
+
+  // Rediriger vers la page d'accueil si l'utilisateur n'est pas Admin
+  return router.createUrlTree(['/']);
+};
+
 export const CandicatGuard: CanActivateFn = (
 ):
   Observable<boolean | UrlTree>

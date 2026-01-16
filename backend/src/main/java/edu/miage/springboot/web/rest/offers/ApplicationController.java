@@ -31,7 +31,7 @@ public class ApplicationController {
     @Autowired
     private CandidatRepository candidatRepository;
 
-    private static final String UPLOAD_DIR = "backend/uploads/cvs/";
+    private static final String UPLOAD_DIR = "uploads/cvs/";
 
     /**
      * Endpoint pour uploader les fichiers (CV + LM) et créer une candidature

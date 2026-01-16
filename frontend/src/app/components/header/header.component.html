@@ -42,13 +42,17 @@
         class="nav-item user-menu"
       >
         <mat-icon>account_circle</mat-icon>
-        Menu
+        Moi
       </button>
 
       <mat-menu #menu="matMenu">
         <button mat-menu-item (click)="goToProfile()">
           <mat-icon>person</mat-icon>
           <span>Mon profil</span>
+        </button>
+        <button mat-menu-item *ngIf="isAdmin" (click)="goToAdmin()">
+          <mat-icon>admin_panel_settings</mat-icon>
+          <span>Administration</span>
         </button>
         <button mat-menu-item (click)="logout()">
           <mat-icon>logout</mat-icon>

@@ -3,7 +3,7 @@ import { RouterModule, type Routes } from "@angular/router"
 import { LoginComponent } from "./pages/login/login.component"
 import { FolderListComponent } from "./pages/folder-list/folder-list.component"
 import { AuthGuard } from "./guards/AuthGuard"
-import { RHGuard } from "./guards/RoleGuard"
+import { RHGuard, AdminGuard } from "./guards/RoleGuard"
 import { FileListComponent } from "./pages/file-list/file-list.component"
 import { HomeComponent } from "./pages/home/home.component"
 import { JobOffersListComponent } from "./pages/job-offers-list/job-offers-list.component"
@@ -14,10 +14,12 @@ import { DashboardComponent } from "./pages/dashboard/dashboard.component"
 import { JobCandidatesComponent } from "./pages/job-candidates/job-candidates.component"
 import { UserProfileComponent } from "./pages/user-profile/user-profile.component"
 import { UserApplicationsComponent } from "./pages/user-applications/user-applications.component"
+import { AdminDashboardComponent } from "./pages/admin-dashboard/admin-dashboard.component"
 
 const routes: Routes = [
   { path: "", component: HomeComponent },
   { path: "login", component: LoginComponent },
+  { path: "admin", component: AdminDashboardComponent, canActivate: [AdminGuard] },
   { path: "job-offers", component: JobOffersListComponent },
   { path: "job-offers/:id", component: JobDetailComponent },
   { path: "job-offers/:id/edit", component: AddJobOfferComponent, canActivate: [RHGuard] },

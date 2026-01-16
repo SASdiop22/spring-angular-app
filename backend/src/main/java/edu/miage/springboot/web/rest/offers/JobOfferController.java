@@ -118,7 +118,7 @@ public class JobOfferController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_RH')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         jobOfferService.deleteJobOffer(id);
         return ResponseEntity.noContent().build();

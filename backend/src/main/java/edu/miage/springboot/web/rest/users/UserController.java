@@ -62,6 +62,13 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUserPermanently(id);
+        return ResponseEntity.noContent().build();
+    }
+
     // Méthode de mapping (À déplacer idéalement dans un Service ou Mapper dédié)
     private UserDTO convertToDTO(UserEntity entity) {
         UserDTO dto = new UserDTO();

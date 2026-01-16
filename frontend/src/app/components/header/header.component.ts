@@ -12,6 +12,7 @@ import { Subscription } from "rxjs"
 export class HeaderComponent implements OnInit, OnDestroy {
   isAuthenticated = false
   isRH = false
+  isAdmin = false
   isCandidat = false
   userRole = "VISITOR"
   showMenu = false
@@ -29,6 +30,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.roleSubscription = this.roleService.role$.subscribe((role) => {
       this.userRole = role
       this.isRH = this.roleService.isRH()
+      this.isAdmin = this.authService.isAdmin()
       this.isCandidat = this.roleService.isCandidat()
       this.isAuthenticated = this.authService.authenticated()
     })
@@ -44,6 +46,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.isAuthenticated = this.authService.authenticated()
     this.userRole = this.authService.getUserRole()
     this.isRH = this.authService.isRH()
+    this.isAdmin = this.authService.isAdmin()
     this.isCandidat = this.authService.isCandidat()
   }
 
@@ -79,6 +82,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   goToAddJobOffer(): void {
     this.router.navigate(["/add-job-offer"])
+  }
+
+  goToAdmin(): void {
+    this.router.navigate(["/admin"])
   }
 }
 

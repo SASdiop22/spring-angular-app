@@ -119,11 +119,14 @@ export class JobDetailComponent implements OnInit {
     this.applying = true
     this.applicationError = null
 
-    // Pour l'instant, utiliser le nom du fichier comme URL (à remplacer par un vrai upload)
-    const cvUrl = this.cvFile.name
-    const coverLetterUrl = this.coverLetterFile ? this.coverLetterFile.name : undefined
-
-    this.applicationService.apply(this.jobOffer.id, candidateId, cvUrl, coverLetterUrl).subscribe({
+    // ✅ UTILISER applyWithFiles() pour uploader les fichiers réels
+    // coverLetterFile peut être null, donc passer undefined si null
+    this.applicationService.applyWithFiles(
+      this.jobOffer.id,
+      candidateId,
+      this.cvFile as File, // cvFile est certainement non-null (vérifié plus haut)
+      this.coverLetterFile || undefined // coverLetterFile peut être null
+    ).subscribe({
       next: () => {
         this.applicationSuccess = true
         this.applying = false

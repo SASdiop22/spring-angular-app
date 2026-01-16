@@ -149,4 +149,36 @@ public class UserServiceImpl {
         // 4. Sauvegarde et conversion finale
         return userMapper.toDto(userRepository.save(candidat));
     }
+
+    /**
+     * Supprime définitivement un utilisateur et toutes ses données associées
+     * ONLY FOR ADMIN
+     */
+    @Transactional
+    public void deleteUserPermanently(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
+
+        System.out.println("🗑️ Suppression définitive de l'utilisateur: " + user.getUsername() + " (ID: " + userId + ")");
+
+        // Supprimer les profils associés (Candidat ou Employé)
+        // Les relations en cascade doivent s'en charger
+        if (user.getCandidatProfile() != null) {
+            System.out.println("  - Suppression du profil candidat");
+            // Les cascades s'en chargeront
+        }
+
+        if (user.getEmployeProfile() != null) {
+            System.out.println("  - Suppression du profil employé");
+            // Les cascades s'en chargeront
+        }
+
+        // Supprimer les rôles
+        user.getRoles().clear();
+
+        // Supprimer l'utilisateur lui-même
+        userRepository.delete(user);
+
+        System.out.println("✅ Utilisateur " + user.getUsername() + " supprimé définitivement");
+    }
 }
