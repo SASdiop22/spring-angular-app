@@ -14,6 +14,9 @@ public interface JobOfferRepository extends JpaRepository<JobOfferEntity, Long> 
     List<JobOfferEntity> findByLocationContainingIgnoreCase(String location);
 
     List<JobOfferEntity> findByStatus(JobStatusEnum jobStatusEnum);
+
+    // Filtrage par plusieurs statuts
+    List<JobOfferEntity> findByStatusIn(List<JobStatusEnum> statuses);
 }
 
 

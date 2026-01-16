@@ -22,4 +22,7 @@ public interface ApplicationService {
     ApplicationDTO updateStatus(Long id, ApplicationStatusEnum status);
 
     ApplicationDTO findById(Long id);
+
+    // Nouvelle méthode : Récupérer les candidatures pour une offre d'emploi
+    List<ApplicationDTO> findByJobOfferId(Long jobOfferId);
 }

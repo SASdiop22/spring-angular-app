@@ -16,7 +16,7 @@ export class AddJobOfferComponent implements OnInit {
   contractTypes = ["CDI", "CDD", "Stage", "Alternance", "Freelance"]
   isEditMode = false
   offerId: number | null = null
-  deleteLoading = false
+  closeLoading = false
 
   constructor(
     private fb: FormBuilder,
@@ -43,8 +43,7 @@ export class AddJobOfferComponent implements OnInit {
       description: ["", [Validators.required, Validators.minLength(10)]],
       location: ["", [Validators.required]],
       contractType: ["CDI", [Validators.required]],
-      minSalary: ["", [Validators.required, Validators.min(0)]],
-      maxSalary: ["", [Validators.required, Validators.min(0)]],
+      salary: ["", [Validators.required, Validators.min(0)]],
       remoteDays: [0, [Validators.required, Validators.min(0), Validators.max(5)]],
       requiredSkills: ["", [Validators.required]],
       companyName: ["", [Validators.required]],
@@ -62,8 +61,7 @@ export class AddJobOfferComponent implements OnInit {
           description: offer.description,
           location: offer.location,
           contractType: offer.contractType,
-          minSalary: offer.minSalary || offer.salary,
-          maxSalary: offer.maxSalary || offer.salary,
+          salary: offer.salary || "",
           remoteDays: offer.remoteDays || 0,
           requiredSkills: offer.skillsRequired ? offer.skillsRequired.join(", ") : "",
           companyName: offer.companyName || "",
@@ -142,26 +140,27 @@ export class AddJobOfferComponent implements OnInit {
     }
   }
 
-  deleteOffer(): void {
+
+  closeOffer(): void {
     if (!this.offerId) return
 
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cette offre d'emploi ?")) {
+    if (!confirm("Êtes-vous sûr de vouloir clôturer cette offre d'emploi ? Elle n'apparaîtra plus aux candidats.")) {
       return
     }
 
-    this.deleteLoading = true
-    this.jobOfferService.deleteJobOffer(this.offerId).subscribe({
+    this.closeLoading = true
+    this.jobOfferService.closeJobOffer(this.offerId).subscribe({
       next: () => {
-        this.deleteLoading = false
-        this.successMessage = "Offre d'emploi supprimée avec succès!"
+        this.closeLoading = false
+        this.successMessage = "Offre d'emploi clôturée avec succès!"
         setTimeout(() => {
           this.router.navigate(["/job-offers"])
         }, 1500)
       },
       error: (error) => {
-        this.deleteLoading = false
+        this.closeLoading = false
         this.errorMessage =
-          error.error?.message || "Erreur lors de la suppression de l'offre"
+          error.error?.message || "Erreur lors de la clôture de l'offre"
       },
     })
   }

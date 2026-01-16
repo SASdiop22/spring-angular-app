@@ -115,12 +115,24 @@
       <aside class="detail-sidebar">
         <!-- Apply Card -->
         <div class="apply-card">
+          <!-- DEBUG: Afficher le rôle et isCandidat -->
+          <div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">
+            <p>Rôle: {{ authService.getUserRole() }}</p>
+            <p>isCandidat: {{ isCandidat }}</p>
+            <p>isAuthenticated: {{ isAuthenticated }}</p>
+          </div>
+
           <button
             *ngIf="!showApplicationForm && isCandidat"
             class="apply-btn"
             (click)="toggleApplicationForm()">
             Postuler maintenant
           </button>
+
+          <!-- Message si pas candidat -->
+          <div *ngIf="!isCandidat && isAuthenticated" class="alert alert-info" style="margin-bottom: 1rem; padding: 10px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 4px;">
+            <small>Vous devez être candidat pour postuler à cette offre.</small>
+          </div>
 
           <div class="info-grid">
             <div class="info-item" *ngIf="jobOffer.salary">
@@ -145,10 +157,21 @@
           </div>
         </div>
 
-        <!-- Company Info (placeholder) -->
+        <!-- Company Info -->
         <div class="company-card">
-          <h3>À propos de l'entreprise</h3>
-          <p>Rejoignez notre équipe dynamique et contribuez à des projets innovants.</p>
+          <h3>{{ jobOffer.companyName || 'À propos de l\'entreprise' }}</h3>
+          <p>{{ jobOffer.companyDescription || 'Aucune description disponible' }}</p>
+        </div>
+
+        <!-- View Candidates Button - Visible only for RH/Admin -->
+        <div class="candidates-action-card" *ngIf="isRH || isAdmin">
+          <h3><i class="fas fa-users"></i> Candidatures</h3>
+          <p>Consulter la liste des candidats qui ont postulé pour cette offre</p>
+          <button class="btn-view-candidates"
+                  [routerLink]="['/job-offers', jobOffer.id, 'candidates']"
+                  title="Voir les candidats">
+            <i class="fas fa-arrow-right"></i> Voir les candidats
+          </button>
         </div>
       </aside>
     </div>

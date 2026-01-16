@@ -1,11 +1,9 @@
 package edu.miage.springboot.services.impl.offers;
 
-import edu.miage.springboot.dao.entities.users.EmployeEntity;
 import edu.miage.springboot.dao.entities.offers.JobOfferEntity;
 import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
 import edu.miage.springboot.dao.entities.users.UserEntity;
 import edu.miage.springboot.dao.entities.users.UserTypeEnum;
-import edu.miage.springboot.dao.repositories.users.EmployeRepository;
 import edu.miage.springboot.dao.repositories.offers.JobOfferRepository;
 import edu.miage.springboot.dao.repositories.users.UserRepository;
 import edu.miage.springboot.services.interfaces.JobOfferService;
@@ -17,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -46,8 +45,10 @@ public class JobOfferServiceImpl implements JobOfferService {
     // --- Spec 2.A & 2.B : Visibilité publique ---
     @Override
     public List<JobOfferDTO> findAllOpen() {
-        // On ne récupère que les offres dont le statut est OPEN
-        List<JobOfferEntity> entities = jobOfferRepository.findByStatus(JobStatusEnum.OPEN);
+        // On récupère les offres OPEN (actives) et CLOSED (historique visible)
+        List<JobOfferEntity> entities = jobOfferRepository.findByStatusIn(
+                Arrays.asList(JobStatusEnum.OPEN, JobStatusEnum.CLOSED)
+        );
         return jobOfferMapper.entitiesToDtos(entities);
     }
 
@@ -88,7 +89,7 @@ public class JobOfferServiceImpl implements JobOfferService {
             case OPEN:
                 // Si le passage en OPEN nécessite des données RH (salaire/remote),
                 // on vérifie qu'elles existent ou on utilise des valeurs par défaut
-                if (jobOffer.getSalaryRange() == null) {
+                if (jobOffer.getSalary() == null) {
                     throw new IllegalStateException("Impossible de publier : le salaire doit être renseigné par les RH.");
                 }
                 jobOffer.setStatus(JobStatusEnum.OPEN);
@@ -168,13 +169,18 @@ public class JobOfferServiceImpl implements JobOfferService {
         JobOfferEntity existing = jobOfferRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Offre introuvable"));
 
+        // Mettre à jour tous les champs modifiables
         existing.setTitle(dto.getTitle());
         existing.setDescription(dto.getDescription());
+        existing.setCompanyName(dto.getCompanyName());
+        existing.setCompanyDescription(dto.getCompanyDescription());
+        existing.setContractType(dto.getContractType());
         existing.setDeadline(dto.getDeadline());
         existing.setDepartment(dto.getDepartment());
-        existing.setSkillsRequired(dto.getSkillsRequired());
         existing.setLocation(dto.getLocation());
-        // Note: Le salaire et le statut sont généralement gérés par des méthodes dédiées (workflow)
+        existing.setSalary(dto.getSalary());
+        existing.setRemoteDays(dto.getRemoteDays());
+        existing.setSkillsRequired(dto.getSkillsRequired());
 
         return jobOfferMapper.entityToDto(jobOfferRepository.save(existing));
     }

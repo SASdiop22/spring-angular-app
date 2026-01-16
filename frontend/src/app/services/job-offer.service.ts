@@ -48,4 +48,9 @@ export class JobOfferService {
   deleteJobOffer(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`)
   }
+
+  // Clôture une offre d'emploi (change son statut à CLOSED)
+  closeJobOffer(id: number): Observable<JobOffer> {
+    return this.http.patch<JobOffer>(`${this.apiUrl}/${id}/close`, {})
+  }
 }

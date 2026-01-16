@@ -43,23 +43,52 @@ export class AuthService {
 
           let role = null;
 
-          // Chercher le rôle dans le token (idéalement)
+          // 1. Chercher le rôle dans le champ 'role' du token
           if (decodedToken && decodedToken.role) {
             role = decodedToken.role;
-            console.log('🔑 AuthService.login() - Role trouvé dans token:', role);
+            console.log('🔑 AuthService.login() - Role trouvé dans token.role:', role);
           }
-          // Fallback: extraire le rôle du username (alice.rh -> RH)
-          else if (decodedToken && decodedToken.sub) {
-            const username = decodedToken.sub;
-            console.log('🔑 AuthService.login() - Extraction du rôle du username:', username);
+          // 2. Chercher dans le champ 'authorities' du token
+          else if (decodedToken && decodedToken.authorities) {
+            const authorities = Array.isArray(decodedToken.authorities)
+              ? decodedToken.authorities
+              : [decodedToken.authorities];
+            console.log('🔑 AuthService.login() - Authorities trouvées:', authorities);
 
-            if (username.includes('.rh')) {
+            if (authorities.some((auth: any) => auth.includes('RH'))) {
               role = 'RH';
-            } else if (username.includes('.candidat') || username.includes('.candidate')) {
+            } else if (authorities.some((auth: any) => auth.includes('CANDIDAT'))) {
               role = 'CANDIDAT';
-            } else if (username.includes('.admin')) {
+            } else if (authorities.some((auth: any) => auth.includes('ADMIN'))) {
               role = 'ADMIN';
             }
+          }
+          // 3. Fallback: extraire le rôle du username
+          else if (decodedToken && decodedToken.sub) {
+            const username = decodedToken.sub.toLowerCase();
+            console.log('🔑 AuthService.login() - Extraction du rôle du username:', username);
+
+            // Chercher les patterns dans le username
+            if (username.includes('.rh') || username.includes('rh')) {
+              role = 'RH';
+            } else if (username.includes('.candidat') || username.includes('candidat') ||
+                       username.includes('.candidate') || username.includes('candidate') ||
+                       username.includes('candidate_')) {
+              role = 'CANDIDAT';
+            } else if (username.includes('.admin') || username.includes('admin')) {
+              role = 'ADMIN';
+            }
+            // Si le username contient 'rgpd', c'est un candidat
+            else if (username.includes('rgpd')) {
+              role = 'CANDIDAT';
+              console.log('🔑 AuthService.login() - Username contient RGPD, assigné en CANDIDAT');
+            }
+            // Default : si connecté et aucun pattern trouvé, assigner CANDIDAT
+            else {
+              role = 'CANDIDAT';
+              console.log('🔑 AuthService.login() - Assigné par défaut en CANDIDAT');
+            }
+
             console.log('🔑 AuthService.login() - Role extrait du username:', role);
           }
 
@@ -68,6 +97,8 @@ export class AuthService {
             this.roleService.setRole(role);
           } else {
             console.warn('⚠️ AuthService.login() - Impossible de trouver le rôle!', decodedToken);
+            // Par défaut, assigner CANDIDAT si authentifié
+            this.roleService.setRole('CANDIDAT');
           }
         }
       })
@@ -93,6 +124,37 @@ export class AuthService {
   isAdmin(): boolean {
     return this.roleService.getRole() === "ADMIN";
   }
+
+  /**
+   * Récupère l'ID de l'utilisateur connecté depuis le token JWT
+   */
+  getCurrentUserId(): number | null {
+    const token = sessionStorage.getItem("ACCESS_TOKEN");
+    if (!token) {
+      console.warn('⚠️ AuthService.getCurrentUserId() - No token found');
+      return null;
+    }
+
+    const decodedToken = this.decodeToken(token);
+    if (!decodedToken) {
+      console.warn('⚠️ AuthService.getCurrentUserId() - Could not decode token');
+      return null;
+    }
+
+    console.log('🔍 AuthService.getCurrentUserId() - Decoded token:', decodedToken);
+
+    // Chercher l'ID dans le token - priorité: userId, puis id, puis user_id
+    let userId = decodedToken.userId || decodedToken.id || decodedToken.user_id;
+
+    if (userId && typeof userId === 'number') {
+      console.log('👤 AuthService.getCurrentUserId() - Found userId:', userId);
+      return userId;
+    }
+
+    console.warn('⚠️ AuthService.getCurrentUserId() - No valid userId found in token');
+    return null;
+  }
+
 
   private decodeToken(token: string): any {
     try {

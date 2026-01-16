@@ -1,7 +1,9 @@
 package edu.miage.springboot.web.rest.offers;
 
 import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
+import edu.miage.springboot.services.interfaces.ApplicationService;
 import edu.miage.springboot.services.interfaces.JobOfferService;
+import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
 import edu.miage.springboot.web.dtos.offers.JobOfferDTO;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,9 @@ public class JobOfferController {
 
     @Autowired
     private JobOfferService jobOfferService;
+
+    @Autowired
+    private ApplicationService applicationService;
 
     // --- ACCÈS PUBLIC (Visiteurs & Candidats) ---
 
@@ -46,6 +51,18 @@ public class JobOfferController {
     @GetMapping("/{id}")
     public ResponseEntity<JobOfferDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(jobOfferService.findById(id));
+    }
+
+    /**
+     * Spécification 4.A : Seuls les RH/ADMIN peuvent consulter les candidatures.
+     * Récupère la liste des candidats qui ont postulé pour une offre d'emploi,
+     * triés par score de correspondance décroissant.
+     */
+    @GetMapping("/{id}/candidates")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_RH') or @securityService.isJobOfferOwner(#id)")
+    public ResponseEntity<List<ApplicationDTO>> getApplicationsByJobOffer(@PathVariable Long id) {
+        List<ApplicationDTO> applications = applicationService.findByJobOfferId(id);
+        return ResponseEntity.ok(applications);
     }
 
     // --- ACCÈS EMPLOYÉ / DEMANDEUR (Spec 2.A) ---

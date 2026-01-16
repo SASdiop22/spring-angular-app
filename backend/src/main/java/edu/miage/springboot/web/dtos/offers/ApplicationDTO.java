@@ -25,4 +25,5 @@ public class ApplicationDTO {
     private String rejectionReason;        // Pour le motif de rejet (Spec 4.B)
     private List<ApplicationNoteDTO> notes;    // Pour le suivi interne
     private LocalDateTime createdAt;
+    private Integer matchingScore;        // Score de correspondance (0-100)
 }

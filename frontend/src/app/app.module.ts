@@ -27,6 +27,7 @@ import { AddJobOfferComponent } from "./pages/add-job-offer/add-job-offer.compon
 import { CandidatesComponent } from "./pages/candidates/candidates.component"
 import { DashboardComponent } from "./pages/dashboard/dashboard.component"
 import { HeaderComponent } from "./components/header/header.component"
+import { JobCandidatesComponent } from "./pages/job-candidates/job-candidates.component"
 
 @NgModule({
   declarations: [
@@ -41,6 +42,7 @@ import { HeaderComponent } from "./components/header/header.component"
     CandidatesComponent,
     DashboardComponent,
     HeaderComponent,
+    JobCandidatesComponent,
   ],
   imports: [
     CommonModule,

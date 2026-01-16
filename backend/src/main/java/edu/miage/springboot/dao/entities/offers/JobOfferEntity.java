@@ -25,11 +25,15 @@ public class JobOfferEntity {
     private String title;
     @Column(length = 2000)
     private String description;
+    private String companyName;
+    @Column(length = 2000)
+    private String companyDescription;
+    private String contractType;
     private LocalDate deadline;
     //@Enumerated(EnumType.STRING)
     private String department;
     private String location;
-    private Double salaryRange; // Enrichi par les RH
+    private Double salary; // Salaire unique (peut être une valeur estimée ou moyenne)
     private Integer remoteDays; // Enrichi par les RH - Spécification 2.A
 
     @Enumerated(EnumType.STRING)
@@ -65,6 +69,10 @@ public class JobOfferEntity {
     @Column(name = "skill")
     private List<String> skills = new ArrayList<>();
 
+    // Relations avec les applications - Pas de cascade delete car on clôture l'offre au lieu de la supprimer
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    private List<ApplicationEntity> applications = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -76,8 +84,8 @@ public class JobOfferEntity {
         }
     }
 
-    public void validateAndPublish(Double salaryRange, Integer remoteDays) {
-        this.salaryRange = salaryRange;
+    public void validateAndPublish(Double salary, Integer remoteDays) {
+        this.salary = salary;
         this.remoteDays = remoteDays;
         this.status = JobStatusEnum.OPEN;
         this.publishedAt = LocalDateTime.now();

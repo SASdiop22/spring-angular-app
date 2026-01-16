@@ -11,4 +11,5 @@ export interface Application {
   meetingDate?: string
   rejectionReason?: string
   createdAt: string
+  matchingScore?: number
 }

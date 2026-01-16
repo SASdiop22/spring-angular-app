@@ -11,6 +11,7 @@ import { JobDetailComponent } from "./pages/job-detail/job-detail.component"
 import { AddJobOfferComponent } from "./pages/add-job-offer/add-job-offer.component"
 import { CandidatesComponent } from "./pages/candidates/candidates.component"
 import { DashboardComponent } from "./pages/dashboard/dashboard.component"
+import { JobCandidatesComponent } from "./pages/job-candidates/job-candidates.component"
 
 const routes: Routes = [
   { path: "", component: HomeComponent },
@@ -18,6 +19,7 @@ const routes: Routes = [
   { path: "job-offers", component: JobOffersListComponent },
   { path: "job-offers/:id", component: JobDetailComponent },
   { path: "job-offers/:id/edit", component: AddJobOfferComponent, canActivate: [RHGuard] },
+  { path: "job-offers/:id/candidates", component: JobCandidatesComponent, canActivate: [AuthGuard] },
   { path: "candidates", component: CandidatesComponent },
   { path: "add-job-offer", component: AddJobOfferComponent, canActivate: [RHGuard] },
   { path: "dashboard", component: DashboardComponent, canActivate: [AuthGuard] },

@@ -80,9 +80,9 @@
                 <mat-icon>location_on</mat-icon>
                 <span>{{ job.location }}</span>
               </div>
-              <div class="info-item" *ngIf="job.salaryRange">
+              <div class="info-item" *ngIf="job.salary">
                 <mat-icon>payments</mat-icon>
-                <span>{{ job.salaryRange }}€</span>
+                <span>{{ job.salary | number:'1.0-0' }}€</span>
               </div>
               <div class="info-item" *ngIf="job.remoteDays !== null && job.remoteDays !== undefined">
                 <mat-icon>home</mat-icon>

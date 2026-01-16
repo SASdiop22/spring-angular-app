@@ -1,0 +1,125 @@
+-- Insertion de données initiales pour les offres d'emploi
+
+-- Insérer les offres d'emploi avec types de contrat, noms et descriptions d'entreprises
+INSERT INTO job_offers (
+  id, title, description, company_name, company_description, contract_type,
+  location, salary, remote_days, status, department, created_at, creator_id
+) VALUES
+(
+  1,
+  'Développeur Full Stack Angular',
+  'Nous recherchons un développeur Full Stack passionné pour rejoindre notre équipe. Vous travaillerez sur des applications web modernes avec Angular en frontend et Java/Spring en backend. Vous aurez l''opportunité d''apprendre les meilleures pratiques du développement logiciel et de contribuer à des projets innovants.',
+  'TechCorp Solutions',
+  'TechCorp Solutions est une entreprise spécialisée dans le développement de solutions informatiques innovantes. Fondée en 2015, nous travaillons avec des clients de tous les secteurs pour transformer leurs besoins métier en solutions technologiques performantes.',
+  'CDI',
+  'Paris',
+  3500.00,
+  3,
+  'OPEN',
+  'Développement',
+  NOW(),
+  1
+),
+(
+  2,
+  'Ingénieur DevOps Cloud',
+  'Rejoignez notre équipe DevOps pour gérer et optimiser notre infrastructure cloud AWS. Vous serez en charge de l''orchestration des conteneurs avec Kubernetes, de l''infrastructure-as-code avec Terraform, et de la mise en place de pipelines CI/CD robustes. Vous collaborerez avec les développeurs pour améliorer le processus de déploiement.',
+  'CloudInnovate Inc',
+  'CloudInnovate Inc est un leader en solutions cloud pour les entreprises. Nous aidons les organisations à migrer, sécuriser et optimiser leurs infrastructures informatiques sur le cloud.',
+  'CDI',
+  'Lyon',
+  4000.00,
+  4,
+  'OPEN',
+  'Infrastructure',
+  NOW(),
+  1
+),
+(
+  3,
+  'Développeur Python Backend',
+  'Nous recherchons un développeur Python compétent pour développer et maintenir nos services backend. Vous travaillerez avec Django/FastAPI et PostgreSQL. Vous participerez à la conception d''APIs RESTful et à l''optimisation des performances. Vous collaborerez avec l''équipe frontend et les data scientists.',
+  'DataFlow Technologies',
+  'DataFlow Technologies est une startup innovante spécialisée dans l''analyse de données et l''apprentissage automatique. Nous aidons les entreprises à extraire de la valeur de leurs données.',
+  'Stage',
+  'Toulouse',
+  2500.00,
+  2,
+  'OPEN',
+  'Développement',
+  NOW(),
+  1
+),
+(
+  4,
+  'Product Manager',
+  'En tant que Product Manager, vous piloterez la stratégie produit de nos applications SaaS. Vous travaillerez en étroite collaboration avec les développeurs, les designers et les clients pour définir les roadmaps produit et identifier les opportunities de croissance. Vous analyserez les données utilisateur pour prendre des décisions éclairées.',
+  'SaaS Ventures',
+  'SaaS Ventures est un éditeur de logiciels cloud proposant des solutions de gestion collaboratives pour les entreprises. Nous servons des milliers de clients dans 50 pays.',
+  'CDI',
+  'Bordeaux',
+  4500.00,
+  5,
+  'OPEN',
+  'Produit',
+  NOW(),
+  1
+),
+(
+  5,
+  'Alternant(e) Développeur Frontend React',
+  'Nous proposons un contrat d''alternance d''une durée de 12 mois. Vous renforcerez notre équipe frontend en développant des interfaces utilisateur modernes avec React et TypeScript. Vous travaillerez sur des projets réels qui impactent nos utilisateurs. Vous bénéficierez d''un mentoring personnalisé et d''une formation continue.',
+  'WebCreative Studio',
+  'WebCreative Studio est une agence web créative spécialisée dans le développement de sites et d''applications web sur-mesure pour les PME et les startups. Notre équipe créative allie design innovant et technologies modernes.',
+  'Alternance',
+  'Nantes',
+  1200.00,
+  1,
+  'OPEN',
+  'Développement',
+  NOW(),
+  1
+),
+(
+  6,
+  'Développeur Java Senior',
+  'Nous cherchons un développeur Java expérimenté pour architected nos systèmes backend critiques. Vous aurez l''opportunité de mentorer les juniors, de participer aux décisions architecturales et de travailler sur des problèmes d''échelle. Vous utiliserez Spring Boot, Kafka et PostgreSQL dans un environnement microservices.',
+  'EnterpriseSoft Inc',
+  'EnterpriseSoft Inc fournit des solutions logicielles aux grandes entreprises. Avec 20 ans d''expérience, nous servons plus de 500 clients Fortune 500 à travers le monde.',
+  'CDI',
+  'Lyon',
+  5500.00,
+  2,
+  'OPEN',
+  'Développement',
+  NOW(),
+  1
+);
+
+-- Insertion des compétences pour chaque offre
+INSERT INTO job_skills (job_id, skill) VALUES
+(1, 'Angular'),
+(1, 'TypeScript'),
+(1, 'Spring Boot'),
+(1, 'PostgreSQL'),
+(2, 'AWS'),
+(2, 'Kubernetes'),
+(2, 'Terraform'),
+(2, 'Docker'),
+(3, 'Python'),
+(3, 'Django'),
+(3, 'PostgreSQL'),
+(3, 'API REST'),
+(4, 'Stratégie Produit'),
+(4, 'Analytics'),
+(4, 'User Research'),
+(4, 'Agile'),
+(5, 'React'),
+(5, 'TypeScript'),
+(5, 'CSS'),
+(5, 'JavaScript'),
+(6, 'Java'),
+(6, 'Spring Boot'),
+(6, 'Microservices'),
+(6, 'Kafka');
+

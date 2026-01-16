@@ -18,7 +18,9 @@ export class JobDetailComponent implements OnInit {
   showApplicationForm = false
   isAuthenticated = false
   isRH = false
+  isAdmin = false
   isCandidat = false
+  currentUserId: number | null = null
 
   // Formulaire de candidature
   cvUrl = ""
@@ -34,13 +36,19 @@ export class JobDetailComponent implements OnInit {
     private router: Router,
     private jobOfferService: JobOfferService,
     private applicationService: ApplicationService,
-    private authService: AuthService,
+    public authService: AuthService,
   ) {}
 
   ngOnInit(): void {
     this.isAuthenticated = this.authService.authenticated()
     this.isRH = this.authService.isRH()
+    this.isAdmin = this.authService.isAdmin()
     this.isCandidat = this.authService.isCandidat()
+
+    // Récupérer l'ID de l'utilisateur connecté
+    this.currentUserId = this.authService.getCurrentUserId()
+    console.log('👤 Current User ID:', this.currentUserId)
+
     const id = this.route.snapshot.paramMap.get("id")
 
     if (id) {
@@ -77,6 +85,11 @@ export class JobDetailComponent implements OnInit {
       return
     }
 
+    if (!this.currentUserId) {
+      this.applicationError = "Vous devez être connecté pour postuler"
+      return
+    }
+
     // Validation du fichier CV
     if (!this.cvFile.name.endsWith('.pdf')) {
       this.applicationError = "Le CV doit être au format PDF"
@@ -100,8 +113,8 @@ export class JobDetailComponent implements OnInit {
       }
     }
 
-    // TODO: Récupérer le vrai candidateId depuis l'utilisateur connecté
-    const candidateId = 1 // À remplacer par l'ID réel du candidat connecté
+    // Utiliser l'ID réel du candidat connecté
+    const candidateId = this.currentUserId
 
     this.applying = true
     this.applicationError = null

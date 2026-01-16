@@ -33,4 +33,12 @@ export class ApplicationService {
   getAllApplications(): Observable<Application[]> {
     return this.http.get<Application[]>(this.apiUrl)
   }
+
+  /**
+   * Récupère les candidatures pour une offre d'emploi spécifique
+   * Triées automatiquement par score de correspondance décroissant
+   */
+  getApplicationsByJobOffer(jobOfferId: number): Observable<Application[]> {
+    return this.http.get<Application[]>(`${geturl()}/api/joboffers/${jobOfferId}/candidates`)
+  }
 }

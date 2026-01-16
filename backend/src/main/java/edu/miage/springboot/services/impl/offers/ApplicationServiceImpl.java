@@ -184,4 +184,11 @@ public class ApplicationServiceImpl implements ApplicationService {
                 status == ApplicationStatusEnum.OFFER_PENDING;
     }
 
+    @Override
+    public List<ApplicationDTO> findByJobOfferId(Long jobOfferId) {
+        JobOfferEntity job = jobOfferRepository.findById(jobOfferId)
+                .orElseThrow(() -> new RuntimeException("Offre d'emploi introuvable"));
+        return applicationMapper.toDtos(applicationRepository.findByJobOrderByMatchingScoreDesc(job));
+    }
+
 }

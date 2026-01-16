@@ -368,6 +368,70 @@
       line-height: 1.6;
     }
   }
+
+  .candidates-action-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    color: white;
+    margin-top: 1rem;
+
+    h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i {
+        font-size: 1.25rem;
+      }
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .btn-view-candidates {
+      width: 100%;
+      padding: 0.75rem 1.25rem;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
+        transform: translateY(-2px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      i {
+        transition: transform 0.2s ease;
+      }
+
+      &:hover i {
+        transform: translateX(4px);
+      }
+    }
+  }
 }
 
 @keyframes spin {
@@ -389,4 +453,3 @@
     font-size: 2rem;
   }
 }
-

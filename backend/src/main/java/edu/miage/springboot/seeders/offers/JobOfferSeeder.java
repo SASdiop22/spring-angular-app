@@ -46,7 +46,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             3,
             LocalDate.now().plusDays(30),
             Arrays.asList("Java", "Spring Boot", "PostgreSQL", "Docker"),
-            "CDI"
+            "CDI",
+            "TechVision Solutions",
+            "TechVision Solutions est une entreprise leader en ingénierie logicielle et transformation digitale. " +
+            "Fondée en 2010, nous accompagnons les grandes entreprises dans leurs projets de modernisation technologique. " +
+            "Basée à Paris, notre équipe de 150+ experts conçoit des solutions cloud-native innovantes."
         );
 
         createOffer(
@@ -64,7 +68,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             4,
             LocalDate.now().plusDays(45),
             Arrays.asList("AWS", "Kubernetes", "Terraform", "CI/CD"),
-            "CDI"
+            "CDI",
+            "CloudNative Systems",
+            "CloudNative Systems spécialise dans l'infrastructure cloud et DevOps pour les startups tech et PME ambitieuses. " +
+            "Depuis 2015, nous aidons nos clients à optimiser leurs déploiements et à réduire leurs coûts cloud. " +
+            "Notre expertise couvre AWS, Azure et GCP avec une équipe de 80+ ingénieurs."
         );
 
         createOffer(
@@ -81,7 +89,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             5,
             LocalDate.now().plusDays(30),
             Arrays.asList("React", "TypeScript", "Angular", "CSS"),
-            "CDI"
+            "CDI",
+            "DigitalFront Agency",
+            "DigitalFront Agency est une agence web spécialisée dans la création d'applications web haut de gamme. " +
+            "Créée en 2012, nous travaillons avec des clients Fortune 500 et des startups innovantes pour créer des expériences utilisateur exceptionnelles. " +
+            "Notre équipe de 60+ développeurs frontend est basée à Toulouse et dans toute la France."
         );
 
         createOffer(
@@ -98,7 +110,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             3,
             LocalDate.now().plusDays(35),
             Arrays.asList("Python", "SQL", "Power BI", "Machine Learning"),
-            "CDI"
+            "CDI",
+            "DataLake Analytics",
+            "DataLake Analytics est le partenaire de référence en intelligence artificielle et big data analytics. " +
+            "Depuis 2016, nous aidons les entreprises à valoriser leurs données pour prendre de meilleures décisions. " +
+            "Basée à Bordeaux, notre startup de 45+ data scientists et ML engineers travaille sur des projets complexes et stimulants."
         );
 
         // === OFFRES RESSOURCES HUMAINES ===
@@ -116,7 +132,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             2,
             LocalDate.now().plusDays(40),
             Arrays.asList("Recrutement", "SIRH", "Gestion de paie", "Droit social"),
-            "CDI"
+            "CDI",
+            "HR Connect Consulting",
+            "HR Connect Consulting est un cabinet de conseil RH spécialisé dans le recrutement et la gestion des talents. " +
+            "Depuis 2008, nous accompagnons les PME et ETI dans la construction de leurs politiques RH innovantes. " +
+            "Basée à Paris, notre équipe de 30+ consultants travaille sur des missions stratégiques et opérationnelles."
         );
 
         createOffer(
@@ -133,7 +153,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             2,
             LocalDate.now().plusDays(25),
             Arrays.asList("Recrutement", "Sourcing", "Entretiens", "LinkedIn"),
-            "CDI"
+            "CDI",
+            "TalentHunt Groupe",
+            "TalentHunt Groupe est une agence de recrutement spécialisée dans la recherche de talents en ingénierie et digital. " +
+            "Créée en 2014, nous plaçons plus de 500 candidats par an dans les meilleures entreprises tech du pays. " +
+            "Notre réseau comprend les plus grands groupes français et les startups prometteuses."
         );
 
         // === OFFRES FINANCE ===
@@ -151,7 +175,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             2,
             LocalDate.now().plusDays(30),
             Arrays.asList("Contrôle de gestion", "Excel", "SAP", "Reporting"),
-            "CDI"
+            "CDI",
+            "FinanceFlow Pro",
+            "FinanceFlow Pro est un groupe international spécialisé dans la gestion financière et le conseil fiscal. " +
+            "Présent dans 25 pays, nous aidons les entreprises à optimiser leur gestion financière et fiscale. " +
+            "Basée à Paris avec plus de 200 collaborateurs, notre expertise couvre la consolidation, l'audit et le contrôle de gestion."
         );
 
         createOffer(
@@ -168,7 +196,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             1,
             LocalDate.now().plusDays(35),
             Arrays.asList("Comptabilité", "Fiscalité", "Audit", "Conformité"),
-            "CDI"
+            "CDI",
+            "Expertise Comptable Rhône-Alpes",
+            "Expertise Comptable Rhône-Alpes est un cabinet leader en expertise comptable et audit avec plus de 40 ans d'expérience. " +
+            "Avec des bureaux à Lyon, Grenoble et Saint-Étienne, nous accompagnons PME et ETI dans leur gestion comptable et fiscale. " +
+            "Notre équipe de 50+ experts comptables maîtrise les normes IFRS et les exigences réglementaires."
         );
 
         // === OFFRES MARKETING ===
@@ -186,7 +218,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             3,
             LocalDate.now().plusDays(30),
             Arrays.asList("SEO", "SEM", "Email Marketing", "Analytics"),
-            "CDI"
+            "CDI",
+            "Digital Wave Marketing",
+            "Digital Wave Marketing est une agence marketing digitale innovante spécialisée dans le growth marketing et l'acquisition client. " +
+            "Depuis 2013, nous aidons les PME et ETI à accélérer leur croissance à travers des stratégies digitales intégrées. " +
+            "Notre équipe de 40+ experts couvre SEO, SEM, content marketing et marketing automation."
         );
 
         createOffer(
@@ -203,7 +239,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             4,
             LocalDate.now().plusDays(20),
             Arrays.asList("Social Media", "Content Creation", "Community Management", "Copywriting"),
-            "CDI"
+            "Freelance",
+            "Social Impact Agency",
+            "Social Impact Agency est une agence spécialisée dans les réseaux sociaux et le community management pour les marques modernes. " +
+            "Créée en 2017, nous créons des communautés engagées et authentiques sur tous les réseaux sociaux. " +
+            "Notre équipe de 25+ content creators et community managers crée du contenu viral et pertinent."
         );
 
         // === OFFRES VENTES ===
@@ -221,7 +261,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             2,
             LocalDate.now().plusDays(25),
             Arrays.asList("Ventes B2B", "CRM", "Négociation", "Anglais"),
-            "CDI"
+            "CDI",
+            "SaaS Enterprise Solutions",
+            "SaaS Enterprise Solutions est un éditeur de logiciels SaaS leader dans la gestion d'entreprise pour les PME. " +
+            "Créée en 2010 et basée à Paris, nous servons plus de 5000 clients avec nos solutions cloud innovantes. " +
+            "Notre équipe de 200+ collaborateurs est composée d'experts en vente, technologie et service client."
         );
 
         createOffer(
@@ -238,7 +282,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             3,
             LocalDate.now().plusDays(35),
             Arrays.asList("Business Development", "Prospection", "Anglais", "Négociation"),
-            "CDI"
+            "Alternance",
+            "Global Tech Partners",
+            "Global Tech Partners est un leader mondial en solutions technologiques pour les entreprises. " +
+            "Présent dans 35 pays, nous créons des partenariats stratégiques avec les meilleurs prestataires globaux. " +
+            "Notre équipe de 100+ business developers basée à Lyon gère un portefeuille de partenaires de plusieurs milliards d'euros."
         );
 
         // === OFFRES AVEC STATUT DRAFT (non publiées) ===
@@ -256,7 +304,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             2,
             LocalDate.now().plusDays(60),
             Arrays.asList("Architecture", "Scalabilité", "Microservices", "Cloud"),
-            "CDI"
+            "Stage",
+            "TechVision Solutions",
+            "TechVision Solutions est une entreprise leader en ingénierie logicielle et transformation digitale. " +
+            "Fondée en 2010, nous accompagnons les grandes entreprises dans leurs projets de modernisation technologique. " +
+            "Basée à Paris, notre équipe de 150+ experts conçoit des solutions cloud-native innovantes."
         );
 
         createOffer(
@@ -273,7 +325,11 @@ public class JobOfferSeeder implements CommandLineRunner {
             3,
             LocalDate.now().plusDays(50),
             Arrays.asList("Agile", "Scrum", "Kanban", "Leadership"),
-            "CDI"
+            "CDD",
+            "Agile Transformation Experts",
+            "Agile Transformation Experts est un cabinet de conseil spécialisé dans la transformation agile et l'amélioration continue. " +
+            "Depuis 2012, nous aidons les organisations à adopter les pratiques agiles et à améliorer leur productivité. " +
+            "Basée à Bordeaux, notre équipe de 35+ consultants agiles accompagne les plus grandes entreprises françaises."
         );
 
         System.out.println("✓ JobOfferSeeder : " + jobOfferRepository.count() + " offres créées");
@@ -290,7 +346,9 @@ public class JobOfferSeeder implements CommandLineRunner {
         Integer remoteDays,
         LocalDate deadline,
         java.util.List<String> skills,
-        String contractType
+        String contractType,
+        String compagnyName,
+        String compagnyDescription
     ) {
         JobOfferEntity offer = new JobOfferEntity();
         offer.setTitle(title);
@@ -299,7 +357,7 @@ public class JobOfferSeeder implements CommandLineRunner {
         offer.setStatus(status);
         offer.setDepartment(department);
         offer.setLocation(location);
-        offer.setSalaryRange(salaryRange);
+        offer.setSalary(salaryRange);
         offer.setRemoteDays(remoteDays);
         offer.setDeadline(deadline);
 
@@ -314,7 +372,9 @@ public class JobOfferSeeder implements CommandLineRunner {
             offer.setPublishedAt(LocalDateTime.now());
         }
         offer.setCreatedAt(LocalDateTime.now());
-
+        offer.setContractType(contractType);
+        offer.setCompanyName(compagnyName);
+        offer.setCompanyDescription(compagnyDescription);
         jobOfferRepository.save(offer);
     }
 }

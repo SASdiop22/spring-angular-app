@@ -98,7 +98,13 @@
         <div *ngFor="let offer of filteredOffers" class="offer-card" (click)="viewDetails(offer.id)">
           <div class="offer-header">
             <h3>{{ offer.title }}</h3>
-            <span class="contract-badge">{{ offer.contractType }}</span>
+            <div class="badges-container">
+              <span class="contract-badge">{{ offer.contractType }}</span>
+              <span *ngIf="offer.status === 'CLOSED'" class="closed-badge">
+                <mat-icon>lock</mat-icon>
+                Clôturée
+              </span>
+            </div>
           </div>
 
           <p class="offer-description">{{ offer.description }}</p>
@@ -132,19 +138,23 @@
 
           <div class="offer-footer">
             <button class="view-btn" (click)="viewDetails(offer.id)">Voir l'offre</button>
-            <!-- Bouton Candidater visible uniquement pour les candidats -->
+            <!-- Bouton Candidater visible uniquement pour les candidats (désactivé si offre clôturée) -->
             <button
               *ngIf="isCandidat"
               class="apply-btn"
+              [disabled]="offer.status === 'CLOSED'"
+              [title]="offer.status === 'CLOSED' ? 'Cette offre est clôturée' : ''"
               (click)="viewDetails(offer.id)">
-              Candidater
+              {{ offer.status === 'CLOSED' ? 'Offre clôturée' : 'Candidater' }}
             </button>
-            <!-- Bouton Modifier visible uniquement pour les RH -->
+            <!-- Bouton Modifier visible uniquement pour les RH (désactivé si offre clôturée) -->
             <button
               *ngIf="isRH"
               class="edit-btn"
+              [disabled]="offer.status === 'CLOSED'"
+              [title]="offer.status === 'CLOSED' ? 'Impossible de modifier une offre clôturée' : ''"
               (click)="editOffer(offer.id)">
-              Modifier
+              {{ offer.status === 'CLOSED' ? 'Clôturée' : 'Modifier' }}
             </button>
           </div>
         </div>

@@ -27,8 +27,8 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
   searchKeyword = ""
   selectedContractType = ""
   selectedLocation = ""
-  minSalary: number | null = null
-  maxSalary: number | null = null
+  minSalary: number = 0 // Par défaut 0
+  maxSalary: number = 1000000 // Par défaut une grande valeur
   selectedRemoteDays = ""
 
   // Options pour les filtres
@@ -102,11 +102,8 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
       // Filtre par localisation
       const matchesLocation = !this.selectedLocation || offer.location === this.selectedLocation
 
-      // Filtre par salaire minimum
-      const matchesMinSalary = !this.minSalary || (offer.salaryRange && offer.salaryRange >= this.minSalary)
-
-      // Filtre par salaire maximum
-      const matchesMaxSalary = !this.maxSalary || (offer.salaryRange && offer.salaryRange <= this.maxSalary)
+      // Filtre par salaire (toujours appliqué entre min et max)
+      const matchesSalary = offer.salary && offer.salary >= this.minSalary && offer.salary <= this.maxSalary
 
       // Filtre par jours de télétravail
       const matchesRemoteDays =
@@ -117,8 +114,7 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
         matchesKeyword &&
         matchesContractType &&
         matchesLocation &&
-        matchesMinSalary &&
-        matchesMaxSalary &&
+        matchesSalary &&
         matchesRemoteDays
       )
     })
@@ -128,8 +124,8 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
     this.searchKeyword = ""
     this.selectedContractType = ""
     this.selectedLocation = ""
-    this.minSalary = null
-    this.maxSalary = null
+    this.minSalary = 0
+    this.maxSalary = 1000000
     this.selectedRemoteDays = ""
     this.filteredOffers = this.jobOffers
   }
