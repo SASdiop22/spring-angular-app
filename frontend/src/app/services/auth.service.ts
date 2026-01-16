@@ -157,6 +157,25 @@ export class AuthService {
   }
 
   /**
+   * Récupère le username (sub) du token JWT
+   */
+  getCurrentUserName(): string | null {
+    const token = localStorage.getItem("ACCESS_TOKEN");
+    if (!token) {
+      return null;
+    }
+
+    const decodedToken = this.decodeToken(token);
+    if (decodedToken && decodedToken.sub) {
+      console.log('👤 AuthService.getCurrentUserName() - Found username:', decodedToken.sub);
+      return decodedToken.sub;
+    }
+
+    console.warn('⚠️ AuthService.getCurrentUserName() - Could not decode token or no sub found');
+    return null;
+  }
+
+  /**
    * Vérifie si un token JWT est expiré
    * @param token - Le token JWT à vérifier
    * @returns true si le token est expiré, false sinon

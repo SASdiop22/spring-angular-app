@@ -74,7 +74,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   goToProfile(): void {
-    this.router.navigate(["/profile"])
+    this.router.navigate(["/user/profile"])
   }
 
   goToAddJobOffer(): void {

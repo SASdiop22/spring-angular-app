@@ -12,6 +12,8 @@ import { AddJobOfferComponent } from "./pages/add-job-offer/add-job-offer.compon
 import { CandidatesComponent } from "./pages/candidates/candidates.component"
 import { DashboardComponent } from "./pages/dashboard/dashboard.component"
 import { JobCandidatesComponent } from "./pages/job-candidates/job-candidates.component"
+import { UserProfileComponent } from "./pages/user-profile/user-profile.component"
+import { UserApplicationsComponent } from "./pages/user-applications/user-applications.component"
 
 const routes: Routes = [
   { path: "", component: HomeComponent },
@@ -23,6 +25,8 @@ const routes: Routes = [
   { path: "candidates", component: CandidatesComponent },
   { path: "add-job-offer", component: AddJobOfferComponent, canActivate: [RHGuard] },
   { path: "dashboard", component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: "user/profile", component: UserProfileComponent, canActivate: [AuthGuard] },
+  { path: "user/applications", component: UserApplicationsComponent, canActivate: [AuthGuard] },
   { path: "folders", component: FolderListComponent, canActivate: [AuthGuard] },
   { path: "folder/:id", component: FileListComponent, canActivate: [AuthGuard] },
   { path: "**", pathMatch: "full", redirectTo: "/" },

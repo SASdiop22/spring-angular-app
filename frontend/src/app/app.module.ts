@@ -28,6 +28,8 @@ import { CandidatesComponent } from "./pages/candidates/candidates.component"
 import { DashboardComponent } from "./pages/dashboard/dashboard.component"
 import { HeaderComponent } from "./components/header/header.component"
 import { JobCandidatesComponent } from "./pages/job-candidates/job-candidates.component"
+import { UserProfileComponent } from "./pages/user-profile/user-profile.component"
+import { UserApplicationsComponent } from "./pages/user-applications/user-applications.component"
 
 @NgModule({
   declarations: [
@@ -43,6 +45,8 @@ import { JobCandidatesComponent } from "./pages/job-candidates/job-candidates.co
     DashboardComponent,
     HeaderComponent,
     JobCandidatesComponent,
+    UserProfileComponent,
+    UserApplicationsComponent,
   ],
   imports: [
     CommonModule,
