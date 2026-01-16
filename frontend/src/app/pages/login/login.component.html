@@ -1,48 +1,80 @@
-<mat-card>
-  <mat-card-title>Connexion</mat-card-title>
-  <mat-card-content>
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+<div class="login-container">
+  <!-- Left Section - Info -->
+  <div class="login-left">
+    <div class="login-info">
+      <div class="logo">
+        <i class="fas fa-briefcase"></i>
+        <h1>TalentHub</h1>
+      </div>
+      <h2>Bienvenue</h2>
+      <p>Plateforme de gestion des offres d'emploi et des candidatures</p>
+    </div>
+  </div>
 
-      <div *ngIf="errorMessage" class="error-banner" role="alert">
-        <strong>❌ Erreur :</strong> {{ errorMessage }}
+  <!-- Right Section - Login Form -->
+  <div class="login-right">
+    <div class="login-card">
+      <h2>Se connecter</h2>
+      <p class="subtitle">Accédez à votre compte TalentHub</p>
+
+      <!-- Error Banner -->
+      <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ errorMessage }}
       </div>
 
-      <p>
-        <mat-form-field appearance="fill">
-          <mat-label>Nom d'utilisateur</mat-label>
-          <input type="text" matInput placeholder="Ex: alice.rh" formControlName="username">
-          <mat-error *ngIf="loginForm.get('username')?.hasError('required')">
+      <!-- Login Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <!-- Username Field -->
+        <div class="form-group">
+          <label for="username">Nom d'utilisateur</label>
+          <div class="input-wrapper">
+            <i class="fas fa-user"></i>
+            <input
+              type="text"
+              id="username"
+              placeholder="Ex: alice.rh"
+              formControlName="username"
+              class="form-input"
+            >
+          </div>
+          <span class="error-text" *ngIf="loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched">
             Le nom d'utilisateur est obligatoire
-          </mat-error>
-        </mat-form-field>
-      </p>
+          </span>
+        </div>
 
-      <p>
-        <mat-form-field appearance="fill">
-          <mat-label>Mot de passe</mat-label>
-          <input type="password" matInput placeholder="Votre mot de passe" formControlName="password">
-          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <div class="input-wrapper">
+            <i class="fas fa-lock"></i>
+            <input
+              type="password"
+              id="password"
+              placeholder="Votre mot de passe"
+              formControlName="password"
+              class="form-input"
+            >
+          </div>
+          <span class="error-text" *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
             Le mot de passe est obligatoire
-          </mat-error>
-        </mat-form-field>
-      </p>
+          </span>
+        </div>
 
-      <div class="button">
-        <button type="submit" mat-raised-button color="primary" [disabled]="loginForm.invalid || isLoading">
-          <span *ngIf="!isLoading">Se connecter</span>
-          <span *ngIf="isLoading">⏳ Chargement...</span>
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="btn-login"
+          [disabled]="loginForm.invalid || isLoading"
+        >
+          <span *ngIf="!isLoading">
+            <i class="fas fa-sign-in-alt"></i> Se connecter
+          </span>
+          <span *ngIf="isLoading">
+            <i class="fas fa-spinner fa-spin"></i> Connexion en cours...
+          </span>
         </button>
-      </div>
-
-    </form>
-  </mat-card-content>
-</mat-card>
-
-<!-- Afficher les identifiants de test pour les développeurs -->
-<mat-card style="margin-top: 20px; background-color: #f5f5f5;">
-  <mat-card-title>Identifiants de test</mat-card-title>
-  <mat-card-content>
-    <p><strong>Username :</strong> alice.rh</p>
-    <p><strong>Password :</strong> password123</p>
-  </mat-card-content>
-</mat-card>
+      </form>
+    </div>
+  </div>
+</div>
