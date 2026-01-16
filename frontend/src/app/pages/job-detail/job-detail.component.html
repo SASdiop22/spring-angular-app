@@ -115,12 +115,6 @@
       <aside class="detail-sidebar">
         <!-- Apply Card -->
         <div class="apply-card">
-          <!-- DEBUG: Afficher le rôle et isCandidat -->
-          <div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">
-            <p>Rôle: {{ authService.getUserRole() }}</p>
-            <p>isCandidat: {{ isCandidat }}</p>
-            <p>isAuthenticated: {{ isAuthenticated }}</p>
-          </div>
 
           <button
             *ngIf="!showApplicationForm && isCandidat"

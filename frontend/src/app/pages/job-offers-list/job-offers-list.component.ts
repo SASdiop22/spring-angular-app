@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from "@angular/core"
 import { Router } from "@angular/router"
 import type { JobOffer } from "../../models/JobOffer"
+import type { Application } from "../../models/Application"
 import { JobOfferService } from "../../services/job-offer.service"
 import { ApplicationService } from "../../services/application.service"
 import { AuthService } from "../../services/auth.service"
@@ -45,6 +46,7 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
   applicationModalSuccess = false
   applicationModalApplying = false
   currentUserId: number | null = null
+  appliedOfferIds: Set<number> = new Set() // Offres sur lesquelles le candidat a déjà postulé
 
   constructor(
     private jobOfferService: JobOfferService,
@@ -57,11 +59,44 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.updateRoleStatus()
     this.currentUserId = this.authService.getCurrentUserId()
+
+    // Charger les candidatures existantes du candidat
+    if (this.isCandidat && this.currentUserId) {
+      this.loadUserApplications()
+    }
+
     // S'abonner aux changements de rôle
     this.roleSubscription = this.roleService.role$.subscribe(() => {
       this.updateRoleStatus()
     })
     this.loadJobOffers()
+  }
+
+  /**
+   * Charge les candidatures existantes du candidat
+   */
+  private loadUserApplications(): void {
+    if (!this.currentUserId) return
+
+    this.applicationService.getApplicationsByCandidate(this.currentUserId).subscribe({
+      next: (applications: Application[]) => {
+        // Ajouter les IDs des offres à la liste des offres auxquelles il a postulé
+        applications.forEach(app => {
+          this.appliedOfferIds.add(app.jobOfferId)
+        })
+        console.log('✅ Applications chargées:', this.appliedOfferIds)
+      },
+      error: (err: any) => {
+        console.error('Erreur lors du chargement des applications:', err)
+      }
+    })
+  }
+
+  /**
+   * Vérifie si le candidat a déjà postulé sur une offre
+   */
+  hasAlreadyApplied(offerId: number): boolean {
+    return this.appliedOfferIds.has(offerId)
   }
 
   ngOnDestroy(): void {
@@ -215,7 +250,7 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Soumet la candidature depuis le modal
+   * Soumet la candidature depuis le modal avec upload de fichiers
    */
   submitApplicationModal(): void {
     if (!this.selectedOfferForApplication || !this.modalCvFile || !this.currentUserId) {
@@ -249,21 +284,28 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
     this.applicationModalApplying = true
     this.applicationModalError = null
 
-    const cvUrl = this.modalCvFile.name
-    const coverLetterUrl = this.modalCoverLetterFile ? this.modalCoverLetterFile.name : ""
-
-    this.applicationService.apply(
+    // Utiliser applyWithFiles pour envoyer les fichiers réels
+    this.applicationService.applyWithFiles(
       this.selectedOfferForApplication.id,
       this.currentUserId,
-      cvUrl,
-      coverLetterUrl
+      this.modalCvFile,
+      this.modalCoverLetterFile || undefined
     ).subscribe({
       next: () => {
+        // ✅ IMPORTANT: Ajouter l'offre à appliedOfferIds pour désactiver immédiatement le bouton
+        this.appliedOfferIds.add(this.selectedOfferForApplication!.id)
+        console.log('✅ Candidature réussie! Offre ajoutée à appliedOfferIds:', this.selectedOfferForApplication!.id)
+
         this.applicationModalSuccess = true
         this.applicationModalApplying = false
+
+        // Fermer le modal après 2 secondes
+        setTimeout(() => {
+          this.closeApplicationModal()
+        }, 2000)
       },
       error: (err: any) => {
-        this.applicationModalError = err.error?.message || "Erreur lors de la candidature"
+        this.applicationModalError = err.error?.error || "Erreur lors de la candidature"
         this.applicationModalApplying = false
         console.error("Error applying:", err)
       },

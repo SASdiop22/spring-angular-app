@@ -138,14 +138,14 @@
 
           <div class="offer-footer">
             <button class="view-btn" (click)="viewDetails(offer.id)">Voir l'offre</button>
-            <!-- Bouton Candidater visible uniquement pour les candidats (désactivé si offre clôturée) -->
+            <!-- Bouton Candidater visible uniquement pour les candidats (désactivé si offre clôturée ou déjà postulé) -->
             <button
               *ngIf="isCandidat"
               class="apply-btn"
-              [disabled]="offer.status === 'CLOSED'"
-              [title]="offer.status === 'CLOSED' ? 'Cette offre est clôturée' : ''"
+              [disabled]="offer.status === 'CLOSED' || hasAlreadyApplied(offer.id)"
+              [title]="hasAlreadyApplied(offer.id) ? 'Vous avez déjà postulé sur cette offre' : (offer.status === 'CLOSED' ? 'Cette offre est clôturée' : '')"
               (click)="openApplicationModal(offer)">
-              {{ offer.status === 'CLOSED' ? 'Offre clôturée' : 'Candidater' }}
+              {{ hasAlreadyApplied(offer.id) ? '✓ Postulé' : (offer.status === 'CLOSED' ? 'Offre clôturée' : 'Candidater') }}
             </button>
             <!-- Bouton Modifier visible uniquement pour les RH (désactivé si offre clôturée) -->
             <button

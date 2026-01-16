@@ -231,9 +231,46 @@ export class JobCandidatesComponent implements OnInit {
   }
 
   /**
+   * Télécharge la lettre de motivation du candidat
+   */
+  downloadCoverLetter(candidate: Application): void {
+    if (!candidate.coverLetter) {
+      return;
+    }
+
+    // Si c'est une URL complète (commence par http), ouvrir directement
+    if (candidate.coverLetter.startsWith('http')) {
+      window.open(candidate.coverLetter, '_blank');
+      return;
+    }
+
+    // Sinon, créer un lien de téléchargement via l'API backend
+    const downloadUrl = `http://localhost:8080/api/files/download/${encodeURIComponent(candidate.coverLetter)}`;
+
+    // Créer un lien temporaire et le cliquer
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = candidate.coverLetter;
+    link.style.display = 'none';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  /**
    * Voit les détails complets du candidat
    */
   viewDetails(application: Application): void {
+    if (application.id) {
+      this.router.navigate(['/job-offers', this.jobOfferId, 'candidates', application.id]);
+    }
+  }
+
+  /**
+   * Gère la candidature (entretien, statut, etc.)
+   */
+  manageCandidacy(application: Application): void {
     if (application.id) {
       this.router.navigate(['/applications', application.id]);
     }

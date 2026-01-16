@@ -22,6 +22,23 @@ export class ApplicationService {
     return this.http.post<Application>(`${this.apiUrl}/apply`, null, { params })
   }
 
+  /**
+   * Postule à une offre en uploadant les fichiers CV et LM
+   * Envoie les fichiers en multipart/form-data
+   */
+  applyWithFiles(jobOfferId: number, candidateId: number, cvFile: File, coverLetterFile?: File): Observable<Application> {
+    const formData = new FormData();
+    formData.append('jobOfferId', jobOfferId.toString());
+    formData.append('candidateId', candidateId.toString());
+    formData.append('cvFile', cvFile);
+
+    if (coverLetterFile) {
+      formData.append('coverLetterFile', coverLetterFile);
+    }
+
+    return this.http.post<Application>(`${this.apiUrl}/apply-with-files`, formData);
+  }
+
   getApplicationById(id: number): Observable<Application> {
     return this.http.get<Application>(`${this.apiUrl}/${id}`)
   }

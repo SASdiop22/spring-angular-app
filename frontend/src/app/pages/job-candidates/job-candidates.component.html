@@ -140,15 +140,21 @@
                       title="Télécharger le CV">
                 <i class="fas fa-download"></i> CV
               </button>
+              <button class="btn btn-outline-warning btn-sm"
+                      (click)="downloadCoverLetter(candidate)"
+                      *ngIf="candidate.coverLetter"
+                      title="Télécharger la lettre de motivation">
+                <i class="fas fa-download"></i> LM
+              </button>
               <button class="btn btn-outline-primary btn-sm"
                       (click)="viewDetails(candidate)"
-                      title="Voir les détails">
+                      title="Voir les détails de la candidature">
                 <i class="fas fa-eye"></i> Détails
               </button>
               <button class="btn btn-outline-success btn-sm"
                       *ngIf="isRH || isAdmin"
-                      [routerLink]="['/applications', candidate.id]"
-                      title="Gérer la candidature">
+                      (click)="manageCandidacy(candidate)"
+                      title="Gérer la candidature (entretien, statut, etc.)">
                 <i class="fas fa-tasks"></i> Gérer
               </button>
             </div>

@@ -133,7 +133,18 @@ export class JobDetailComponent implements OnInit {
         this.coverLetterFile = null
       },
       error: (err: any) => {
-        this.applicationError = err.error?.message || "Erreur lors de la candidature"
+        // Gérer les différents formats d'erreur du backend
+        let errorMessage = "Erreur lors de la candidature"
+
+        if (err.error?.error) {
+          errorMessage = err.error.error
+        } else if (err.error?.message) {
+          errorMessage = err.error.message
+        } else if (err.status === 409) {
+          errorMessage = "Vous avez déjà postulé sur cette offre"
+        }
+
+        this.applicationError = errorMessage
         this.applying = false
         console.error("[v0] Error applying:", err)
       },
