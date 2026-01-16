@@ -1,0 +1,250 @@
+<div class="user-profile-container">
+  <!-- Header -->
+  <div class="profile-header">
+    <div class="container">
+      <button class="back-btn" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i> Retour
+      </button>
+      <h1>Mon Profil</h1>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement de votre profil...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="alert alert-danger">
+    <i class="fas fa-exclamation-circle"></i> {{ error }}
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="userProfile && !loading" class="profile-content">
+    <div class="container">
+      <!-- Main Profile Card -->
+      <div class="profile-card">
+        <!-- Avatar Section -->
+        <div class="avatar-section">
+          <div class="avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="user-info-header">
+            <h2>{{ userProfile.prenom }} {{ userProfile.nom }}</h2>
+            <p class="username">{{ '@' }}{{ userProfile.username }}</p>
+            <div class="role-badges">
+              <span class="role-badge" *ngIf="userProfile.isCandidat">
+                <i class="fas fa-briefcase"></i> Candidat
+              </span>
+              <span class="role-badge rh-badge" *ngIf="isRH">
+                <i class="fas fa-users"></i> RH
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="profile-actions">
+          <button
+            class="btn-edit"
+            (click)="toggleEditMode()"
+            [disabled]="updatingProfile">
+            <i class="fas fa-edit"></i>
+            {{ editMode ? 'Annuler' : 'Modifier le profil' }}
+          </button>
+          <button
+            class="btn-delete"
+            (click)="openDeleteModal()">
+            <i class="fas fa-trash"></i> Supprimer mon compte
+          </button>
+        </div>
+
+        <!-- Profile Details -->
+        <div class="profile-details">
+          <!-- Display Mode -->
+          <div *ngIf="!editMode" class="details-display">
+            <div class="detail-group">
+              <h3>Informations Personnelles</h3>
+              <div class="detail-item">
+                <label>Prénom</label>
+                <p>{{ userProfile.prenom }}</p>
+              </div>
+              <div class="detail-item">
+                <label>Nom</label>
+                <p>{{ userProfile.nom }}</p>
+              </div>
+              <div class="detail-item">
+                <label>Email</label>
+                <p>{{ userProfile.email }}</p>
+              </div>
+              <div class="detail-item">
+                <label>Téléphone</label>
+                <p>{{ userProfile.telephone }}</p>
+              </div>
+              <div class="detail-item" *ngIf="userProfile.ville">
+                <label>Ville</label>
+                <p>{{ userProfile.ville }}</p>
+              </div>
+            </div>
+
+            <div class="detail-group">
+              <h3>Informations Additionnelles</h3>
+              <div class="detail-item">
+                <label>Membre depuis</label>
+                <p>{{ userProfile.createdAt }}</p>
+              </div>
+              <div class="detail-item" *ngIf="userProfile.telephone_candidat">
+                <label>Téléphone (Candidat)</label>
+                <p>{{ userProfile.telephone_candidat }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Mode -->
+          <form *ngIf="editMode" class="details-edit">
+            <div class="form-group">
+              <label>Prénom</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.prenom"
+                name="prenom"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Nom</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.nom"
+                name="nom"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                [(ngModel)]="editForm.email"
+                name="email"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Téléphone</label>
+              <input
+                type="tel"
+                [(ngModel)]="editForm.telephone"
+                name="telephone"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Ville</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.ville"
+                name="ville"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Téléphone (Candidat)</label>
+              <input
+                type="tel"
+                [(ngModel)]="editForm.telephone_candidat"
+                name="telephone_candidat"
+                class="form-input">
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn-cancel"
+                (click)="toggleEditMode()">
+                Annuler
+              </button>
+              <button
+                type="button"
+                class="btn-save"
+                (click)="saveProfile()"
+                [disabled]="updatingProfile">
+                <span *ngIf="!updatingProfile">Sauvegarder</span>
+                <span *ngIf="updatingProfile">
+                  <i class="fas fa-spinner fa-spin"></i> Sauvegarde...
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="quick-links">
+        <a href="/user/applications" class="link-item">
+          <i class="fas fa-clipboard-list"></i>
+          <span>Mes candidatures</span>
+        </a>
+        <a href="/job-offers" class="link-item">
+          <i class="fas fa-briefcase"></i>
+          <span>Parcourir les offres</span>
+        </a>
+        <a href="/" class="link-item">
+          <i class="fas fa-home"></i>
+          <span>Accueil</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Account Modal -->
+  <div *ngIf="showDeleteModal" class="modal-overlay" (click)="closeDeleteModal()">
+    <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header danger">
+        <h2>
+          <i class="fas fa-exclamation-triangle"></i>
+          Supprimer votre compte
+        </h2>
+        <button class="close-btn" (click)="closeDeleteModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="warning-box">
+          <p><strong>Attention : Cette action est irréversible !</strong></p>
+          <p>La suppression de votre compte entraînera :</p>
+          <ul>
+            <li>La suppression permanente de tous vos données personnelles</li>
+            <li>L'annulation de toutes vos candidatures</li>
+            <li>La perte de l'accès à votre compte</li>
+          </ul>
+        </div>
+
+        <div class="confirmation-box">
+          <p>Pour confirmer, tapez exactement : <strong>"SUPPRIMER MON COMPTE"</strong></p>
+          <input
+            type="text"
+            [(ngModel)]="deleteConfirmation"
+            placeholder="Entrez le texte de confirmation"
+            class="confirmation-input">
+        </div>
+
+        <div class="modal-actions">
+          <button
+            class="btn-cancel"
+            (click)="closeDeleteModal()">
+            Annuler
+          </button>
+          <button
+            class="btn-delete-confirm"
+            (click)="deleteAccount()"
+            [disabled]="deleteConfirmation.toUpperCase() !== 'SUPPRIMER MON COMPTE' || deletingAccount">
+            <span *ngIf="!deletingAccount">
+              <i class="fas fa-trash"></i> Supprimer définitivement
+            </span>
+            <span *ngIf="deletingAccount">
+              <i class="fas fa-spinner fa-spin"></i> Suppression...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

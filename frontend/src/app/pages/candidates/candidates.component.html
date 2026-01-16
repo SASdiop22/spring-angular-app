@@ -1,0 +1,62 @@
+<div class="candidates-container">
+  <div class="container">
+    <!-- Header -->
+    <div class="candidates-header">
+      <button class="back-btn" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Retour
+      </button>
+      <h1>Base de candidats</h1>
+      <p *ngIf="!isRH" class="info-text">Consulter les profils des candidats disponibles</p>
+      <p *ngIf="isRH" class="info-text">Accédez à la base complète des candidats pour vos recrutements</p>
+    </div>
+
+    <!-- Candidates Grid -->
+    <div class="candidates-grid">
+      <mat-card *ngFor="let candidate of candidates" class="candidate-card">
+        <mat-card-header>
+          <div class="candidate-avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+          <mat-card-title>{{ candidate.name }}</mat-card-title>
+          <mat-card-subtitle>{{ candidate.title }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="candidate-info">
+            <div class="info-item">
+              <mat-icon>location_on</mat-icon>
+              <span>{{ candidate.location }}</span>
+            </div>
+            <div class="skills-section">
+              <p class="skills-label">Compétences</p>
+              <div class="skills-tags">
+                <span *ngFor="let skill of candidate.skills" class="skill-tag">
+                  {{ skill }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-button (click)="viewCandidateProfile(candidate.id)">
+            <mat-icon>person_search</mat-icon>
+            Voir le profil
+          </button>
+          <button *ngIf="isRH" mat-button color="primary" (click)="contactCandidate(candidate.id)">
+            <mat-icon>mail</mat-icon>
+            Contacter
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && candidates.length === 0" class="empty-state">
+      <mat-icon>people_outline</mat-icon>
+      <p>Aucun candidat disponible pour le moment</p>
+    </div>
+  </div>
+</div>
+

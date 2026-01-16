@@ -2,13 +2,16 @@ package edu.miage.springboot.web.rest.offers;
 
 import edu.miage.springboot.dao.entities.offers.JobStatusEnum;
 import edu.miage.springboot.services.impl.security.SecurityService;
+import edu.miage.springboot.services.interfaces.ApplicationService;
 import edu.miage.springboot.services.interfaces.JobOfferService;
+import edu.miage.springboot.web.dtos.offers.ApplicationDTO;
 import edu.miage.springboot.web.dtos.offers.JobOfferDTO;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +24,9 @@ public class JobOfferController {
     private JobOfferService jobOfferService;
     @Autowired
     private SecurityService securityService;
+
+    @Autowired
+    private ApplicationService applicationService;
 
     // --- ACCÈS PUBLIC (Visiteurs & Candidats) ---
 
@@ -45,6 +51,18 @@ public class JobOfferController {
     @GetMapping("/search")
     public List<JobOfferDTO> search(@RequestParam String keyword) {
         return jobOfferService.searchJobOffers(keyword);
+    }
+
+    /**
+     * Spécification 4.A : Seuls les RH/ADMIN peuvent consulter les candidatures.
+     * Récupère la liste des candidats qui ont postulé pour une offre d'emploi,
+     * triés par score de correspondance décroissant.
+     */
+    @GetMapping("/{id}/candidates")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_RH') or @securityService.isJobOfferOwner(#id)")
+    public ResponseEntity<List<ApplicationDTO>> getApplicationsByJobOffer(@PathVariable Long id) {
+        List<ApplicationDTO> applications = applicationService.findByJobOfferId(id);
+        return ResponseEntity.ok(applications);
     }
 
     // --- ACCÈS EMPLOYÉ / DEMANDEUR (Spec 2.A) ---
@@ -112,5 +130,15 @@ public class JobOfferController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         jobOfferService.deleteJobOffer(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Mettre à jour une offre d'emploi
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_RH')")
+    public ResponseEntity<JobOfferDTO> updateOffer(@PathVariable Long id, @Valid @RequestBody JobOfferDTO dto) {
+        JobOfferDTO updated = jobOfferService.updateJobOffer(id, dto);
+        return ResponseEntity.ok(updated);
     }
 }

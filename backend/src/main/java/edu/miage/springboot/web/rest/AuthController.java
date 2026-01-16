@@ -38,7 +38,13 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(authRequestDTO.getUsername(), authRequestDTO.getPassword())
         );
         if (authentication.isAuthenticated()) {
-            return new AuthResponseDTO(jwtService.GenerateToken(authRequestDTO.getUsername()));
+            // Récupérer l'utilisateur pour obtenir son ID
+            UserEntity user = userRepository.findByUsername(authRequestDTO.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+            // Générer le token en passant aussi l'ID
+            String token = jwtService.GenerateToken(authRequestDTO.getUsername(), user.getId());
+            return new AuthResponseDTO(token);
         } else {
             throw new RuntimeException("Utilisateur non trouvé ou mot de passe incorrect");
         }
@@ -58,8 +64,8 @@ public class AuthController {
         // ENCODAGE DU MOT DE PASSE (CRUCIAL)
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
-        // ASSIGNATION DU RÔLE PAR DÉFAUT (ROLE_CANDIDATE)
-        UserRoleEntity candidateRole = userRoleRepository.findByName("ROLE_CANDIDAT")
+        // ASSIGNATION DU RÔLE PAR DÉFAUT (CANDIDAT)
+        UserRoleEntity candidateRole = userRoleRepository.findByName("CANDIDAT")
                 .orElseThrow(() -> new RuntimeException("Rôle par défaut introuvable. Avez-vous lancé le Seeder ?"));
 
         newUser.setRoles(Collections.singleton(candidateRole));

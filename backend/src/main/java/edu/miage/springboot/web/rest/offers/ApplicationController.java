@@ -11,10 +11,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 
 import java.time.LocalDateTime;
+import java.time.LocalDateTime;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -26,9 +34,92 @@ public class ApplicationController {
     @Autowired
     private CandidatRepository candidatRepository;
 
+    private static final String UPLOAD_DIR = "backend/uploads/cvs/";
+
     /**
-     * Spécification 3.A : Un candidat postule.
-     * La vérification RGPD (< 2 ans) doit être gérée dans le service (applicationService.apply).
+     * Endpoint pour uploader les fichiers (CV + LM) et créer une candidature
+     * POST /api/applications/apply-with-files
+     */
+    @PostMapping("/apply-with-files")
+    @PreAuthorize("hasAnyAuthority('ROLE_CANDIDAT', 'ROLE_ADMIN')")
+    public ResponseEntity<?> applyWithFiles(
+            @RequestParam Long jobOfferId,
+            @RequestParam Long candidateId,
+            @RequestParam("cvFile") MultipartFile cvFile,
+            @RequestParam(value = "coverLetterFile", required = false) MultipartFile coverLetterFile
+    ) {
+        try {
+            // Vérifier que le candidat existe
+            CandidatEntity candidate = candidatRepository.findById(candidateId)
+                    .orElseThrow(() -> new RuntimeException("Candidat non trouvé"));
+
+            if (candidate.isArchived()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Profil archivé"));
+            }
+
+            // Vérifier que le candidat n'a pas déjà postulé sur cette offre
+            boolean alreadyApplied = applicationService.findAll().stream()
+                    .anyMatch(app -> app.getJobOfferId() == jobOfferId && app.getCandidateId() == candidateId);
+
+            if (alreadyApplied) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("error", "Vous avez déjà postulé sur cette offre"));
+            }
+
+            // Valider le CV
+            if (cvFile == null || cvFile.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Le CV est requis"));
+            }
+
+            // Sauvegarder le CV
+            String cvUrl = saveFile(cvFile);
+
+            // Valider et sauvegarder la lettre de motivation (optionnelle)
+            String coverLetterUrl = null;
+            if (coverLetterFile != null && !coverLetterFile.isEmpty()) {
+                coverLetterUrl = saveFile(coverLetterFile);
+            }
+
+            // Créer la candidature avec les URLs des fichiers sauvegardés
+            ApplicationDTO newApplication = applicationService.apply(
+                    jobOfferId,
+                    candidateId,
+                    cvUrl,
+                    coverLetterUrl
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(newApplication);
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Erreur lors du téléchargement des fichiers: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Erreur: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Sauvegarde un fichier et retourne le nom unique
+     */
+    private String saveFile(MultipartFile file) throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
+
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        Files.createDirectories(uploadPath);
+
+        Path filePath = uploadPath.resolve(uniqueFilename);
+        Files.write(filePath, file.getBytes());
+
+        System.out.println("✅ Fichier sauvegardé: " + filePath.getFileName());
+        return uniqueFilename;
+    }
+
+    /**
+     * Ancien endpoint pour compatibilité (paramètres URL simples)
      */
     @PostMapping("/apply")
     @PreAuthorize("hasAnyAuthority('ROLE_CANDIDAT', 'ROLE_ADMIN')")
@@ -39,19 +130,29 @@ public class ApplicationController {
             @RequestParam(required = false) String coverLetter
     ){
         try {
-            // On vérifie si le candidat n'est pas déjà archivé (embauché)
             CandidatEntity candidate = candidatRepository.findById(candidateId)
                     .orElseThrow(() -> new RuntimeException("Candidat non trouvé"));
 
             if (candidate.isArchived()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(null); // Ou un message : "Profil archivé, redirection vers espace employé"
+                        .body(null);
             }
+
+            // Vérifier que le candidat n'a pas déjà postulé sur cette offre
+            boolean alreadyApplied = applicationService.findAll().stream()
+                    .anyMatch(app -> app.getJobOfferId() == jobOfferId && app.getCandidateId() == candidateId);
+
+            if (alreadyApplied) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(null);
+            }
+
             ApplicationDTO newApplication = applicationService.apply(jobOfferId, candidateId, cvUrl, coverLetter);
             return ResponseEntity.status(HttpStatus.CREATED).body(newApplication);
         }catch (Exception e) {
-            e.printStackTrace(); // Pour voir l'erreur exacte dans la console Spring
-            return ResponseEntity.badRequest().header("X-Error-Reason", e.getMessage()).build();
+            System.err.println("Erreur lors de la candidature: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
@@ -94,7 +195,6 @@ public class ApplicationController {
     @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN') or (hasAuthority('ROLE_CANDIDAT') and @securityService.isApplicationOwner(#id))")
     public ResponseEntity<ApplicationDTO> getApplicationById(@PathVariable Long id) {
         try {
-            // Le service doit implémenter une méthode findById ou getById
             ApplicationDTO application = applicationService.findById(id);
             return ResponseEntity.ok(application);
         } catch (RuntimeException e) {
@@ -115,9 +215,25 @@ public class ApplicationController {
      * Spécification 3.B : Un candidat peut voir ses propres candidatures.
      */
     @GetMapping("/candidate/{candidateId}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or ((hasAuthority('ROLE_CANDIDAT') and  @securityService.isApplicationOwner(#candidateId)))")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or ((hasAuthority('ROLE_CANDIDAT') and @securityService.isApplicationOwner(#candidateId)))")
     public List<ApplicationDTO> getApplicationsByCandidate(@PathVariable Long candidateId) {
         return applicationService.findByCandidateId(candidateId);
     }
 
+    @PatchMapping("/{id}/status2")
+    @PreAuthorize("hasAnyAuthority('ROLE_RH', 'ROLE_ADMIN')")
+    public ResponseEntity<ApplicationDTO> updateApplicationStatus2(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        try {
+            String statusStr = body.get("status");
+            ApplicationStatusEnum status = ApplicationStatusEnum.valueOf(statusStr);
+            ApplicationDTO application = applicationService.updateStatus(id, status);
+            return ResponseEntity.ok(application);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().header("X-Error-Message", e.getMessage()).build();
+        }
+    }
+
 }
+

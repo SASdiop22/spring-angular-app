@@ -1,0 +1,170 @@
+### ============================================================================
+### TEST - CONSULTATION DES CANDIDATS POUR UNE OFFRE D'EMPLOI
+### ============================================================================
+### Cette endpoint permet aux RH et Admin de consulter la liste des candidats
+### qui ont postulé pour une offre d'emploi spécifique
+###
+### Endpoint: GET /api/joboffers/{id}/candidates
+### Sécurité: ROLE_ADMIN, ROLE_RH, ou propriétaire de l'offre
+### Tri: Par score de correspondance décroissant (meilleur candidat en premier)
+###
+### ============================================================================
+
+### Variables
+@baseUrl = http://localhost:8080/api
+@adminToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@rhToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### ============================================================================
+### 1. GET - Récupérer les candidatures pour l'offre d'emploi ID=1
+### Description: Affiche tous les candidats triés par score de correspondance
+### ============================================================================
+GET {{baseUrl}}/joboffers/1/candidates
+Authorization: {{rhToken}}
+Accept: application/json
+
+### Réponse attendue:
+### [
+###   {
+###     "id": 101,
+###     "candidateName": "Alice Martin",
+###     "candidateId": 5,
+###     "status": "RECEIVED",
+###     "applicationDate": "2026-01-16T10:30:00",
+###     "createdAt": "2026-01-16T10:30:00",
+###     "matchingScore": 95,
+###     "cvUrl": "https://...",
+###     "coverLetter": "Bonjour, je suis très intéressé par...",
+###     "jobOfferId": 1,
+###     "jobOfferTitle": "Développeur Java Senior",
+###     "meetingDate": null,
+###     "rejectionReason": null,
+###     "notes": []
+###   },
+###   {
+###     "id": 102,
+###     "candidateName": "Bob Durand",
+###     "candidateId": 6,
+###     "status": "RECEIVED",
+###     "applicationDate": "2026-01-16T11:00:00",
+###     "createdAt": "2026-01-16T11:00:00",
+###     "matchingScore": 78,
+###     "cvUrl": "https://...",
+###     "coverLetter": "Je suis développeur Java depuis 4 ans...",
+###     ...
+###   }
+### ]
+
+### ============================================================================
+### 2. GET - Récupérer les candidats pour l'offre "Lead Frontend React" (ID=3)
+### ============================================================================
+GET {{baseUrl}}/joboffers/3/candidates
+Authorization: {{rhToken}}
+Accept: application/json
+
+### ============================================================================
+### 3. GET - Récupérer les candidats pour une offre fermée ou inexistante
+### Description: Devrait retourner 404 ou une liste vide selon l'implémentation
+### ============================================================================
+GET {{baseUrl}}/joboffers/999/candidates
+Authorization: {{rhToken}}
+Accept: application/json
+
+### ============================================================================
+### 4. GET - Tentative sans authentification (doit échouer)
+### Description: Retourne 401 Unauthorized
+### ============================================================================
+GET {{baseUrl}}/joboffers/1/candidates
+Accept: application/json
+
+### ============================================================================
+### 5. GET - Tentative avec un rôle CANDIDAT non autorisé (doit échouer)
+### Description: Retourne 403 Forbidden sauf si c'est le propriétaire de l'offre
+### ============================================================================
+GET {{baseUrl}}/joboffers/1/candidates
+Authorization: Bearer CANDIDAT_TOKEN
+Accept: application/json
+
+### ============================================================================
+### CAS D'USAGE - WORKFLOW RH COMPLET
+### ============================================================================
+### Étape 1: Récupérer la liste des offres ouvertes
+### ============================================================================
+GET {{baseUrl}}/joboffers/privilege
+Authorization: {{rhToken}}
+Accept: application/json
+
+### Étape 2: Sélectionner une offre et consulter ses candidatures
+### ============================================================================
+### Supposons que l'offre ID=1 "Développeur Java Senior" a plusieurs candidats
+
+GET {{baseUrl}}/joboffers/1/candidates
+Authorization: {{rhToken}}
+Accept: application/json
+
+### Étape 3: Analyser les scores de correspondance
+### Les candidats sont triés par matchingScore décroissant
+### - Score > 80 : Très bon match
+### - Score 60-80 : Bon match
+### - Score 40-60 : Match modéré
+### - Score < 40 : Match faible
+
+### Étape 4: Sélectionner un candidat et programmer un entretien
+### Exemple: candidat avec ID=101 pour l'offre 1
+PATCH {{baseUrl}}/applications/101/schedule-interview
+Authorization: {{rhToken}}
+Content-Type: application/json
+
+{
+  "interviewDate": "2026-01-25T10:00:00",
+  "interviewerId": 2
+}
+
+### Étape 5: Mettre à jour le statut du candidat
+### Après l'entretien, on peut mettre à jour le statut
+PATCH {{baseUrl}}/applications/101/status
+Authorization: {{rhToken}}
+Content-Type: application/json
+
+{
+  "status": "INTERVIEW_PENDING",
+  "feedback": "Excellent candidat, compétences confirmées"
+}
+
+### ============================================================================
+### NOTES IMPORTANTES
+### ============================================================================
+###
+### 1. AUTHENTIFICATION REQUISE
+###    - L'endpoint nécessite une authentification
+###    - Token JWT valide requis dans le header Authorization
+###
+### 2. AUTORISATIONS
+###    - ROLE_ADMIN: Peut consulter TOUTES les candidatures
+###    - ROLE_RH: Peut consulter TOUTES les candidatures
+###    - ROLE_EMPLOYE: Peut consulter UNIQUEMENT les candidatures
+###                     de SES PROPRES offres (via @securityService.isJobOfferOwner)
+###
+### 3. SCORE DE CORRESPONDANCE (matchingScore)
+###    - Calculé automatiquement lors de la candidature
+###    - Basé sur la correspondance entre les compétences du candidat
+###      et celles requises par l'offre
+###    - Valeur: 0 à 100 (en pourcentage)
+###    - Les candidats sont toujours triés par score décroissant
+###
+### 4. STATUTS POSSIBLES
+###    - RECEIVED: Candidature reçue (initial)
+###    - INTERVIEW_PENDING: En attente d'entretien
+###    - TECHNICAL_TEST_PENDING: En attente de test technique
+###    - OFFER_PENDING: Offre proposée
+###    - HIRED: Embauché
+###    - REJECTED: Rejeté
+###
+### 5. AMÉLIORATIONS FUTURES
+###    - Filtrer par statut (query param: ?status=INTERVIEW_PENDING)
+###    - Filtrer par score minimum (?minScore=80)
+###    - Pagination pour les offres avec beaucoup de candidats
+###    - Export CSV des candidatures
+###
+### ============================================================================
+

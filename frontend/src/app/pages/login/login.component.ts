@@ -44,9 +44,14 @@ export class LoginComponent implements OnInit {
     this.authService.login(credentials).subscribe({
       next: (response: AuthResponse) => {
         console.log('✅ Login réussi:', response);
-        console.log('Token reçu:', response.accessToken);
-        sessionStorage.setItem("ACCESS_TOKEN", response.accessToken);
-        this.router.navigateByUrl("/");
+        const token = response.token || response.accessToken;
+        console.log('Token reçu:', token);
+        if (token) {
+          sessionStorage.setItem("ACCESS_TOKEN", token);
+          this.router.navigateByUrl("/");
+        } else {
+          this.errorMessage = 'Token non reçu du serveur';
+        }
       },
       error: (error) => {
         console.error('❌ Erreur de login:', error);

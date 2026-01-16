@@ -19,6 +19,9 @@ public interface JobOfferRepository extends JpaRepository<JobOfferEntity, Long> 
             JobStatusEnum status1, String title,
             JobStatusEnum status2, String description
     );
+
+    // Filtrage par plusieurs statuts
+    List<JobOfferEntity> findByStatusIn(List<JobStatusEnum> statuses);
 }
 
 

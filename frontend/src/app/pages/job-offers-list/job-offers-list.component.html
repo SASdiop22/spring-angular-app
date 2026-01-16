@@ -1,0 +1,247 @@
+<div class="job-offers-container">
+
+  <div class="container main-content">
+    <!-- Sidebar avec filtres -->
+    <aside class="filters-sidebar">
+      <div class="filters-header">
+        <h2>Filtres</h2>
+        <button class="reset-btn" (click)="resetFilters()">Réinitialiser</button>
+      </div>
+
+      <!-- Recherche par mot-clé -->
+      <div class="filter-group">
+        <label>Mot-clé</label>
+        <input
+          type="text"
+          [(ngModel)]="searchKeyword"
+          (keyup.enter)="searchByKeyword()"
+          placeholder="Rechercher..."
+          class="filter-input">
+        <button class="search-btn" (click)="searchByKeyword()">Rechercher</button>
+      </div>
+
+      <!-- Type de contrat -->
+      <div class="filter-group">
+        <label>Type de contrat</label>
+        <select [(ngModel)]="selectedContractType" (change)="applyFilters()" class="filter-select">
+          <option value="">Tous les types</option>
+          <option *ngFor="let type of contractTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+
+      <!-- Localisation -->
+      <div class="filter-group">
+        <label>Localisation</label>
+        <select [(ngModel)]="selectedLocation" (change)="applyFilters()" class="filter-select">
+          <option value="">Toutes les villes</option>
+          <option *ngFor="let location of locations" [value]="location">{{ location }}</option>
+        </select>
+      </div>
+
+      <!-- Salaire -->
+      <div class="filter-group">
+        <label>Salaire (€)</label>
+        <div class="salary-inputs">
+          <input
+            type="number"
+            [(ngModel)]="minSalary"
+            (change)="applyFilters()"
+            placeholder="Min"
+            class="filter-input">
+          <span>-</span>
+          <input
+            type="number"
+            [(ngModel)]="maxSalary"
+            (change)="applyFilters()"
+            placeholder="Max"
+            class="filter-input">
+        </div>
+      </div>
+
+      <!-- Télétravail -->
+      <div class="filter-group">
+        <label>Jours de télétravail (min)</label>
+        <select [(ngModel)]="selectedRemoteDays" (change)="applyFilters()" class="filter-select">
+          <option value="">Peu importe</option>
+          <option value="1">1+ jours</option>
+          <option value="2">2+ jours</option>
+          <option value="3">3+ jours</option>
+          <option value="4">4+ jours</option>
+          <option value="5">100% télétravail</option>
+        </select>
+      </div>
+    </aside>
+
+    <!-- Liste des offres -->
+    <main class="offers-content">
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement des offres...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="error && !loading" class="error-state">
+        <p>{{ error }}</p>
+        <button (click)="loadJobOffers()">Réessayer</button>
+      </div>
+
+      <!-- No results -->
+      <div *ngIf="!loading && !error && filteredOffers.length === 0" class="empty-state">
+        <h3>Aucune offre trouvée</h3>
+        <p>Essayez de modifier vos critères de recherche</p>
+        <button (click)="resetFilters()">Réinitialiser les filtres</button>
+      </div>
+
+      <!-- Job offers grid -->
+      <div *ngIf="!loading && !error && filteredOffers.length > 0" class="offers-grid">
+        <div *ngFor="let offer of filteredOffers" class="offer-card" (click)="viewDetails(offer.id)">
+          <div class="offer-header">
+            <h3>{{ offer.title }}</h3>
+            <div class="badges-container">
+              <span class="contract-badge">{{ offer.contractType }}</span>
+              <span *ngIf="offer.status === 'CLOSED'" class="closed-badge">
+                <mat-icon>lock</mat-icon>
+                Clôturée
+              </span>
+            </div>
+          </div>
+
+          <p class="offer-description">{{ offer.description }}</p>
+
+          <div class="offer-details">
+            <div class="detail-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>{{ offer.location }}</span>
+            </div>
+
+            <div class="detail-item" *ngIf="offer.salary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              <span>{{ offer.salary | number:'1.0-0' }}€</span>
+            </div>
+
+            <div class="detail-item" *ngIf="offer.remoteDays !== null">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <span>{{ offer.remoteDays }} jour(s) télétravail</span>
+            </div>
+          </div>
+
+          <div class="offer-footer">
+            <button class="view-btn" (click)="viewDetails(offer.id)">Voir l'offre</button>
+            <!-- Bouton Candidater visible uniquement pour les candidats (désactivé si offre clôturée ou déjà postulé) -->
+            <button
+              *ngIf="isCandidat"
+              class="apply-btn"
+              [disabled]="offer.status === 'CLOSED' || hasAlreadyApplied(offer.id)"
+              [title]="hasAlreadyApplied(offer.id) ? 'Vous avez déjà postulé sur cette offre' : (offer.status === 'CLOSED' ? 'Cette offre est clôturée' : '')"
+              (click)="openApplicationModal(offer)">
+              {{ hasAlreadyApplied(offer.id) ? '✓ Postulé' : (offer.status === 'CLOSED' ? 'Offre clôturée' : 'Candidater') }}
+            </button>
+            <!-- Bouton Modifier visible uniquement pour les RH (désactivé si offre clôturée) -->
+            <button
+              *ngIf="isRH"
+              class="edit-btn"
+              [disabled]="offer.status === 'CLOSED'"
+              [title]="offer.status === 'CLOSED' ? 'Impossible de modifier une offre clôturée' : ''"
+              (click)="editOffer(offer.id)">
+              {{ offer.status === 'CLOSED' ? 'Clôturée' : 'Modifier' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de candidature rapide -->
+  <div *ngIf="showApplicationModal" class="modal-overlay" (click)="closeApplicationModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Postuler à cette offre</h2>
+        <button class="close-btn" (click)="closeApplicationModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="offer-summary" *ngIf="selectedOfferForApplication">
+          <h3>{{ selectedOfferForApplication.title }}</h3>
+          <p class="company">{{ selectedOfferForApplication.companyName }}</p>
+        </div>
+
+        <form (ngSubmit)="submitApplicationModal()" class="application-form">
+          <!-- Erreur d'application -->
+          <div *ngIf="applicationModalError" class="alert alert-danger">
+            {{ applicationModalError }}
+          </div>
+
+          <!-- Succès -->
+          <div *ngIf="applicationModalSuccess" class="alert alert-success">
+            ✅ Candidature envoyée avec succès !
+          </div>
+
+          <!-- Champ CV -->
+          <div class="form-group" *ngIf="!applicationModalSuccess">
+            <label for="cvFileModal">Importer votre CV (PDF) *</label>
+            <input
+              type="file"
+              id="cvFileModal"
+              (change)="onModalCvFileSelected($event)"
+              accept=".pdf"
+              required
+              class="form-input">
+            <small>Veuillez importer votre CV au format PDF (taille max: 5 MB)</small>
+            <div *ngIf="modalCvFile" class="file-info">
+              <i class="fas fa-file-pdf"></i>
+              <span>{{ modalCvFile.name }}</span>
+            </div>
+          </div>
+
+          <!-- Champ Lettre de motivation -->
+          <div class="form-group" *ngIf="!applicationModalSuccess">
+            <label for="coverLetterFileModal">Lettre de motivation (optionnel - PDF)</label>
+            <input
+              type="file"
+              id="coverLetterFileModal"
+              (change)="onModalCoverLetterFileSelected($event)"
+              accept=".pdf"
+              class="form-input">
+            <small>Format PDF, taille max: 5 MB</small>
+            <div *ngIf="modalCoverLetterFile" class="file-info">
+              <i class="fas fa-file-pdf"></i>
+              <span>{{ modalCoverLetterFile.name }}</span>
+            </div>
+          </div>
+
+          <!-- Boutons d'action -->
+          <div class="form-actions" *ngIf="!applicationModalSuccess">
+            <button type="button" class="btn-cancel" (click)="closeApplicationModal()">
+              Annuler
+            </button>
+            <button type="submit" class="btn-submit" [disabled]="applicationModalApplying || !modalCvFile">
+              <span *ngIf="!applicationModalApplying">Soumettre la candidature</span>
+              <span *ngIf="applicationModalApplying">
+                <i class="fas fa-spinner fa-spin"></i> Envoi en cours...
+              </span>
+            </button>
+          </div>
+
+          <!-- Bouton fermer après succès -->
+          <div class="form-actions" *ngIf="applicationModalSuccess">
+            <button type="button" class="btn-submit" (click)="closeApplicationModal()">
+              Fermer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

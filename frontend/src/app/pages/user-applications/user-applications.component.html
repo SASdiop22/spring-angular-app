@@ -1,0 +1,162 @@
+<div class="user-applications-container">
+  <!-- Header -->
+  <div class="applications-header">
+    <div class="container">
+      <button class="back-btn" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i> Retour
+      </button>
+      <div class="header-content">
+        <h1>Mes Candidatures</h1>
+        <p class="subtitle">Suivi de vos postulations et entretiens</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="container">
+      <div class="filters-row">
+        <!-- Search Bar -->
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearchChange()"
+            placeholder="Rechercher par titre, entreprise...">
+        </div>
+
+        <!-- Status Filter -->
+        <select
+          [(ngModel)]="statusFilter"
+          (ngModelChange)="onStatusFilterChange()"
+          class="filter-select">
+          <option value="ALL">Tous les statuts</option>
+          <option value="PENDING">En attente</option>
+          <option value="INTERVIEWING">En entretien</option>
+          <option value="ACCEPTED">Accepté</option>
+          <option value="REJECTED">Rejeté</option>
+        </select>
+
+        <!-- Sort By -->
+        <select
+          [(ngModel)]="sortBy"
+          (ngModelChange)="onSortChange()"
+          class="filter-select">
+          <option value="recent">Plus récents</option>
+          <option value="oldest">Plus anciens</option>
+          <option value="status">Par statut</option>
+        </select>
+      </div>
+
+      <!-- Results Count -->
+      <div class="results-info">
+        <p>{{ filteredApplications.length }} candidature(s) trouvée(s)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Section -->
+  <div class="applications-content">
+    <div class="container">
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement de vos candidatures...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="error && !loading" class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+        <button class="retry-btn" (click)="loadApplications()">Réessayer</button>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && filteredApplications.length === 0 && !error" class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h3>Aucune candidature</h3>
+        <p>Vous n'avez pas encore postulé à d'offres.</p>
+        <a href="/job-offers" class="btn-primary">Parcourir les offres</a>
+      </div>
+
+      <!-- Applications List -->
+      <div *ngIf="!loading && filteredApplications.length > 0" class="applications-list">
+        <!-- Applications Grid -->
+        <div class="applications-grid">
+          <div
+            *ngFor="let app of getPaginatedApplications()"
+            class="application-card">
+
+            <!-- Status Badge -->
+            <div class="card-status">
+              <span [ngClass]="getStatusBadgeClass(app.status)">
+                {{ getStatusLabel(app.status) }}
+              </span>
+            </div>
+
+            <!-- Card Content -->
+            <div class="card-content">
+              <h3 class="job-title">{{ app.jobOfferTitle || 'Offre sans titre' }}</h3>
+              <p class="company-name">
+                <i class="fas fa-user"></i>
+                {{ app.candidateName || 'Candidat inconnu' }}
+              </p>
+
+              <!-- Application Info -->
+              <div class="app-info">
+                <div class="info-item">
+                  <label>Date de candidature</label>
+                  <p>{{ app.createdAt | date: 'dd/MM/yyyy' }}</p>
+                </div>
+                <div class="info-item">
+                  <label>Score de matching</label>
+                  <p *ngIf="app.matchingScore">{{ app.matchingScore }}%</p>
+                  <p *ngIf="!app.matchingScore">N/A</p>
+                </div>
+              </div>
+
+              <!-- Additional Info -->
+              <div class="additional-info" *ngIf="app.status === 'INTERVIEWING'">
+                <p class="interview-text">
+                  <i class="fas fa-calendar-alt"></i>
+                  Entretien prévu
+                </p>
+              </div>
+
+              <!-- Card Actions -->
+              <div class="card-actions">
+                <button
+                  class="btn-view"
+                  (click)="viewApplicationDetails(app.id)">
+                  <i class="fas fa-arrow-right"></i> Voir les détails
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div *ngIf="getTotalPages() > 1" class="pagination">
+          <button
+            class="pagination-btn"
+            (click)="prevPage()"
+            [disabled]="currentPage === 0">
+            <i class="fas fa-chevron-left"></i> Précédent
+          </button>
+
+          <div class="pagination-info">
+            Page {{ currentPage + 1 }} sur {{ getTotalPages() }}
+          </div>
+
+          <button
+            class="pagination-btn"
+            (click)="nextPage()"
+            [disabled]="currentPage === getTotalPages() - 1">
+            Suivant <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,8 +50,10 @@ public class JobOfferServiceImpl implements JobOfferService {
     // --- Spec 2.A & 2.B : Visibilité publique ---
     @Override
     public List<JobOfferDTO> findAllOpen() {
-        // On ne récupère que les offres dont le statut est OPEN
-        List<JobOfferEntity> entities = jobOfferRepository.findByStatus(JobStatusEnum.OPEN);
+        // On récupère les offres OPEN (actives) et CLOSED (historique visible)
+        List<JobOfferEntity> entities = jobOfferRepository.findByStatusIn(
+                Arrays.asList(JobStatusEnum.OPEN, JobStatusEnum.CLOSED)
+        );
         return jobOfferMapper.entitiesToDtos(entities);
     }
 
@@ -91,7 +94,7 @@ public class JobOfferServiceImpl implements JobOfferService {
             case OPEN:
                 // Si le passage en OPEN nécessite des données RH (salaire/remote),
                 // on vérifie qu'elles existent ou on utilise des valeurs par défaut
-                if (jobOffer.getSalaryRange() == null) {
+                if (jobOffer.getSalary() == null) {
                     throw new IllegalStateException("Impossible de publier : le salaire doit être renseigné par les RH.");
                 }
                 jobOffer.setStatus(JobStatusEnum.OPEN);
@@ -116,7 +119,6 @@ public class JobOfferServiceImpl implements JobOfferService {
     @Override
     @Transactional
     public JobOfferDTO createJobOffer(JobOfferDTO jobOfferDTO) {
-        // 1. Récupérer le nom d'utilisateur depuis le Token JWT
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
@@ -178,11 +180,15 @@ public class JobOfferServiceImpl implements JobOfferService {
 
         existing.setTitle(dto.getTitle());
         existing.setDescription(dto.getDescription());
+        existing.setCompanyName(dto.getCompanyName());
+        existing.setCompanyDescription(dto.getCompanyDescription());
+        existing.setContractType(dto.getContractType());
         existing.setDeadline(dto.getDeadline());
         existing.setDepartment(dto.getDepartment());
-        existing.setSkillsRequired(dto.getSkillsRequired());
         existing.setLocation(dto.getLocation());
-        // Note: Le salaire et le statut sont généralement gérés par des méthodes dédiées (workflow)
+        existing.setSalary(dto.getSalary());
+        existing.setRemoteDays(dto.getRemoteDays());
+        existing.setSkillsRequired(dto.getSkillsRequired());
 
         return jobOfferMapper.entityToDto(jobOfferRepository.save(existing));
     }

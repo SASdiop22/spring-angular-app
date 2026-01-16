@@ -1,0 +1,237 @@
+.candidates-container {
+  padding: 40px 0;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.candidates-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+
+  h1 {
+    flex: 1;
+    margin: 0;
+    color: #333;
+    font-size: 28px;
+    min-width: 100%;
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 16px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    order: -1;
+
+    &:hover {
+      background-color: #f0f0f0;
+      border-color: #999;
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .info-text {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+    width: 100%;
+  }
+}
+
+.candidates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.candidate-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background-color: white;
+  border-radius: 8px;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .candidate-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  mat-card-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  mat-card-subtitle {
+    margin: 4px 0 0 0;
+    color: #666;
+    font-size: 13px;
+  }
+
+  mat-card-content {
+    padding: 0 16px 16px;
+  }
+
+  mat-card-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid #eee;
+
+    button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}
+
+.candidate-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 13px;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #999;
+  }
+}
+
+.skills-section {
+  .skills-label {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .skill-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background-color: white;
+  border-radius: 8px;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #ccc;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin: 0;
+    color: #999;
+    font-size: 16px;
+  }
+}
+
+/* Responsif */
+@media (max-width: 768px) {
+  .candidates-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .candidates-header {
+    flex-direction: column;
+
+    h1 {
+      font-size: 22px;
+    }
+
+    .back-btn {
+      order: 0;
+      align-self: flex-start;
+    }
+  }
+}
+

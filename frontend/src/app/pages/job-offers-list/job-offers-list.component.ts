@@ -1,0 +1,314 @@
+import { Component, OnInit, OnDestroy } from "@angular/core"
+import { Router } from "@angular/router"
+import type { JobOffer } from "../../models/JobOffer"
+import type { Application } from "../../models/Application"
+import { JobOfferService } from "../../services/job-offer.service"
+import { ApplicationService } from "../../services/application.service"
+import { AuthService } from "../../services/auth.service"
+import { RoleService } from "../../services/role.service"
+import { Subscription } from "rxjs"
+
+@Component({
+  selector: "app-job-offers-list",
+  templateUrl: "./job-offers-list.component.html",
+  styleUrls: ["./job-offers-list.component.scss"],
+})
+export class JobOffersListComponent implements OnInit, OnDestroy {
+  jobOffers: JobOffer[] = []
+  filteredOffers: JobOffer[] = []
+  loading = true
+  error: string | null = null
+
+  // Rôles
+  isRH = false
+  isCandidat = false
+  isVisitor = false
+  private roleSubscription: Subscription | null = null
+
+  // Filtres
+  searchKeyword = ""
+  selectedContractType = ""
+  selectedLocation = ""
+  minSalary: number = 0 // Par défaut 0
+  maxSalary: number = 1000000 // Par défaut une grande valeur
+  selectedRemoteDays = ""
+
+  // Options pour les filtres
+  contractTypes: string[] = []
+  locations: string[] = []
+
+  // Modal de candidature
+  showApplicationModal = false
+  selectedOfferForApplication: JobOffer | null = null
+  modalCvFile: File | null = null
+  modalCoverLetterFile: File | null = null
+  applicationModalError: string | null = null
+  applicationModalSuccess = false
+  applicationModalApplying = false
+  currentUserId: number | null = null
+  appliedOfferIds: Set<number> = new Set() // Offres sur lesquelles le candidat a déjà postulé
+
+  constructor(
+    private jobOfferService: JobOfferService,
+    private applicationService: ApplicationService,
+    private router: Router,
+    private authService: AuthService,
+    private roleService: RoleService
+  ) {}
+
+  ngOnInit(): void {
+    this.updateRoleStatus()
+    this.currentUserId = this.authService.getCurrentUserId()
+
+    // Charger les candidatures existantes du candidat
+    if (this.isCandidat && this.currentUserId) {
+      this.loadUserApplications()
+    }
+
+    // S'abonner aux changements de rôle
+    this.roleSubscription = this.roleService.role$.subscribe(() => {
+      this.updateRoleStatus()
+    })
+    this.loadJobOffers()
+  }
+
+  /**
+   * Charge les candidatures existantes du candidat
+   */
+  private loadUserApplications(): void {
+    if (!this.currentUserId) return
+
+    this.applicationService.getApplicationsByCandidate(this.currentUserId).subscribe({
+      next: (applications: Application[]) => {
+        // Ajouter les IDs des offres à la liste des offres auxquelles il a postulé
+        applications.forEach(app => {
+          this.appliedOfferIds.add(app.jobOfferId)
+        })
+        console.log('✅ Applications chargées:', this.appliedOfferIds)
+      },
+      error: (err: any) => {
+        console.error('Erreur lors du chargement des applications:', err)
+      }
+    })
+  }
+
+  /**
+   * Vérifie si le candidat a déjà postulé sur une offre
+   */
+  hasAlreadyApplied(offerId: number): boolean {
+    return this.appliedOfferIds.has(offerId)
+  }
+
+  ngOnDestroy(): void {
+    if (this.roleSubscription) {
+      this.roleSubscription.unsubscribe()
+    }
+  }
+
+  updateRoleStatus(): void {
+    this.isRH = this.authService.isRH()
+    this.isCandidat = this.authService.isCandidat()
+    this.isVisitor = !this.authService.authenticated()
+  }
+
+  loadJobOffers(): void {
+    this.loading = true
+    this.jobOfferService.getAllPublished().subscribe({
+      next: (offers: JobOffer[]) => {
+        this.jobOffers = offers
+        this.filteredOffers = offers
+        this.extractFilterOptions()
+        this.loading = false
+      },
+      error: (err: any) => {
+        this.error = "Erreur lors du chargement des offres"
+        this.loading = false
+        console.error("[v0] Error loading job offers:", err)
+      },
+    })
+  }
+
+  extractFilterOptions(): void {
+    // Extraire les types de contrat uniques
+    this.contractTypes = [...new Set(this.jobOffers.map((offer) => offer.contractType || ""))]
+
+    // Extraire les localisations uniques
+    this.locations = [...new Set(this.jobOffers.map((offer) => offer.location))]
+  }
+
+  applyFilters(): void {
+    this.filteredOffers = this.jobOffers.filter((offer) => {
+      // Filtre par mot-clé
+      const matchesKeyword =
+        !this.searchKeyword ||
+        offer.title.toLowerCase().includes(this.searchKeyword.toLowerCase()) ||
+        offer.description.toLowerCase().includes(this.searchKeyword.toLowerCase())
+
+      // Filtre par type de contrat
+      const matchesContractType = !this.selectedContractType || offer.contractType === this.selectedContractType
+
+      // Filtre par localisation
+      const matchesLocation = !this.selectedLocation || offer.location === this.selectedLocation
+
+      // Filtre par salaire (toujours appliqué entre min et max)
+      const matchesSalary = offer.salary && offer.salary >= this.minSalary && offer.salary <= this.maxSalary
+
+      // Filtre par jours de télétravail
+      const matchesRemoteDays =
+        !this.selectedRemoteDays ||
+        (offer.remoteDays !== null && offer.remoteDays !== undefined && offer.remoteDays >= Number.parseInt(this.selectedRemoteDays))
+
+      return (
+        matchesKeyword &&
+        matchesContractType &&
+        matchesLocation &&
+        matchesSalary &&
+        matchesRemoteDays
+      )
+    })
+  }
+
+  resetFilters(): void {
+    this.searchKeyword = ""
+    this.selectedContractType = ""
+    this.selectedLocation = ""
+    this.minSalary = 0
+    this.maxSalary = 1000000
+    this.selectedRemoteDays = ""
+    this.filteredOffers = this.jobOffers
+  }
+
+  searchByKeyword(): void {
+    if (this.searchKeyword.trim()) {
+      this.loading = true
+      this.jobOfferService.search(this.searchKeyword).subscribe({
+        next: (offers: JobOffer[]) => {
+          this.filteredOffers = offers
+          this.loading = false
+        },
+        error: (err: any) => {
+          console.error("[v0] Error searching offers:", err)
+          this.loading = false
+        },
+      })
+    } else {
+      this.filteredOffers = this.jobOffers
+    }
+  }
+
+  viewDetails(offerId: number): void {
+    this.router.navigate(["/job-offers", offerId])
+  }
+
+  editOffer(offerId: number): void {
+    this.router.navigate(["/job-offers", offerId, "edit"])
+  }
+
+  /**
+   * Ouvre le modal de candidature rapide
+   */
+  openApplicationModal(offer: JobOffer): void {
+    this.selectedOfferForApplication = offer
+    this.showApplicationModal = true
+    this.modalCvFile = null
+    this.modalCoverLetterFile = null
+    this.applicationModalError = null
+    this.applicationModalSuccess = false
+  }
+
+  /**
+   * Ferme le modal de candidature
+   */
+  closeApplicationModal(): void {
+    this.showApplicationModal = false
+    this.selectedOfferForApplication = null
+    this.modalCvFile = null
+    this.modalCoverLetterFile = null
+    this.applicationModalError = null
+    this.applicationModalSuccess = false
+    this.applicationModalApplying = false
+  }
+
+  /**
+   * Traite la sélection du CV dans le modal
+   */
+  onModalCvFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement
+    if (input.files && input.files.length > 0) {
+      this.modalCvFile = input.files[0]
+    }
+  }
+
+  /**
+   * Traite la sélection de la lettre de motivation dans le modal
+   */
+  onModalCoverLetterFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement
+    if (input.files && input.files.length > 0) {
+      this.modalCoverLetterFile = input.files[0]
+    }
+  }
+
+  /**
+   * Soumet la candidature depuis le modal avec upload de fichiers
+   */
+  submitApplicationModal(): void {
+    if (!this.selectedOfferForApplication || !this.modalCvFile || !this.currentUserId) {
+      this.applicationModalError = "Tous les champs requis doivent être remplis"
+      return
+    }
+
+    // Validation du CV
+    if (!this.modalCvFile.name.endsWith('.pdf')) {
+      this.applicationModalError = "Le CV doit être au format PDF"
+      return
+    }
+
+    if (this.modalCvFile.size > 5 * 1024 * 1024) {
+      this.applicationModalError = "Le fichier CV ne doit pas dépasser 5 MB"
+      return
+    }
+
+    // Validation de la lettre de motivation (optionnel)
+    if (this.modalCoverLetterFile) {
+      if (!this.modalCoverLetterFile.name.endsWith('.pdf')) {
+        this.applicationModalError = "La lettre de motivation doit être au format PDF"
+        return
+      }
+      if (this.modalCoverLetterFile.size > 5 * 1024 * 1024) {
+        this.applicationModalError = "La lettre de motivation ne doit pas dépasser 5 MB"
+        return
+      }
+    }
+
+    this.applicationModalApplying = true
+    this.applicationModalError = null
+
+    // Utiliser applyWithFiles pour envoyer les fichiers réels
+    this.applicationService.applyWithFiles(
+      this.selectedOfferForApplication.id,
+      this.currentUserId,
+      this.modalCvFile,
+      this.modalCoverLetterFile || undefined
+    ).subscribe({
+      next: () => {
+        // ✅ IMPORTANT: Ajouter l'offre à appliedOfferIds pour désactiver immédiatement le bouton
+        this.appliedOfferIds.add(this.selectedOfferForApplication!.id)
+        console.log('✅ Candidature réussie! Offre ajoutée à appliedOfferIds:', this.selectedOfferForApplication!.id)
+
+        this.applicationModalSuccess = true
+        this.applicationModalApplying = false
+
+        // Fermer le modal après 2 secondes
+        setTimeout(() => {
+          this.closeApplicationModal()
+        }, 2000)
+      },
+      error: (err: any) => {
+        this.applicationModalError = err.error?.error || "Erreur lors de la candidature"
+        this.applicationModalApplying = false
+        console.error("Error applying:", err)
+      },
+    })
+  }
+}

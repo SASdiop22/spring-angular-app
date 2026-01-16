@@ -56,6 +56,15 @@ public class JwtService {
         return createToken(claims, username);
     }
 
+    /**
+     * Génère un token JWT avec le username et l'ID de l'utilisateur
+     */
+    public String GenerateToken(String username, Long userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);  // Ajouter l'ID au token
+        return createToken(claims, username);
+    }
+
 
     private String createToken(Map<String, Object> claims, String username) {
 

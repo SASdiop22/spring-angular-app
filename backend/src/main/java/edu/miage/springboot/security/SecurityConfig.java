@@ -63,14 +63,14 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // 4. Autorisation des requêtes
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        // Autoriser explicitement les RH/ADMIN sur les actions de gestion
-                        .requestMatchers(HttpMethod.POST, "/api/applications/*/hire").hasAnyAuthority("ROLE_ADMIN", "ROLE_RH")
-                        .requestMatchers(HttpMethod.PATCH, "/api/applications/*/status").hasAnyAuthority("ROLE_ADMIN", "ROLE_RH")
-                         //Puis les règles plus larges
-                        .requestMatchers("/api/applications/**").authenticated()
-                        .anyRequest().authenticated()
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/api/auth/**").permitAll() // Login et Register publics
+                        .requestMatchers(HttpMethod.GET, "/api/joboffers/**").permitAll() // Offres publiques en lecture
+                        .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll() // Téléchargement des fichiers (CVs)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Permettre les pré-requêtes CORS
+                        .requestMatchers("/", "/index.html", "/*.ico", "/*.css", "/*.js").permitAll() // Frontend statique
+                        .requestMatchers("/actuator/**").permitAll() // Actuator de Spring Boot
+                        .anyRequest().authenticated() // Le reste nécessite un token
                 )
 
                 .authenticationProvider(authenticationProvider())
