@@ -58,4 +58,15 @@ export class ApplicationService {
   getApplicationsByJobOffer(jobOfferId: number): Observable<Application[]> {
     return this.http.get<Application[]>(`${geturl()}/api/joboffers/${jobOfferId}/candidates`)
   }
+
+  /**
+   * Met à jour le statut d'une candidature
+   * Utilisé par les RH pour gérer les candidatures
+   */
+  updateApplicationStatus(applicationId: number, status: string): Observable<Application> {
+    return this.http.patch<Application>(
+      `${this.apiUrl}/${applicationId}/status`,
+      { status }
+    )
+  }
 }

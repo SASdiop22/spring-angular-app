@@ -38,12 +38,16 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(authRequestDTO.getUsername(), authRequestDTO.getPassword())
         );
         if (authentication.isAuthenticated()) {
-            // Récupérer l'utilisateur pour obtenir son ID
+            // Récupérer l'utilisateur pour obtenir son ID et les rôles
             UserEntity user = userRepository.findByUsername(authRequestDTO.getUsername())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-            // Générer le token en passant aussi l'ID
-            String token = jwtService.GenerateToken(authRequestDTO.getUsername(), user.getId());
+            // Générer le token en passant aussi l'ID et les autorités (rôles)
+            String token = jwtService.GenerateToken(
+                    authRequestDTO.getUsername(),
+                    user.getId(),
+                    authentication.getAuthorities()
+            );
             return new AuthResponseDTO(token);
         } else {
             throw new RuntimeException("Utilisateur non trouvé ou mot de passe incorrect");

@@ -121,16 +121,24 @@ export class UserApplicationsComponent implements OnInit {
    */
   getStatusBadgeClass(status: string): string {
     switch (status) {
-      case 'ACCEPTED':
-        return 'status-accepted'
+      case 'RECEIVED':
+        return 'status-pending';
+      case 'INTERVIEW_PENDING':
+        return 'status-interviewing';
+      case 'TECHNICAL_TEST_PENDING':
+        return 'status-interviewing';
+      case 'SHORTLISTED':
+        return 'status-interviewing';
+      case 'OFFER_PENDING':
+        return 'status-pending';
+      case 'HIRED':
+        return 'status-accepted';
       case 'REJECTED':
-        return 'status-rejected'
-      case 'PENDING':
-        return 'status-pending'
-      case 'INTERVIEWING':
-        return 'status-interviewing'
+        return 'status-rejected';
+      case 'OFFER_DECLINED':
+        return 'status-rejected';
       default:
-        return 'status-default'
+        return 'status-default';
     }
   }
 
@@ -138,18 +146,17 @@ export class UserApplicationsComponent implements OnInit {
    * Obtient le label du statut
    */
   getStatusLabel(status: string): string {
-    switch (status) {
-      case 'ACCEPTED':
-        return 'Accepté'
-      case 'REJECTED':
-        return 'Rejeté'
-      case 'PENDING':
-        return 'En attente'
-      case 'INTERVIEWING':
-        return 'En entretien'
-      default:
-        return status
-    }
+    const statusMap: { [key: string]: string } = {
+      'RECEIVED': 'Reçue',
+      'INTERVIEW_PENDING': 'Entretien en attente',
+      'TECHNICAL_TEST_PENDING': 'Test technique en attente',
+      'SHORTLISTED': 'Présélectionnée',
+      'REJECTED': 'Rejeté',
+      'OFFER_PENDING': 'Offre proposée',
+      'OFFER_DECLINED': 'Offre déclinée',
+      'HIRED': 'Embauché'
+    };
+    return statusMap[status] || status;
   }
 
   /**

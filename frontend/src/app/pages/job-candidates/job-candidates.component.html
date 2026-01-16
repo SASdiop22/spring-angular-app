@@ -133,29 +133,24 @@
 
           <!-- Colonne 4: Actions -->
           <div class="col-md-3">
-            <div class="btn-group-vertical w-100" role="group">
+            <div class="d-grid gap-2">
               <button class="btn btn-outline-info btn-sm"
-                      (click)="downloadCV(candidate)"
                       *ngIf="candidate.cvUrl"
+                      (click)="downloadCV(candidate)"
                       title="Télécharger le CV">
                 <i class="fas fa-download"></i> CV
               </button>
               <button class="btn btn-outline-warning btn-sm"
-                      (click)="downloadCoverLetter(candidate)"
                       *ngIf="candidate.coverLetter"
+                      (click)="downloadCoverLetter(candidate)"
                       title="Télécharger la lettre de motivation">
                 <i class="fas fa-download"></i> LM
               </button>
-              <button class="btn btn-outline-primary btn-sm"
-                      (click)="viewDetails(candidate)"
-                      title="Voir les détails de la candidature">
-                <i class="fas fa-eye"></i> Détails
-              </button>
-              <button class="btn btn-outline-success btn-sm"
+              <button class="btn btn-outline-warning btn-sm"
                       *ngIf="isRH || isAdmin"
-                      (click)="manageCandidacy(candidate)"
-                      title="Gérer la candidature (entretien, statut, etc.)">
-                <i class="fas fa-tasks"></i> Gérer
+                      (click)="openStatusModal(candidate); $event.stopPropagation()"
+                      title="Changer le statut de la candidature">
+                <i class="fas fa-exchange-alt"></i> Statut
               </button>
             </div>
           </div>
@@ -213,3 +208,62 @@
   </div>
 </div>
 
+<!-- Modale pour changer le statut -->
+<div class="modal" [class.show]="showStatusModal" [style.display]="showStatusModal ? 'block' : 'none'">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-exchange-alt"></i> Changer le statut de la candidature
+        </h5>
+        <button type="button" class="btn-close" (click)="closeStatusModal()" [disabled]="statusUpdateLoading"></button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="selectedApplication" class="mb-4">
+          <p class="text-muted mb-1">Candidat:</p>
+          <h6 class="mb-3">{{ selectedApplication.candidateName }}</h6>
+
+          <p class="text-muted mb-1">Statut actuel:</p>
+          <div class="mb-3">
+            <span class="badge" [ngClass]="getStatusBadgeClass(selectedApplication.status)">
+              {{ getStatusLabel(selectedApplication.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div *ngIf="statusUpdateError" class="alert alert-danger mb-3">
+          <i class="fas fa-exclamation-circle"></i> {{ statusUpdateError }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-list"></i> Nouveau statut</label>
+          <select class="form-select" [(ngModel)]="newStatus" [disabled]="statusUpdateLoading">
+            <option value="" disabled>Sélectionnez un statut</option>
+            <option *ngFor="let status of availableStatuses" [value]="status.value">
+              {{ status.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeStatusModal()" [disabled]="statusUpdateLoading">
+          <i class="fas fa-times"></i> Annuler
+        </button>
+        <button type="button" class="btn btn-primary" (click)="updateStatus()"
+                [disabled]="!newStatus || statusUpdateLoading || newStatus === selectedApplication?.status">
+          <span *ngIf="!statusUpdateLoading">
+            <i class="fas fa-check"></i> Mettre à jour
+          </span>
+          <span *ngIf="statusUpdateLoading">
+            <i class="fas fa-spinner fa-spin"></i> Mise à jour...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop pour la modale -->
+<div class="modal-backdrop fade" [class.show]="showStatusModal" *ngIf="showStatusModal"></div>

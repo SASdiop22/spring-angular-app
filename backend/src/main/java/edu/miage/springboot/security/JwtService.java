@@ -5,14 +5,18 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtService {
@@ -32,7 +36,7 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getSignKey())
@@ -50,18 +54,31 @@ public class JwtService {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-
     public String GenerateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, username);
     }
 
     /**
-     * Génère un token JWT avec le username et l'ID de l'utilisateur
+     * Génère un token JWT avec le username, l'ID et les rôles de l'utilisateur
+     */
+    public String GenerateToken(String username, Long userId, Collection<? extends GrantedAuthority> authorities) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        // Ajouter les rôles au token
+        List<String> roles = authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+        claims.put("authorities", roles);
+        return createToken(claims, username);
+    }
+
+    /**
+     * Version ancienne pour compatibilité (sans rôles)
      */
     public String GenerateToken(String username, Long userId) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userId);  // Ajouter l'ID au token
+        claims.put("userId", userId);
         return createToken(claims, username);
     }
 

@@ -33,6 +33,25 @@ export class JobCandidatesComponent implements OnInit {
   isRH = false;
   isAdmin = false;
 
+  // Modal pour changer le statut
+  showStatusModal = false;
+  selectedApplication: Application | null = null;
+  newStatus: string = '';
+  statusUpdateLoading = false;
+  statusUpdateError: string | null = null;
+
+  // Statuts disponibles
+  availableStatuses = [
+    { value: 'RECEIVED', label: 'Reçue' },
+    { value: 'INTERVIEW_PENDING', label: 'Entretien en attente' },
+    { value: 'TECHNICAL_TEST_PENDING', label: 'Test technique en attente' },
+    { value: 'SHORTLISTED', label: 'Présélectionnée' },
+    { value: 'REJECTED', label: 'Rejeté' },
+    { value: 'OFFER_PENDING', label: 'Offre proposée' },
+    { value: 'OFFER_DECLINED', label: 'Offre déclinée' },
+    { value: 'HIRED', label: 'Embauché' }
+  ];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -258,23 +277,6 @@ export class JobCandidatesComponent implements OnInit {
     document.body.removeChild(link);
   }
 
-  /**
-   * Voit les détails complets du candidat
-   */
-  viewDetails(application: Application): void {
-    if (application.id) {
-      this.router.navigate(['/job-offers', this.jobOfferId, 'candidates', application.id]);
-    }
-  }
-
-  /**
-   * Gère la candidature (entretien, statut, etc.)
-   */
-  manageCandidacy(application: Application): void {
-    if (application.id) {
-      this.router.navigate(['/applications', application.id]);
-    }
-  }
 
   /**
    * Revenir à la liste des offres
@@ -288,6 +290,60 @@ export class JobCandidatesComponent implements OnInit {
    */
   refresh(): void {
     this.loadCandidates();
+  }
+
+  /**
+   * Ouvre la modale pour changer le statut d'une candidature
+   */
+  openStatusModal(application: Application): void {
+    this.selectedApplication = application;
+    this.newStatus = application.status;
+    this.showStatusModal = true;
+    this.statusUpdateError = null;
+  }
+
+  /**
+   * Ferme la modale de changement de statut
+   */
+  closeStatusModal(): void {
+    this.showStatusModal = false;
+    this.selectedApplication = null;
+    this.newStatus = '';
+    this.statusUpdateError = null;
+  }
+
+  /**
+   * Met à jour le statut de la candidature
+   */
+  updateStatus(): void {
+    if (!this.selectedApplication || !this.newStatus) {
+      return;
+    }
+
+    this.statusUpdateLoading = true;
+    this.statusUpdateError = null;
+
+    this.applicationService.updateApplicationStatus(this.selectedApplication.id, this.newStatus).subscribe({
+      next: (updatedApplication) => {
+        // Mettre à jour la liste locale
+        const index = this.candidates.findIndex(c => c.id === updatedApplication.id);
+        if (index !== -1) {
+          this.candidates[index] = updatedApplication;
+          this.applyFilters();
+        }
+
+        this.statusUpdateLoading = false;
+        this.closeStatusModal();
+
+        // Afficher un message de succès (optionnel)
+        alert(`Candidature mise à jour avec succès!\n\nStatut: ${this.getStatusLabel(this.newStatus)}`);
+      },
+      error: (err) => {
+        console.error('Erreur lors de la mise à jour du statut:', err);
+        this.statusUpdateError = 'Erreur lors de la mise à jour du statut. Veuillez réessayer.';
+        this.statusUpdateLoading = false;
+      }
+    });
   }
 }
 

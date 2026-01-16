@@ -21,9 +21,11 @@ public class AuthUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoles().stream()
+        var authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()))
                 .collect(Collectors.toList());
+        System.out.println("🔐 AuthUserDetails.getAuthorities() pour " + user.getUsername() + ": " + authorities);
+        return authorities;
     }
 
     @Override
