@@ -66,6 +66,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/**").permitAll() // Login et Register publics
                         .requestMatchers(HttpMethod.GET, "/api/joboffers/**").permitAll() // Offres publiques en lecture
+                        .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll() // Téléchargement des fichiers (CVs)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Permettre les pré-requêtes CORS
                         .requestMatchers("/", "/index.html", "/*.ico", "/*.css", "/*.js").permitAll() // Frontend statique
                         .requestMatchers("/actuator/**").permitAll() // Actuator de Spring Boot

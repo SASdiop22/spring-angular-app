@@ -144,7 +144,7 @@
               class="apply-btn"
               [disabled]="offer.status === 'CLOSED'"
               [title]="offer.status === 'CLOSED' ? 'Cette offre est clôturée' : ''"
-              (click)="viewDetails(offer.id)">
+              (click)="openApplicationModal(offer)">
               {{ offer.status === 'CLOSED' ? 'Offre clôturée' : 'Candidater' }}
             </button>
             <!-- Bouton Modifier visible uniquement pour les RH (désactivé si offre clôturée) -->
@@ -161,4 +161,87 @@
       </div>
     </main>
   </div>
-</div>
+
+  <!-- Modal de candidature rapide -->
+  <div *ngIf="showApplicationModal" class="modal-overlay" (click)="closeApplicationModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Postuler à cette offre</h2>
+        <button class="close-btn" (click)="closeApplicationModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="offer-summary" *ngIf="selectedOfferForApplication">
+          <h3>{{ selectedOfferForApplication.title }}</h3>
+          <p class="company">{{ selectedOfferForApplication.companyName }}</p>
+        </div>
+
+        <form (ngSubmit)="submitApplicationModal()" class="application-form">
+          <!-- Erreur d'application -->
+          <div *ngIf="applicationModalError" class="alert alert-danger">
+            {{ applicationModalError }}
+          </div>
+
+          <!-- Succès -->
+          <div *ngIf="applicationModalSuccess" class="alert alert-success">
+            ✅ Candidature envoyée avec succès !
+          </div>
+
+          <!-- Champ CV -->
+          <div class="form-group" *ngIf="!applicationModalSuccess">
+            <label for="cvFileModal">Importer votre CV (PDF) *</label>
+            <input
+              type="file"
+              id="cvFileModal"
+              (change)="onModalCvFileSelected($event)"
+              accept=".pdf"
+              required
+              class="form-input">
+            <small>Veuillez importer votre CV au format PDF (taille max: 5 MB)</small>
+            <div *ngIf="modalCvFile" class="file-info">
+              <i class="fas fa-file-pdf"></i>
+              <span>{{ modalCvFile.name }}</span>
+            </div>
+          </div>
+
+          <!-- Champ Lettre de motivation -->
+          <div class="form-group" *ngIf="!applicationModalSuccess">
+            <label for="coverLetterFileModal">Lettre de motivation (optionnel - PDF)</label>
+            <input
+              type="file"
+              id="coverLetterFileModal"
+              (change)="onModalCoverLetterFileSelected($event)"
+              accept=".pdf"
+              class="form-input">
+            <small>Format PDF, taille max: 5 MB</small>
+            <div *ngIf="modalCoverLetterFile" class="file-info">
+              <i class="fas fa-file-pdf"></i>
+              <span>{{ modalCoverLetterFile.name }}</span>
+            </div>
+          </div>
+
+          <!-- Boutons d'action -->
+          <div class="form-actions" *ngIf="!applicationModalSuccess">
+            <button type="button" class="btn-cancel" (click)="closeApplicationModal()">
+              Annuler
+            </button>
+            <button type="submit" class="btn-submit" [disabled]="applicationModalApplying || !modalCvFile">
+              <span *ngIf="!applicationModalApplying">Soumettre la candidature</span>
+              <span *ngIf="applicationModalApplying">
+                <i class="fas fa-spinner fa-spin"></i> Envoi en cours...
+              </span>
+            </button>
+          </div>
+
+          <!-- Bouton fermer après succès -->
+          <div class="form-actions" *ngIf="applicationModalSuccess">
+            <button type="button" class="btn-submit" (click)="closeApplicationModal()">
+              Fermer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

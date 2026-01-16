@@ -203,12 +203,31 @@ export class JobCandidatesComponent implements OnInit {
   }
 
   /**
-   * Télécharge le CV
+   * Télécharge le CV du candidat
    */
   downloadCV(candidate: Application): void {
-    if (candidate.cvUrl) {
-      window.open(candidate.cvUrl, '_blank');
+    if (!candidate.cvUrl) {
+      return;
     }
+
+    // Si c'est une URL complète (commence par http), ouvrir directement
+    if (candidate.cvUrl.startsWith('http')) {
+      window.open(candidate.cvUrl, '_blank');
+      return;
+    }
+
+    // Sinon, créer un lien de téléchargement via l'API backend
+    const downloadUrl = `http://localhost:8080/api/files/download/${encodeURIComponent(candidate.cvUrl)}`;
+
+    // Créer un lien temporaire et le cliquer
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = candidate.cvUrl;
+    link.style.display = 'none';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   /**

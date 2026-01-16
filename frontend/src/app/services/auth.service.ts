@@ -21,7 +21,7 @@ export class AuthService {
   }
 
   private initializeRoleFromStorage(): void {
-    const savedRole = sessionStorage.getItem('USER_ROLE');
+    const savedRole = localStorage.getItem('USER_ROLE');
     if (savedRole) {
       this.roleService.setRole(savedRole);
     }
@@ -36,7 +36,8 @@ export class AuthService {
         console.log('🔑 AuthService.login() - Response:', response);
         console.log('🔑 AuthService.login() - Token:', tokenValue);
         if (response && tokenValue) {
-          sessionStorage.setItem("ACCESS_TOKEN", tokenValue);
+          // Utiliser localStorage au lieu de sessionStorage pour partager entre onglets
+          localStorage.setItem("ACCESS_TOKEN", tokenValue);
           // Extraire le rôle du token JWT
           const decodedToken = this.decodeToken(tokenValue);
           console.log('🔑 AuthService.login() - Decoded token:', decodedToken);
@@ -106,7 +107,7 @@ export class AuthService {
   }
 
   authenticated(): boolean {
-    return !!sessionStorage.getItem("ACCESS_TOKEN");
+    return !!localStorage.getItem("ACCESS_TOKEN");
   }
 
   getUserRole(): string {
@@ -129,7 +130,7 @@ export class AuthService {
    * Récupère l'ID de l'utilisateur connecté depuis le token JWT
    */
   getCurrentUserId(): number | null {
-    const token = sessionStorage.getItem("ACCESS_TOKEN");
+    const token = localStorage.getItem("ACCESS_TOKEN");
     if (!token) {
       console.warn('⚠️ AuthService.getCurrentUserId() - No token found');
       return null;
@@ -155,6 +156,104 @@ export class AuthService {
     return null;
   }
 
+  /**
+   * Vérifie si un token JWT est expiré
+   * @param token - Le token JWT à vérifier
+   * @returns true si le token est expiré, false sinon
+   */
+  isTokenExpired(token: string): boolean {
+    try {
+      const decodedToken = this.decodeToken(token);
+
+      if (!decodedToken || !decodedToken.exp) {
+        console.warn('⚠️ AuthService.isTokenExpired() - Token invalide ou sans expiration');
+        return true; // Considérer comme expiré si on ne peut pas le décoder
+      }
+
+      // exp est en secondes, Date.now() est en millisecondes
+      const expirationTime = decodedToken.exp * 1000;
+      const now = Date.now();
+      const isExpired = now > expirationTime;
+
+      console.log(`🔔 AuthService.isTokenExpired() - Expiration: ${new Date(expirationTime).toLocaleString()}, Maintenant: ${new Date(now).toLocaleString()}, Expiré: ${isExpired}`);
+
+      return isExpired;
+    } catch (error) {
+      console.error('❌ AuthService.isTokenExpired() - Erreur lors de la vérification:', error);
+      return true; // Considérer comme expiré en cas d'erreur
+    }
+  }
+
+  /**
+   * Restaure la session utilisateur à partir du token stocké
+   * Extrait le rôle et l'ID utilisateur et les stocke dans les services
+   * @param token - Le token JWT
+   */
+  restoreSessionFromToken(token: string): void {
+    try {
+      const decodedToken = this.decodeToken(token);
+
+      if (!decodedToken) {
+        console.warn('⚠️ AuthService.restoreSessionFromToken() - Impossible de décoder le token');
+        return;
+      }
+
+      console.log('🔄 AuthService.restoreSessionFromToken() - Décoded token:', decodedToken);
+
+      // 1. Restaurer le rôle
+      let role = null;
+
+      // Chercher dans le champ 'role' du token
+      if (decodedToken.role) {
+        role = decodedToken.role;
+        console.log('✅ AuthService.restoreSessionFromToken() - Role trouvé:', role);
+      }
+      // Chercher dans le champ 'authorities'
+      else if (decodedToken.authorities) {
+        const authorities = Array.isArray(decodedToken.authorities)
+          ? decodedToken.authorities
+          : [decodedToken.authorities];
+
+        if (authorities.some((auth: any) => auth.includes('RH'))) {
+          role = 'RH';
+        } else if (authorities.some((auth: any) => auth.includes('CANDIDAT'))) {
+          role = 'CANDIDAT';
+        } else if (authorities.some((auth: any) => auth.includes('ADMIN'))) {
+          role = 'ADMIN';
+        }
+        console.log('✅ AuthService.restoreSessionFromToken() - Role trouvé dans authorities:', role);
+      }
+      // Fallback: extraire du username
+      else if (decodedToken.sub) {
+        const username = decodedToken.sub.toLowerCase();
+
+        if (username.includes('.rh') || username.includes('rh')) {
+          role = 'RH';
+        } else if (username.includes('.candidat') || username.includes('candidat') ||
+                   username.includes('.candidate') || username.includes('candidate') ||
+                   username.includes('candidate_') || username.includes('rgpd')) {
+          role = 'CANDIDAT';
+        } else if (username.includes('.admin') || username.includes('admin')) {
+          role = 'ADMIN';
+        } else {
+          role = 'CANDIDAT'; // Par défaut
+        }
+        console.log('✅ AuthService.restoreSessionFromToken() - Role extrait du username:', role);
+      }
+
+      // Définir le rôle s'il a été trouvé
+      if (role) {
+        this.roleService.setRole(role);
+        console.log('✅ AuthService.restoreSessionFromToken() - Rôle restauré:', role);
+      } else {
+        console.warn('⚠️ AuthService.restoreSessionFromToken() - Impossible de trouver le rôle');
+      }
+
+    } catch (error) {
+      console.error('❌ AuthService.restoreSessionFromToken() - Erreur:', error);
+    }
+  }
+
 
   private decodeToken(token: string): any {
     try {
@@ -174,7 +273,7 @@ export class AuthService {
   }
 
   logout(): void {
-    sessionStorage.removeItem("ACCESS_TOKEN");
+    localStorage.removeItem("ACCESS_TOKEN");
     this.roleService.reset();
   }
 }

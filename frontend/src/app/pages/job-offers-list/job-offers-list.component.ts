@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from "@angular/core"
 import { Router } from "@angular/router"
 import type { JobOffer } from "../../models/JobOffer"
 import { JobOfferService } from "../../services/job-offer.service"
+import { ApplicationService } from "../../services/application.service"
 import { AuthService } from "../../services/auth.service"
 import { RoleService } from "../../services/role.service"
 import { Subscription } from "rxjs"
@@ -35,8 +36,19 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
   contractTypes: string[] = []
   locations: string[] = []
 
+  // Modal de candidature
+  showApplicationModal = false
+  selectedOfferForApplication: JobOffer | null = null
+  modalCvFile: File | null = null
+  modalCoverLetterFile: File | null = null
+  applicationModalError: string | null = null
+  applicationModalSuccess = false
+  applicationModalApplying = false
+  currentUserId: number | null = null
+
   constructor(
     private jobOfferService: JobOfferService,
+    private applicationService: ApplicationService,
     private router: Router,
     private authService: AuthService,
     private roleService: RoleService
@@ -44,6 +56,7 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.updateRoleStatus()
+    this.currentUserId = this.authService.getCurrentUserId()
     // S'abonner aux changements de rôle
     this.roleSubscription = this.roleService.role$.subscribe(() => {
       this.updateRoleStatus()
@@ -154,5 +167,106 @@ export class JobOffersListComponent implements OnInit, OnDestroy {
 
   editOffer(offerId: number): void {
     this.router.navigate(["/job-offers", offerId, "edit"])
+  }
+
+  /**
+   * Ouvre le modal de candidature rapide
+   */
+  openApplicationModal(offer: JobOffer): void {
+    this.selectedOfferForApplication = offer
+    this.showApplicationModal = true
+    this.modalCvFile = null
+    this.modalCoverLetterFile = null
+    this.applicationModalError = null
+    this.applicationModalSuccess = false
+  }
+
+  /**
+   * Ferme le modal de candidature
+   */
+  closeApplicationModal(): void {
+    this.showApplicationModal = false
+    this.selectedOfferForApplication = null
+    this.modalCvFile = null
+    this.modalCoverLetterFile = null
+    this.applicationModalError = null
+    this.applicationModalSuccess = false
+    this.applicationModalApplying = false
+  }
+
+  /**
+   * Traite la sélection du CV dans le modal
+   */
+  onModalCvFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement
+    if (input.files && input.files.length > 0) {
+      this.modalCvFile = input.files[0]
+    }
+  }
+
+  /**
+   * Traite la sélection de la lettre de motivation dans le modal
+   */
+  onModalCoverLetterFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement
+    if (input.files && input.files.length > 0) {
+      this.modalCoverLetterFile = input.files[0]
+    }
+  }
+
+  /**
+   * Soumet la candidature depuis le modal
+   */
+  submitApplicationModal(): void {
+    if (!this.selectedOfferForApplication || !this.modalCvFile || !this.currentUserId) {
+      this.applicationModalError = "Tous les champs requis doivent être remplis"
+      return
+    }
+
+    // Validation du CV
+    if (!this.modalCvFile.name.endsWith('.pdf')) {
+      this.applicationModalError = "Le CV doit être au format PDF"
+      return
+    }
+
+    if (this.modalCvFile.size > 5 * 1024 * 1024) {
+      this.applicationModalError = "Le fichier CV ne doit pas dépasser 5 MB"
+      return
+    }
+
+    // Validation de la lettre de motivation (optionnel)
+    if (this.modalCoverLetterFile) {
+      if (!this.modalCoverLetterFile.name.endsWith('.pdf')) {
+        this.applicationModalError = "La lettre de motivation doit être au format PDF"
+        return
+      }
+      if (this.modalCoverLetterFile.size > 5 * 1024 * 1024) {
+        this.applicationModalError = "La lettre de motivation ne doit pas dépasser 5 MB"
+        return
+      }
+    }
+
+    this.applicationModalApplying = true
+    this.applicationModalError = null
+
+    const cvUrl = this.modalCvFile.name
+    const coverLetterUrl = this.modalCoverLetterFile ? this.modalCoverLetterFile.name : ""
+
+    this.applicationService.apply(
+      this.selectedOfferForApplication.id,
+      this.currentUserId,
+      cvUrl,
+      coverLetterUrl
+    ).subscribe({
+      next: () => {
+        this.applicationModalSuccess = true
+        this.applicationModalApplying = false
+      },
+      error: (err: any) => {
+        this.applicationModalError = err.error?.message || "Erreur lors de la candidature"
+        this.applicationModalApplying = false
+        console.error("Error applying:", err)
+      },
+    })
   }
 }

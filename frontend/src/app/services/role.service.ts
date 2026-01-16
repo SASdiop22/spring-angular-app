@@ -9,8 +9,8 @@ export class RoleService {
   public role$: Observable<string> = this.roleSubject.asObservable();
 
   constructor() {
-    // Initialiser avec le rôle stocké en session
-    const savedRole = sessionStorage.getItem('USER_ROLE') || 'VISITOR';
+    // Initialiser avec le rôle stocké en localStorage (partagé entre onglets)
+    const savedRole = localStorage.getItem('USER_ROLE') || 'VISITOR';
     console.log('🔐 RoleService init - Rôle sauvegardé:', savedRole);
     this.roleSubject.next(savedRole);
   }
@@ -18,7 +18,7 @@ export class RoleService {
   setRole(role: string): void {
     console.log('🔐 RoleService.setRole() ->', role);
     this.roleSubject.next(role);
-    sessionStorage.setItem('USER_ROLE', role);
+    localStorage.setItem('USER_ROLE', role);
   }
 
   getRole(): string {
@@ -48,7 +48,7 @@ export class RoleService {
   reset(): void {
     console.log('🔐 RoleService.reset()');
     this.roleSubject.next('VISITOR');
-    sessionStorage.removeItem('USER_ROLE');
+    localStorage.removeItem('USER_ROLE');
   }
 }
 
