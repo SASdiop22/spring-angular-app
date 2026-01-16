@@ -87,8 +87,9 @@ public class SecurityService {
     public boolean isEmployeAnyKind() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_RH") || a.getAuthority().equals("ROLE_EMPLOYE"));
+                .anyMatch(a -> (a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_RH") || a.getAuthority().equals("ROLE_EMPLOYE")));
     }
+
 
     // --- Méthodes utilitaires ---
 

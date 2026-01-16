@@ -28,7 +28,7 @@ GET http://localhost:8080/api/joboffers
 Authorization: Bearer {{token_rh}}
 
 > {%
-    const offer = response.body.find(o => o.title.includes("Dev Java S1"));
+    const offer = response.body.find(o => o.title.includes("Développeur Java Senior"));
     client.test("Existence offre", function() {
         client.assert(offer != undefined, "L'offre contenant 'S1' doit être présente dans les seeders");
     });

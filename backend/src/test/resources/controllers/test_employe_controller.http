@@ -125,6 +125,6 @@ Authorization: Bearer {{admin_token}}
 
 > {%
     client.test("Erreur : On ne peut pas être son propre manager", function() {
-    client.assert(response.status === 400 || response.status === 500);
+    client.assert(response.status === 400 || response.status === 403);
     });
 %}

@@ -80,7 +80,7 @@ Authorization: Bearer {{token_rh}}
     client.test("Le RH publie l'offre avec succès", function() {
         client.assert(response.status === 200, "La publication devrait réussir");
         client.assert(response.body.status === "OPEN", "Le statut doit passer à OPEN");
-        client.assert(response.body.salaryRange === 72000);
+        client.assert(response.body.salary === 72000);
     });
 %}
 

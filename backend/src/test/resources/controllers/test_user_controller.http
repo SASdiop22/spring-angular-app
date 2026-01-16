@@ -127,7 +127,7 @@ Authorization: Bearer {{admin_token}}
     client.test("Vérification structure UserDTO", function() {
         client.assert(response.status === 200);
         client.assert(response.body.username === "alice.rh", "Le username ne correspond pas");
-        client.assert(response.body.roles.includes("ROLE_RH"), "Le rôle ROLE_RH est manquant");
+        client.assert(response.body.roles.includes("RH"), "Le rôle ROLE_RH est manquant");
         client.assert(response.body.email !== null, "L'email doit être renseigné");
     });
 %}

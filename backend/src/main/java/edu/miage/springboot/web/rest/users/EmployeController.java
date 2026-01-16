@@ -65,7 +65,7 @@ public class EmployeController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("@securityService.isEmployeAnyKind()")
+    //@PreAuthorize("@securityService.isEmployeAnyKind()")
     public ResponseEntity<EmployeDTO> getCurrentEmploye(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(employeService.findByUsername(userDetails.getUsername()));
     }

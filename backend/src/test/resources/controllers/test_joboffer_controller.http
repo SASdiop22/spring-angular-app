@@ -92,7 +92,7 @@ Authorization: Bearer {{rh_token}}
     client.test("Offre publiée avec succès", function() {
         client.assert(response.status === 200);
         client.assert(response.body.status === "OPEN", "Le statut doit être OPEN");
-        client.assert(response.body.salaryRange === 85000, "Le salaire n'a pas été mis à jour");
+        client.assert(response.body.salary === 85000, "Le salaire n'a pas été mis à jour");
         client.assert(response.body.publishedAt !== null, "La date de publication doit être renseignée");
     });
 %}

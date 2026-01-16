@@ -87,7 +87,7 @@ Authorization: Bearer {{token_rh}}
         client.assert(response.body.status === "OPEN", "L'offre doit passer en statut OPEN");
 
         // Vérification avec le champ correct du DTO (salaryRange)
-        client.assert(response.body.salaryRange === 55000.0, "Le salaire n'a pas été correctement enregistré");
+        client.assert(response.body.salary === 55000.0, "Le salaire n'a pas été correctement enregistré");
     });
 %}
 

@@ -9,18 +9,51 @@
 ### Tri: Par score de correspondance décroissant (meilleur candidat en premier)
 ###
 ### ============================================================================
-
-### Variables
 @baseUrl = http://localhost:8080/api
-@adminToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-@rhToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# @name loginSophie
+# Sophie est une candidate valide (Scénario 5)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "sophie.onboard",
+  "password": "password123"
+}
+> {% client.global.set("token_sophie", response.body.accessToken); %}
+
+###
+
+# @name loginJean
+# Jean a un consentement expiré (Scénario 2)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jean.rgpd",
+  "password": "password123"
+}
+> {% client.global.set("token_jean", response.body.accessToken); %}
+
+###
+
+# @name loginRH
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice.rh",
+  "password": "password123"
+}
+> {% client.global.set("token_rh", response.body.accessToken); %}
+
 
 ### ============================================================================
 ### 1. GET - Récupérer les candidatures pour l'offre d'emploi ID=1
 ### Description: Affiche tous les candidats triés par score de correspondance
 ### ============================================================================
 GET {{baseUrl}}/joboffers/1/candidates
-Authorization: {{rhToken}}
+Authorization: {{token_rh}}
 Accept: application/json
 
 ### Réponse attendue:
@@ -59,7 +92,7 @@ Accept: application/json
 ### 2. GET - Récupérer les candidats pour l'offre "Lead Frontend React" (ID=3)
 ### ============================================================================
 GET {{baseUrl}}/joboffers/3/candidates
-Authorization: {{rhToken}}
+Authorization: {{token_rh}}
 Accept: application/json
 
 ### ============================================================================
@@ -67,7 +100,7 @@ Accept: application/json
 ### Description: Devrait retourner 404 ou une liste vide selon l'implémentation
 ### ============================================================================
 GET {{baseUrl}}/joboffers/999/candidates
-Authorization: {{rhToken}}
+Authorization: {{token_rh}}
 Accept: application/json
 
 ### ============================================================================
@@ -91,7 +124,7 @@ Accept: application/json
 ### Étape 1: Récupérer la liste des offres ouvertes
 ### ============================================================================
 GET {{baseUrl}}/joboffers/privilege
-Authorization: {{rhToken}}
+Authorization: {{token_rh}}
 Accept: application/json
 
 ### Étape 2: Sélectionner une offre et consulter ses candidatures
@@ -99,7 +132,7 @@ Accept: application/json
 ### Supposons que l'offre ID=1 "Développeur Java Senior" a plusieurs candidats
 
 GET {{baseUrl}}/joboffers/1/candidates
-Authorization: {{rhToken}}
+Authorization: {{token_rh}}
 Accept: application/json
 
 ### Étape 3: Analyser les scores de correspondance
@@ -112,7 +145,7 @@ Accept: application/json
 ### Étape 4: Sélectionner un candidat et programmer un entretien
 ### Exemple: candidat avec ID=101 pour l'offre 1
 PATCH {{baseUrl}}/applications/101/schedule-interview
-Authorization: {{rhToken}}
+Authorization: {{token_rh}}
 Content-Type: application/json
 
 {
@@ -123,7 +156,7 @@ Content-Type: application/json
 ### Étape 5: Mettre à jour le statut du candidat
 ### Après l'entretien, on peut mettre à jour le statut
 PATCH {{baseUrl}}/applications/101/status
-Authorization: {{rhToken}}
+Authorization: {{token_rh}}
 Content-Type: application/json
 
 {

@@ -59,7 +59,7 @@ GET http://localhost:8080/api/joboffers
 Authorization: Bearer {{token_rh}}
 
 > {%
-    const offer = response.body.find(o => o.title.includes("Dev Java S1"));
+    const offer = response.body.find(o => o.title.includes("Développeur Java Senior"));
     client.test("Offre Cloud identifiée", function() {
         client.assert(offer !== undefined, "L'offre Cloud Architect doit exister");
         client.global.set("target_job_id", offer.id);
