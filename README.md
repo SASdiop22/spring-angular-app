@@ -1,6 +1,6 @@
 # Spring Boot and Angular basic project
 
-This version include:
+This version include :
 
 - Java 17
 - Node 20
